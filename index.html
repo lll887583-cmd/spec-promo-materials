@@ -1,0 +1,2430 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promo Materials UIDemo</title>
+  <link rel="stylesheet" href="assets/spec-ui-foundation.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" />
+  <style>
+    :root {
+      --primary: var(--spec-color-primary, #1F3472);
+      --primary-bright: var(--spec-color-primary, #1F3472);
+      --bg: var(--spec-color-body-bg, #f9fafb);
+      --card: var(--spec-color-white, #ffffff);
+      --text: var(--spec-color-text, #1d1d1d);
+      --muted: var(--spec-color-pale, #5d647d);
+      --line: var(--spec-color-line, #dbdbdb);
+      --soft-line: var(--spec-color-line-soft, #edf1f7);
+      --blue-soft: var(--spec-color-column-head, #f4f8ff);
+      --cyan: #4ecbe3;
+      --success: var(--spec-color-success, #24a661);
+      --warning: var(--spec-color-warning, #ffae57);
+      --disabled: var(--spec-color-disabled, #fbfbfb);
+      --shadow: var(--spec-shadow-card, 0 1px 6px 1px rgba(0, 0, 0, 0.06));
+      --shadow-strong: 0 12px 30px rgba(31, 52, 114, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--spec-font-family, "ubuntu-font", "Ubuntu", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button { cursor: pointer; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: var(--card);
+      border-right: 1px solid var(--soft-line);
+      padding: 18px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      margin-bottom: 34px;
+      white-space: nowrap;
+    }
+
+    .brand-logo {
+      display: block;
+      width: 190px;
+      height: 34px;
+      object-fit: contain;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #d72e28 0 45%, #ffffff 45% 55%, #163a72 55% 100%);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(31, 52, 114, 0.08);
+      flex: 0 0 auto;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      right: 7px;
+      top: 15px;
+      height: 9px;
+      background: #ffffff;
+      clip-path: polygon(0 100%, 18% 45%, 31% 80%, 48% 18%, 66% 80%, 82% 45%, 100% 100%);
+    }
+
+    .nav { display: grid; gap: 4px; }
+
+    .nav-item {
+      border: 0;
+      background: transparent;
+      color: #333333;
+      text-align: left;
+      min-height: 38px;
+      padding: 10px 16px;
+      border-radius: 3px;
+      font-size: 16px;
+      font-weight: 400;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .nav-item:hover {
+      background: var(--bg);
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+      background: var(--bg);
+      font-weight: 500;
+    }
+
+    .workspace {
+      min-width: 0;
+      padding: 24px;
+    }
+
+    .mobile-topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 56px;
+      padding: 14px 16px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--soft-line);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .menu-button,
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid var(--soft-line);
+      background: #ffffff;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hamburger,
+    .hamburger::before,
+    .hamburger::after {
+      width: 15px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+      display: block;
+      content: "";
+      position: relative;
+    }
+
+    .hamburger::before { position: absolute; top: -5px; }
+    .hamburger::after { position: absolute; top: 5px; }
+
+    .layout {
+      width: min(100%, var(--spec-shell-max-width, 1440px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .panel,
+    .preview-shell {
+      background: var(--card);
+      border: 1px solid var(--soft-line);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+    }
+
+    .settings-panel {
+      padding: 20px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel-head,
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-title,
+    .preview-title {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+      margin: 0;
+    }
+
+    .reset-button,
+    .select-all {
+      border: 0;
+      background: transparent;
+      color: var(--spec-color-muted, #777777);
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+
+    .select-all { color: var(--primary); }
+
+    .group { display: grid; gap: 10px; }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #666666;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 18px;
+    }
+
+    .muted { color: #8a96aa; font-weight: 500; }
+
+    .template-grid,
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 230px; }
+
+    .template-card,
+    .logo-card,
+    .upload-card,
+    .language-card {
+      border: 1px solid var(--soft-line);
+      background: #ffffff;
+      border-radius: 4px;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      color: var(--text);
+      transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .template-card:hover,
+    .logo-card:hover,
+    .language-card:hover {
+      border-color: var(--primary);
+      background: var(--blue-soft);
+    }
+
+    .template-card.active,
+    .logo-card.active,
+    .language-card.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(31, 52, 114, .10);
+      color: var(--primary);
+    }
+
+    .template-thumb {
+      width: 62px;
+      height: 38px;
+      border-radius: 4px;
+      background: linear-gradient(110deg, #e7f9ff 0 62%, transparent 62% 100%),
+        linear-gradient(45deg, #ffffff 25%, #f2f4f8 25% 50%, #ffffff 50% 75%, #f2f4f8 75%);
+      background-size: auto, 12px 12px;
+      border: 1px solid var(--line);
+    }
+
+    .template-card.dark .template-thumb {
+      background: linear-gradient(135deg, #071632, #182b4d);
+    }
+
+    .template-name {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      text-align: center;
+      font-size: 12px;
+      background: rgba(248, 250, 255, .94);
+      padding: 2px 0 3px;
+      color: inherit;
+    }
+
+    .logo-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 330px;
+    }
+
+    .logo-card {
+      min-height: 58px;
+      padding: 8px;
+    }
+
+    .logo-card.light {
+      background: #0c1220;
+    }
+
+    .logo-card img {
+      display: block;
+      width: 100%;
+      max-width: 142px;
+      height: 30px;
+      object-fit: contain;
+    }
+
+    .check-corner {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 15px;
+      height: 15px;
+      border-radius: 7px 0 6px 0;
+      background: var(--primary);
+    }
+
+    .check-corner::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 6px;
+      height: 3px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg);
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 68px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .field-label {
+      color: #666666;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 18px;
+      padding-top: 9px;
+    }
+
+    .input-wrap { position: relative; }
+
+    input,
+    textarea {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--soft-line);
+      border-radius: 4px;
+      background: var(--disabled);
+      color: var(--text);
+      padding: 8px 62px 8px 12px;
+      outline: none;
+      font-weight: 400;
+      line-height: 20px;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+      padding-right: 58px;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--spec-color-focus-ring, rgba(31, 52, 114, .08));
+    }
+
+    .counter {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      color: #c5c5c5;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .switch-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--primary);
+      padding: 0;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform .18s ease;
+    }
+
+    .switch.off { background: #c5c5c5; }
+    .switch.off::after { transform: translateX(-18px); }
+
+    .upload-zone {
+      display: grid;
+      grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .upload-input {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .upload-card {
+      width: min(220px, 100%);
+      min-height: 120px;
+      background: var(--spec-color-disabled, #fbfbfb);
+      border-color: #c5c5c5;
+      border-style: dashed;
+      color: #c5c5c5;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .upload-card strong {
+      color: inherit;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+    }
+
+    .upload-card.is-dragover,
+    .upload-card:hover,
+    .upload-card:focus-visible {
+      border-color: var(--primary);
+      background: var(--spec-color-column-head, #f8faff);
+      color: var(--primary);
+      outline: none;
+    }
+
+    .upload-icon {
+      width: 34px;
+      height: 34px;
+      color: #999999;
+    }
+
+    .upload-preview {
+      position: relative;
+      width: min(160px, 100%);
+      min-height: 120px;
+      aspect-ratio: 530 / 628;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: conic-gradient(from 90deg, #eeeeee 25%, #ffffff 0 50%, #eeeeee 0 75%, #ffffff 0);
+      background-size: 28px 28px;
+    }
+
+    .upload-preview::before {
+      content: "";
+      position: absolute;
+      right: 42px;
+      top: 24px;
+      width: 48px;
+      height: 74px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 3px solid #101828;
+      transform: rotate(-13deg);
+      box-shadow: 0 12px 22px rgba(16, 24, 40, .16);
+    }
+
+    .upload-preview::after {
+      content: "";
+      position: absolute;
+      left: 42px;
+      bottom: 18px;
+      width: 70px;
+      height: 36px;
+      background: #2f3744;
+      border-radius: 50% 45% 10% 28%;
+      transform: rotate(-18deg);
+      filter: grayscale(1);
+    }
+
+    .upload-preview.has-image {
+      background: #fbfbfb;
+    }
+
+    .upload-preview.has-image::before,
+    .upload-preview.has-image::after {
+      display: none;
+    }
+
+    .upload-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-upload {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--soft-line);
+      background: rgba(255, 255, 255, .94);
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 14px;
+      line-height: 1;
+      color: #1d1d1d;
+      z-index: 2;
+    }
+
+    .upload-meta {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .upload-name {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 18px;
+      word-break: break-all;
+    }
+
+    .upload-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .upload-action-btn {
+      min-height: 32px;
+      border: 1px solid #dce4f2;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #1F3472;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .upload-action-btn.danger {
+      border-color: #f2cac7;
+      color: #a1261f;
+    }
+
+    .upload-hint {
+      color: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .image-modal,
+    .crop-modal,
+    .confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      background: rgba(29, 29, 29, .62);
+    }
+
+    .image-modal.open,
+    .crop-modal.open,
+    .confirm-modal.open { display: flex; }
+
+    .image-dialog,
+    .crop-dialog,
+    .confirm-dialog {
+      width: min(820px, calc(100vw - 64px));
+      max-height: calc(100vh - 64px);
+      overflow: hidden;
+      border: 1px solid var(--soft-line);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .24);
+    }
+
+    .image-header,
+    .crop-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--soft-line);
+    }
+
+    .image-title,
+    .confirm-title {
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 22px;
+    }
+
+    .image-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .image-body,
+    .crop-body {
+      padding: 16px;
+      background: #f9fafb;
+    }
+
+    .image-large {
+      display: block;
+      width: 100%;
+      max-height: calc(100vh - 168px);
+      object-fit: contain;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .crop-dialog {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .crop-canvas {
+      width: 100%;
+      height: min(520px, calc(100vh - 216px));
+      min-height: 320px;
+    }
+
+    .crop-image {
+      display: block;
+      max-width: 100%;
+    }
+
+    .crop-actions,
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .crop-actions {
+      padding: 12px 16px;
+      border-top: 1px solid var(--soft-line);
+    }
+
+    .modal-btn {
+      min-width: 88px;
+      min-height: 38px;
+      border: 1px solid #dce4f2;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #1d1d1d;
+      padding: 8px 14px;
+      font-weight: 700;
+    }
+
+    .modal-btn.primary {
+      border-color: #1F3472;
+      background: #1F3472;
+      color: #ffffff;
+    }
+
+    .confirm-desc {
+      margin: 10px 0 24px;
+      color: #666666;
+      font-size: 14px;
+      line-height: 22px;
+      font-weight: 500;
+    }
+
+    .poster-edit-dialog {
+      width: min(520px, calc(100vw - 32px));
+      padding: 24px;
+    }
+
+    .poster-edit-form {
+      display: grid;
+      gap: 14px;
+      margin: 18px 0 24px;
+    }
+
+    .poster-edit-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .poster-edit-field label {
+      color: #666666;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 18px;
+    }
+
+    .poster-edit-field input,
+    .poster-edit-field textarea {
+      width: 100%;
+      border: 1px solid #dce4f2;
+      border-radius: 4px;
+      background: #ffffff;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .poster-edit-field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .poster-edit-field input:focus,
+    .poster-edit-field textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(31, 52, 114, .10);
+    }
+
+    .modal-btn.danger {
+      border-color: #a1261f;
+      color: #a1261f;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 6000;
+      display: none;
+      max-width: min(420px, calc(100vw - 32px));
+      transform: translateX(-50%);
+      border: 1px solid #dce4f2;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 16px 40px rgba(16, 24, 40, .16);
+      color: #102044;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .toast.visible { display: block; }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px 8px;
+    }
+
+    .check-item {
+      color: #666666;
+      font-size: 12px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .check-item input {
+      width: 12px;
+      height: 12px;
+      accent-color: var(--primary);
+      margin: 0;
+      padding: 0;
+    }
+
+    .language-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .language-card {
+      min-height: 48px;
+      flex-direction: column;
+      gap: 1px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .language-card span {
+      font-size: 10px;
+      color: var(--spec-color-muted, #777777);
+      font-weight: 400;
+    }
+
+    .primary-action {
+      align-self: center;
+      min-width: 200px;
+      min-height: 36px;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      background: var(--primary);
+      color: var(--card);
+      box-shadow: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: none;
+    }
+
+    .primary-action:disabled {
+      background: var(--disabled);
+      border-color: #C5C5C5;
+      color: #C5C5C5;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .primary-action:not(:disabled):active { transform: none; }
+
+    .preview-shell {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      overflow: hidden;
+    }
+
+    .preview-header {
+      min-height: 64px;
+      border-bottom: 1px solid var(--soft-line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+    }
+
+    .preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .download-btn,
+    .edit-poster-btn {
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      min-height: 36px;
+      padding: 8px 16px;
+      font-weight: 500;
+    }
+
+    .download-btn {
+      background: var(--primary);
+      color: var(--card);
+    }
+
+    .edit-poster-btn {
+      background: transparent;
+      color: var(--primary);
+    }
+
+    .download-btn:disabled,
+    .edit-poster-btn:disabled {
+      background: var(--disabled);
+      border-color: #C5C5C5;
+      color: #C5C5C5;
+      cursor: not-allowed;
+    }
+
+    .pager {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .canvas-area {
+      padding: 30px 22px 36px;
+      border-bottom: 1px solid var(--soft-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 560px;
+      background: #ffffff;
+    }
+
+    .material-card {
+      width: min(100%, 870px);
+      aspect-ratio: 1200 / 628;
+      border-radius: 6px;
+      background: linear-gradient(115deg, #eafaff 0 57%, #ccf2fb 57% 100%);
+      box-shadow: 0 10px 28px rgba(31, 52, 114, .11);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .material-card.generated::before {
+      content: "";
+      position: absolute;
+      right: -8%;
+      top: 0;
+      width: 52%;
+      height: 112%;
+      border-radius: 50% 0 0 50%;
+      background: rgba(82, 207, 231, .27);
+    }
+
+    .material-card.empty {
+      background: conic-gradient(from 90deg, #eeeeee 25%, #ffffff 0 50%, #eeeeee 0 75%, #ffffff 0);
+      background-size: 64px 64px;
+      box-shadow: 0 10px 28px rgba(31, 52, 114, .08);
+    }
+
+    .material-card.empty .kline-bg,
+    .material-card.empty .creative-logo,
+    .material-card.empty .creative-copy,
+    .material-card.empty .poster-product-layer,
+    .material-card.empty .trustpilot,
+    .material-card.empty .empty-note {
+      display: none;
+    }
+
+    .material-card.empty .creative-copy {
+      top: 28%;
+      width: 38%;
+    }
+
+    .material-card.empty .creative-copy h1 {
+      font-size: clamp(26px, 3vw, 44px);
+    }
+
+    .material-card.empty .creative-cta {
+      min-height: 46px;
+      margin-top: 7%;
+      padding: 0 28px;
+    }
+
+    .material-card.empty::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0));
+      pointer-events: none;
+    }
+
+    .creative-logo {
+      position: absolute;
+      left: 7%;
+      top: 9%;
+      display: block;
+      width: clamp(174px, 23vw, 288px);
+      height: auto;
+    }
+
+    .creative-logo.logo-on-dark {
+      width: clamp(204px, 26vw, 332px);
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(7, 22, 50, .92);
+    }
+
+    .creative-logo img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .creative-copy {
+      position: absolute;
+      left: 7%;
+      top: 30%;
+      width: 48%;
+      color: #071632;
+    }
+
+    .creative-copy h1 {
+      margin: 0 0 4%;
+      font-size: clamp(28px, 3.4vw, 50px);
+      line-height: 1.06;
+      letter-spacing: -.04em;
+      color: #081840;
+    }
+
+    .creative-copy p {
+      margin: 0;
+      font-size: clamp(15px, 2vw, 27px);
+      line-height: 1.48;
+      letter-spacing: -.02em;
+    }
+
+    .creative-cta {
+      margin-top: 12%;
+      min-width: 180px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+      padding: 0 32px;
+      border-radius: 999px;
+      background: #03B2CB;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: clamp(12px, 1.35vw, 17px);
+    }
+
+    .poster-product-layer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 44.1667%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .creative-logo,
+    .creative-copy,
+    .trustpilot {
+      z-index: 2;
+    }
+
+    .phone-hand {
+      position: absolute;
+      right: 11%;
+      top: 18%;
+      width: 26%;
+      height: 63%;
+      transform: rotate(10deg);
+      filter: grayscale(1);
+    }
+
+    .phone-hand::before {
+      content: "";
+      position: absolute;
+      left: -20%;
+      top: 42%;
+      width: 70%;
+      height: 40%;
+      background: #222832;
+      border-radius: 48% 42% 20% 40%;
+      transform: rotate(-24deg);
+    }
+
+    .phone {
+      position: absolute;
+      left: 16%;
+      top: 0;
+      width: 62%;
+      height: 100%;
+      background: #ffffff;
+      border: 9px solid #111821;
+      border-radius: 30px;
+      box-shadow: 0 20px 28px rgba(0, 0, 0, .20);
+      overflow: hidden;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      left: 30%;
+      top: 7px;
+      width: 40%;
+      height: 12px;
+      border-radius: 999px;
+      background: #111821;
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 30px 8px 8px;
+      background: linear-gradient(#f8fbff, #ffffff);
+    }
+
+    .phone-line {
+      height: 5px;
+      border-radius: 999px;
+      background: #d6e2f0;
+      margin: 8px 12px;
+    }
+
+    .phone-line.short { width: 48%; }
+    .phone-line.mid { width: 70%; }
+
+    .trade-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin: 14px 8px;
+      gap: 4px;
+    }
+
+    .trade-buttons span {
+      height: 22px;
+      border-radius: 3px;
+      background: #ff6c39;
+    }
+
+    .trade-buttons span:last-child { background: #347dff; }
+
+    .chart-line {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 20%;
+      height: 36%;
+      border-left: 2px solid #f27d63;
+      border-bottom: 2px solid #f27d63;
+      transform: skew(-13deg);
+      opacity: .58;
+    }
+
+    .kline-bg {
+      position: absolute;
+      right: 2%;
+      bottom: 10%;
+      width: 32%;
+      height: 40%;
+      opacity: .35;
+      background:
+        linear-gradient(90deg, transparent 0 8%, #72d8ea 8% 10%, transparent 10% 19%, #72d8ea 19% 25%, transparent 25% 100%),
+        repeating-linear-gradient(90deg, transparent 0 28px, rgba(62, 189, 213, .6) 28px 31px, transparent 31px 52px);
+    }
+
+    .trustpilot {
+      position: absolute;
+      right: 6%;
+      bottom: 7%;
+      color: #102044;
+      display: grid;
+      gap: 8px;
+      justify-items: start;
+      font-weight: 700;
+      font-size: clamp(12px, 1.35vw, 16px);
+    }
+
+    .trustpilot::before {
+      content: "Trustpilot";
+      padding-left: 23px;
+      position: relative;
+    }
+
+    .trustpilot::after {
+      content: "";
+      width: 132px;
+      height: 24px;
+      background: repeating-linear-gradient(90deg, #00a67a 0 23px, #ffffff 23px 25px);
+      border: 1px solid rgba(255, 255, 255, .7);
+    }
+
+    .star {
+      position: absolute;
+      left: 0;
+      top: -1px;
+      width: 18px;
+      height: 18px;
+      background: #00a67a;
+      clip-path: polygon(50% 0, 62% 34%, 98% 35%, 68% 55%, 79% 90%, 50% 68%, 21% 90%, 32% 55%, 2% 35%, 38% 34%);
+    }
+
+    .empty-note {
+      position: absolute;
+      right: 7%;
+      bottom: 8%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #8a96aa;
+      font-size: 13px;
+      background: rgba(255, 255, 255, .72);
+      border: 1px dashed var(--soft-line);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .empty-note::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ffae57;
+    }
+
+    .progress-card {
+      width: min(100%, 870px);
+      border: 1px solid var(--soft-line);
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: none;
+      gap: 14px;
+    }
+
+    .progress-card.visible { display: grid; }
+
+    .progress-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: #edf1f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--muted));
+      transition: width .3s ease;
+    }
+
+    .preview-strip,
+    .language-strip {
+      padding: 20px;
+      border-bottom: 1px solid var(--soft-line);
+      overflow: hidden;
+    }
+
+    .preview-strip.is-empty,
+    .language-strip.is-empty {
+      min-height: 228px;
+      background: #FFFFFF;
+    }
+
+    .preview-strip.is-empty .strip-title,
+    .preview-strip.is-empty .thumb-row,
+    .language-strip.is-empty .strip-title,
+    .language-strip.is-empty .language-row {
+      display: none;
+    }
+
+    .strip-title {
+      margin: 0 0 16px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .thumb-row,
+    .language-row {
+      display: flex;
+      align-items: stretch;
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+    }
+
+    .size-thumb {
+      flex: 0 0 96px;
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #56647c;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .mini-art {
+      width: 96px;
+      height: 60px;
+      border-radius: 5px;
+      border: 0;
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .size-thumb.active .mini-art {
+      box-shadow: none;
+    }
+
+    .mini-art.square { width: 72px; height: 72px; }
+    .mini-art.vertical { width: 56px; height: 86px; }
+    .mini-art.wide { width: 110px; height: 62px; }
+
+    .mini-art::before {
+      content: "";
+      position: absolute;
+      left: 10%;
+      top: 16%;
+      width: 34%;
+      height: 7%;
+      background: #163a72;
+      border-radius: 999px;
+      box-shadow: 0 12px 0 #081840, 0 25px 0 #536179;
+    }
+
+    .mini-art::after {
+      content: "";
+      position: absolute;
+      right: 12%;
+      top: 28%;
+      width: 24%;
+      height: 52%;
+      background: #17202c;
+      border-radius: 44% 44% 18% 18%;
+      transform: rotate(12deg);
+      opacity: .85;
+    }
+
+    .language-pill {
+      flex: 0 0 92px;
+      min-height: 58px;
+      border: 1px solid var(--soft-line);
+      border-radius: 4px;
+      background: #ffffff;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .language-pill.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(31, 52, 114, .10);
+    }
+
+    .language-pill span {
+      color: var(--spec-color-muted, #777777);
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .status-dock {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 30;
+      width: min(360px, calc(100vw - 32px));
+      border: 1px solid var(--soft-line);
+      background: rgba(255, 255, 255, .96);
+      box-shadow: var(--spec-shadow-popup, 0 16px 40px rgba(16, 24, 40, .16));
+      border-radius: 10px;
+      padding: 14px;
+      display: none;
+      gap: 10px;
+    }
+
+    .status-dock.visible { display: grid; }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .status-line span:last-child { color: var(--success); }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1180px) {
+      .app { grid-template-columns: 76px minmax(0, 1fr); }
+      .sidebar { padding: 20px 10px; }
+      .brand { justify-content: center; }
+      .brand-logo { width: 42px; object-fit: cover; object-position: left center; }
+      .nav-item { font-size: 0; padding: 13px 8px; text-align: center; }
+      .nav-item::first-letter { font-size: 18px; }
+      .layout { grid-template-columns: 360px minmax(0, 1fr); }
+      .checkbox-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .canvas-area { min-height: 480px; }
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .settings-panel { order: 2; }
+      .preview-shell { order: 1; }
+      .field { grid-template-columns: 92px minmax(0, 1fr); }
+      .language-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 767px) {
+      body { font-size: 13px; }
+      .app { display: block; }
+      .mobile-topbar { display: flex; }
+      .sidebar {
+        position: fixed;
+        z-index: 40;
+        inset: 0 auto 0 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+        box-shadow: 14px 0 32px rgba(16, 24, 40, .18);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .brand { justify-content: flex-start; }
+      .brand-logo { width: 190px; object-fit: contain; }
+      .nav-item { font-size: 16px; padding: 12px 16px; }
+      .workspace { padding: 14px; }
+      .settings-panel { padding: 16px; }
+      .template-grid { max-width: none; }
+      .logo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field { grid-template-columns: 1fr; gap: 6px; }
+      .field-label { padding-top: 0; }
+      .upload-zone { grid-template-columns: 1fr; }
+      .upload-preview, .upload-card { width: 100%; }
+      .checkbox-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .language-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .primary-action { width: 100%; }
+      .preview-header { flex-direction: column; align-items: stretch; }
+      .preview-actions { justify-content: space-between; gap: 8px; }
+      .download-btn, .edit-poster-btn { flex: 1; }
+      .canvas-area { min-height: 360px; padding: 20px 12px 24px; }
+      .material-card { aspect-ratio: 4 / 5; }
+      .creative-copy { left: 9%; top: 28%; width: 54%; }
+      .creative-copy h1 { font-size: clamp(30px, 10vw, 44px); }
+      .creative-copy p { font-size: clamp(15px, 4vw, 19px); }
+      .poster-product-layer { width: 44.1667%; height: 100%; }
+      .phone-hand { right: 2%; top: 31%; width: 35%; height: 42%; }
+      .trustpilot { display: none; }
+      .preview-strip, .language-strip { padding: 16px; }
+    }
+  </style>
+</head>
+<body class="spec-ui-root">
+  <div class="mobile-topbar">
+    <button class="menu-button" id="menuButton" aria-label="打开导航"><span class="hamburger"></span></button>
+    <div class="brand" style="margin:0"><img class="brand-logo" src="assets/logo.png" alt="Promo Materials"></div>
+    <button class="icon-button" aria-label="用户入口">PM</button>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><img class="brand-logo" src="assets/logo.png" alt="Promo Materials"></div>
+      <nav class="nav" aria-label="主导航">
+        <button class="nav-item active" type="button">素材生成</button>
+        <button class="nav-item" type="button">生成规则</button>
+      </nav>
+    </aside>
+
+    <main class="workspace">
+      <div class="layout">
+        <section class="panel settings-panel" aria-label="基础设置">
+          <div class="panel-head">
+            <h1 class="panel-title">基础设置</h1>
+            <button class="reset-button" id="resetButton" type="button">重置</button>
+          </div>
+
+          <div class="group">
+            <div class="label-row"><span>模板选择</span></div>
+            <div class="template-grid">
+              <button class="template-card active" type="button" data-template="A">
+                <span class="template-thumb"></span>
+                <span class="template-name">模板 A</span>
+                <span class="check-corner"></span>
+              </button>
+              <button class="template-card dark" type="button" data-template="B">
+                <span class="template-thumb"></span>
+                <span class="template-name">模板 B</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="label-row"><span>Logo</span></div>
+            <div class="logo-grid">
+              <button class="logo-card active" type="button" data-logo-src="assets/logo-market-light.png" data-logo-key="market-light" data-logo-theme="light" aria-label="SPEC MARKETS 浅色海报字标">
+                <img src="assets/logo-market-light.png" alt="SPEC MARKETS 浅色海报字标"><span class="check-corner"></span>
+              </button>
+              <button class="logo-card" type="button" data-logo-src="assets/logo-trading-light.png" data-logo-key="trading-light" data-logo-theme="light" aria-label="SPEC TRADING 浅色海报字标">
+                <img src="assets/logo-trading-light.png" alt="SPEC TRADING 浅色海报字标">
+              </button>
+              <button class="logo-card light" type="button" data-logo-src="assets/logo-market-dark.png" data-logo-key="market-dark" data-logo-theme="dark" aria-label="SPEC MARKETS 深色海报字标">
+                <img src="assets/logo-market-dark.png" alt="SPEC MARKETS 深色海报字标">
+              </button>
+              <button class="logo-card light" type="button" data-logo-src="assets/logo-trading-dark.png" data-logo-key="trading-dark" data-logo-theme="dark" aria-label="SPEC TRADING 深色海报字标">
+                <img src="assets/logo-trading-dark.png" alt="SPEC TRADING 深色海报字标">
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="titleInput">标题</label>
+            <div class="input-wrap">
+              <input id="titleInput" maxlength="40" value="Take control" />
+              <span class="counter" id="titleCounter">12/40</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="subtitleInput">副标题</label>
+            <div class="input-wrap">
+              <textarea id="subtitleInput" maxlength="80">Lower your trading costs
+with Spec Markets.</textarea>
+              <span class="counter" id="subtitleCounter">45/80</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="ctaInput">按钮文案</label>
+            <div class="input-wrap">
+              <input id="ctaInput" maxlength="20" value="Find your edge" />
+              <span class="counter" id="ctaCounter">14/20</span>
+            </div>
+          </div>
+
+          <div class="switch-line">
+            <span>Trustpilot 显示</span>
+            <button class="switch" id="trustSwitch" type="button" aria-label="切换 Trustpilot 显示"></button>
+          </div>
+
+          <div class="group">
+            <div class="label-row"><span>上传图片</span></div>
+            <div class="upload-zone" id="uploadZone">
+              <input class="upload-input" id="uploadInput" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+              <div class="upload-preview hidden" id="uploadPreview" tabindex="0" aria-label="图片预览">
+                <button class="remove-upload" id="removeUpload" type="button" aria-label="移除图片">×</button>
+              </div>
+              <div class="upload-meta hidden" id="uploadMeta">
+                <div class="upload-name" id="uploadName">未上传图片</div>
+                <div class="upload-actions">
+                  <button class="upload-action-btn" type="button" data-upload-action="view">查看</button>
+                  <button class="upload-action-btn danger" type="button" data-upload-action="delete">删除</button>
+                  <button class="upload-action-btn" type="button" data-upload-action="reupload">重新上传</button>
+                </div>
+              </div>
+              <button class="upload-card" id="uploadCard" type="button">
+                <svg class="upload-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 15V4m0 0 4 4m-4-4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M5 15v4h14v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <strong>上传并裁切图片</strong>
+                <span class="upload-hint">支持 JPG / PNG，最大 2MB，可拖拽上传</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="section-head">
+              <div class="label-row"><span>尺寸选择（17 个）</span></div>
+              <button class="select-all" type="button" data-select="sizes">全选</button>
+            </div>
+            <div class="checkbox-grid" id="sizeChecks"></div>
+          </div>
+
+          <div class="group">
+            <div class="section-head">
+              <div class="label-row"><span>语言选择（8 种）</span></div>
+              <button class="select-all" type="button" data-select="languages">全选</button>
+            </div>
+            <div class="language-grid" id="languageChecks"></div>
+          </div>
+
+          <button class="primary-action" id="generateButton" type="button">生成全部素材</button>
+        </section>
+
+        <section class="preview-shell" aria-label="素材预览">
+          <header class="preview-header">
+            <h2 class="preview-title">素材预览</h2>
+            <div class="preview-actions">
+              <button class="download-btn" id="downloadButton" type="button">下载(.png)</button>
+              <button class="edit-poster-btn" id="editPosterButton" type="button">编辑</button>
+              <button class="icon-button" type="button" aria-label="上一张">&lt;</button>
+              <span class="pager" id="pagerText">1 / 17</span>
+              <button class="icon-button" type="button" aria-label="下一张">&gt;</button>
+              <button class="icon-button" type="button" aria-label="全屏">全屏</button>
+            </div>
+          </header>
+
+          <div class="canvas-area">
+            <div class="material-card empty" id="materialCard">
+              <div class="kline-bg"></div>
+              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png" alt="SPEC MARKETS 浅色海报字标"></div>
+              <div class="creative-copy">
+                <h1 id="previewTitle">Take control</h1>
+                <p id="previewSubtitle">Lower your trading costs<br>with Spec Markets.</p>
+                <div class="creative-cta" id="previewCta">Find your edge</div>
+              </div>
+              <img class="poster-product-layer hidden" id="phoneHand" alt="上传图片图层">
+              <div class="trustpilot" id="trustpilot"><span class="star"></span></div>
+              <div class="empty-note hidden" id="emptyNote">上传图片后将生成右侧商品图层</div>
+            </div>
+
+            <div class="progress-card" id="progressCard">
+              <div class="progress-top"><span>正在批量生成素材</span><span id="progressText">0%</span></div>
+              <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="muted">系统将按尺寸、语言和模板规则生成可下载素材。</div>
+            </div>
+          </div>
+
+          <div class="preview-strip" id="sizePreviewSection">
+            <h3 class="strip-title">尺寸预览（17个）</h3>
+            <div class="thumb-row" id="sizePreviewRow"></div>
+          </div>
+
+          <div class="language-strip" id="languagePreviewSection">
+            <h3 class="strip-title">语言预览（8种）</h3>
+            <div class="language-row" id="languagePreviewRow"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="status-dock" id="statusDock" role="status" aria-live="polite">
+    <div class="status-line"><span>生成任务</span><span>已完成</span></div>
+    <div class="muted" id="statusMeta">17 个尺寸 × 8 种语言，共 136 张素材已准备下载。</div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script>
+    const sizes = [
+      '1200 x 628', '1080 x 1080', '1080 x 1350', '1920 x 1080',
+      '1080 x 1920', '1080 x 1920', '720 x 1280', '800 x 800',
+      '1080 x 566', '1024 x 768', '1366 x 768', '1440 x 900',
+      '1600 x 900', '1680 x 1050', '2560 x 1440', '1280 x 720', '1536 x 864'
+    ];
+
+    const languages = [
+      ['英语', 'English'], ['日语', '日本語'], ['简体中文', '简体中文'], ['繁体中文', '繁體中文'],
+      ['越南语', 'Tiếng Việt'], ['泰语', 'ภาษาไทย'], ['韩语', '한국어'], ['印尼语', 'Indonesia']
+    ];
+
+
+    const localizedCopy = [
+      { title: 'Take control', subtitle: 'Lower your trading costs\nwith Spec Markets.', cta: 'Find your edge' },
+      { title: '主導権を握る', subtitle: 'Spec Marketsで\n取引コストを抑えましょう。', cta: '優位性を見つける' },
+      { title: '掌控交易', subtitle: '使用 Spec Markets\n降低您的交易成本。', cta: '找到你的优势' },
+      { title: '掌控交易', subtitle: '使用 Spec Markets\n降低您的交易成本。', cta: '找到你的優勢' },
+      { title: 'Làm chủ giao dịch', subtitle: 'Giảm chi phí giao dịch\ncùng Spec Markets.', cta: 'Tìm lợi thế của bạn' },
+      { title: 'ควบคุมการเทรด', subtitle: 'ลดต้นทุนการเทรดของคุณ\nกับ Spec Markets', cta: 'ค้นหาจุดได้เปรียบ' },
+      { title: '거래를 주도하세요', subtitle: 'Spec Markets와 함께\n거래 비용을 낮추세요.', cta: '나만의 우위 찾기' },
+      { title: 'Kendalikan trading', subtitle: 'Turunkan biaya trading Anda\nbersama Spec Markets.', cta: 'Temukan keunggulan Anda' }
+    ];
+
+    const sizeChecks = document.getElementById('sizeChecks');
+    const languageChecks = document.getElementById('languageChecks');
+    const sizePreviewRow = document.getElementById('sizePreviewRow');
+    const languagePreviewRow = document.getElementById('languagePreviewRow');
+    const titleInput = document.getElementById('titleInput');
+    const subtitleInput = document.getElementById('subtitleInput');
+    const ctaInput = document.getElementById('ctaInput');
+    const titleCounter = document.getElementById('titleCounter');
+    const subtitleCounter = document.getElementById('subtitleCounter');
+    const ctaCounter = document.getElementById('ctaCounter');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewSubtitle = document.getElementById('previewSubtitle');
+    const previewCta = document.getElementById('previewCta');
+    const creativeLogo = document.getElementById('creativeLogo');
+    const creativeLogoImage = document.getElementById('creativeLogoImage');
+    const trustSwitch = document.getElementById('trustSwitch');
+    const trustpilot = document.getElementById('trustpilot');
+    const removeUpload = document.getElementById('removeUpload');
+    const uploadCard = document.getElementById('uploadCard');
+    const uploadInput = document.getElementById('uploadInput');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadMeta = document.getElementById('uploadMeta');
+    const uploadName = document.getElementById('uploadName');
+    const uploadZone = document.getElementById('uploadZone');
+    const materialCard = document.getElementById('materialCard');
+    const phoneHand = document.getElementById('phoneHand');
+    const emptyNote = document.getElementById('emptyNote');
+    const generateButton = document.getElementById('generateButton');
+    const progressCard = document.getElementById('progressCard');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const statusDock = document.getElementById('statusDock');
+    const statusMeta = document.getElementById('statusMeta');
+    const pagerText = document.getElementById('pagerText');
+    const sidebar = document.getElementById('sidebar');
+    const downloadButton = document.getElementById('downloadButton');
+    const editPosterButton = document.getElementById('editPosterButton');
+    const sizePreviewSection = document.getElementById('sizePreviewSection');
+    const languagePreviewSection = document.getElementById('languagePreviewSection');
+
+    let hasImage = false;
+    let trustVisible = true;
+    let generated = false;
+    let uploadedImageSrc = '';
+    let uploadedImageName = '未上传图片';
+    let uploadCropper = null;
+    let uploadCropFile = null;
+    let toastTimer = null;
+    let generatedLanguageIndices = [0];
+    let currentLanguageIndex = 0;
+    let selectedLogoSrc = 'assets/logo-market-light.png';
+    let selectedLogoTheme = 'light';
+    const posterCopyOverrides = {};
+
+    function renderSelectors() {
+      sizeChecks.innerHTML = sizes.map((size, index) => `
+        <label class="check-item"><input type="checkbox" checked data-size-index="${index}"> ${size}</label>
+      `).join('');
+
+      languageChecks.innerHTML = languages.slice(0, 10).map(([cn, en], index) => `
+        <button class="language-card ${index === 0 ? 'active' : ''}" type="button" data-language-index="${index}">${cn}<span>${en}</span></button>
+      `).join('');
+
+      sizePreviewRow.innerHTML = sizes.slice(0, 8).map((size, index) => {
+        const kind = index === 0 ? 'wide' : size.includes('1080 x 1080') || size.includes('800 x 800') ? 'square' : size.includes('1920') || size.includes('1350') || size.includes('1280') ? 'vertical' : '';
+        return `<button class="size-thumb ${index === 0 ? 'active' : ''}" type="button"><span class="mini-art ${kind}"></span><span>${size}</span></button>`;
+      }).join('');
+
+      renderLanguagePreview(generatedLanguageIndices);
+    }
+
+    function getSourceCopy() {
+      return {
+        title: titleInput.value || localizedCopy[0].title,
+        subtitle: subtitleInput.value || localizedCopy[0].subtitle,
+        cta: ctaInput.value || localizedCopy[0].cta
+      };
+    }
+
+    function getLanguageCopy(languageIndex) {
+      if (posterCopyOverrides[languageIndex]) return posterCopyOverrides[languageIndex];
+      if (languageIndex === 0) return getSourceCopy();
+      return localizedCopy[languageIndex] || getSourceCopy();
+    }
+
+    function applyLanguagePreview(languageIndex) {
+      currentLanguageIndex = languageIndex;
+      const copy = getLanguageCopy(languageIndex);
+      previewTitle.textContent = copy.title;
+      previewSubtitle.innerHTML = copy.subtitle.replace(/\n/g, '<br>');
+      previewCta.textContent = copy.cta;
+      document.querySelectorAll('.language-pill').forEach(pill => {
+        pill.classList.toggle('active', Number(pill.dataset.languagePreviewIndex) === languageIndex);
+      });
+    }
+
+    function selectedLanguageIndices() {
+      return [...document.querySelectorAll('.language-card.active')]
+        .map(card => Number(card.dataset.languageIndex))
+        .filter(index => Number.isInteger(index));
+    }
+
+    function renderLanguagePreview(indices = generatedLanguageIndices) {
+      languagePreviewRow.innerHTML = indices.map(index => {
+        const [cn, en] = languages[index];
+        return `<button class="language-pill ${index === currentLanguageIndex ? 'active' : ''}" type="button" data-language-preview-index="${index}">${cn}<span>${en}</span></button>`;
+      }).join('');
+    }
+
+    function updateGeneratedMeta() {
+      const selectedSizeCount = document.querySelectorAll('#sizeChecks input:checked').length || sizes.length;
+      statusMeta.textContent = `${selectedSizeCount} 个尺寸 × ${generatedLanguageIndices.length} 种语言，共 ${selectedSizeCount * generatedLanguageIndices.length} 张素材已准备下载。`;
+    }
+
+    function updateCounters() {
+      titleCounter.textContent = `${titleInput.value.length}/40`;
+      subtitleCounter.textContent = `${subtitleInput.value.length}/80`;
+      ctaCounter.textContent = `${ctaInput.value.length}/20`;
+      if (!generated || currentLanguageIndex === 0) applyLanguagePreview(0);
+    }
+
+    function updateUploadState() {
+      generated = hasImage && generated;
+      uploadPreview.classList.toggle('hidden', !hasImage);
+      uploadMeta.classList.toggle('hidden', !hasImage);
+      uploadCard.classList.toggle('hidden', hasImage);
+      phoneHand.classList.toggle('hidden', !hasImage);
+      emptyNote.classList.add('hidden');
+      materialCard.classList.toggle('empty', !hasImage);
+      materialCard.classList.toggle('generated', hasImage && generated);
+      generateButton.disabled = !hasImage;
+      downloadButton.disabled = !generated;
+      editPosterButton.disabled = !generated;
+      sizePreviewSection.classList.toggle('is-empty', !generated);
+      languagePreviewSection.classList.toggle('is-empty', !generated);
+      pagerText.textContent = generated ? '1 / 17' : '0 / 17';
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
+    }
+
+    function renderUploadPreview() {
+      uploadPreview.classList.toggle('has-image', Boolean(uploadedImageSrc));
+      uploadPreview.querySelector('.upload-image')?.remove();
+      if (uploadedImageSrc) {
+        const img = document.createElement('img');
+        img.className = 'upload-image';
+        img.src = uploadedImageSrc;
+        img.alt = uploadedImageName;
+        uploadPreview.prepend(img);
+      }
+      if (uploadedImageSrc) {
+        phoneHand.src = uploadedImageSrc;
+      } else {
+        phoneHand.removeAttribute('src');
+      }
+      uploadName.textContent = uploadedImageName;
+    }
+
+    function setUploadEmpty() {
+      hasImage = false;
+      generated = false;
+      uploadedImageSrc = '';
+      uploadedImageName = '未上传图片';
+      uploadInput.value = '';
+      renderUploadPreview();
+      updateUploadState();
+      setTrustVisible(trustVisible);
+    }
+
+    function setUploadImage(file, src) {
+      hasImage = true;
+      generated = false;
+      uploadedImageSrc = src;
+      uploadedImageName = file.name || '已上传图片';
+      uploadInput.value = '';
+      renderUploadPreview();
+      updateUploadState();
+      setTrustVisible(trustVisible);
+    }
+
+    function deleteUploadedImage() {
+      setUploadEmpty();
+      showToast('图片已删除');
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function canvasToBlob(canvas, type, quality) {
+      return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+    }
+
+    async function cropCanvasToUploadDataUrl(canvas) {
+      const maxBytes = 2 * 1024 * 1024;
+      let blob = null;
+      for (let quality = 0.92; quality >= 0.56; quality -= 0.08) {
+        blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+        if (blob && blob.size <= maxBytes) break;
+      }
+      if (!blob) throw new Error('crop failed');
+      return fileToDataUrl(blob);
+    }
+
+    function destroyUploadCropper() {
+      if (!uploadCropper) return;
+      uploadCropper.destroy();
+      uploadCropper = null;
+    }
+
+    function closeUploadCropper(resetInput = true) {
+      document.getElementById('uploadCropModal')?.classList.remove('open');
+      destroyUploadCropper();
+      uploadCropFile = null;
+      if (resetInput) uploadInput.value = '';
+    }
+
+    function ensureUploadCropModal() {
+      let modal = document.getElementById('uploadCropModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'uploadCropModal';
+        modal.className = 'crop-modal';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', event => {
+          if (event.target === modal || event.target.closest('[data-crop-action="cancel"]')) closeUploadCropper(true);
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && modal.classList.contains('open')) closeUploadCropper(true);
+        });
+      }
+      modal.innerHTML = `
+        <div class="crop-dialog" role="dialog" aria-modal="true" aria-label="裁切图片">
+          <div class="crop-header">
+            <div>
+              <div class="image-title">裁切图片</div>
+              <div class="upload-hint">拖动图片生成 530×628 右侧商品图层，应用后会同步显示到海报右侧。</div>
+            </div>
+            <button class="image-close" type="button" data-crop-action="cancel" aria-label="取消">×</button>
+          </div>
+          <div class="crop-body">
+            <div class="crop-canvas"><img class="crop-image" id="uploadCropImage" alt="待裁切图片" /></div>
+          </div>
+          <div class="crop-actions">
+            <button class="modal-btn" type="button" data-crop-action="cancel">取消</button>
+            <button class="modal-btn primary" type="button" data-crop-action="apply">应用裁切</button>
+          </div>
+        </div>
+      `;
+      modal.querySelector('[data-crop-action="apply"]')?.addEventListener('click', async () => {
+        try {
+          const canvas = uploadCropper?.getCroppedCanvas({
+            width: 530,
+            height: 628,
+            fillColor: '#ffffff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+          });
+          if (!canvas || !uploadCropFile) throw new Error('crop failed');
+          const src = await cropCanvasToUploadDataUrl(canvas);
+          setUploadImage(uploadCropFile, src);
+          closeUploadCropper(false);
+          showToast('图片已裁切并上传');
+        } catch (error) {
+          showToast('图片裁切失败，请换一张图片重试');
+        }
+      });
+      return modal;
+    }
+
+    function openUploadCropper(file, src) {
+      if (!window.Cropper) {
+        setUploadImage(file, src);
+        showToast('裁切工具未加载，已使用原图预览');
+        return;
+      }
+      const modal = ensureUploadCropModal();
+      const image = modal.querySelector('#uploadCropImage');
+      uploadCropFile = file;
+      destroyUploadCropper();
+      image.onload = () => {
+        uploadCropper = new Cropper(image, {
+          aspectRatio: 530 / 628,
+          viewMode: 1,
+          autoCropArea: 1,
+          background: false,
+          responsive: true,
+          dragMode: 'move'
+        });
+      };
+      image.src = src;
+      modal.classList.add('open');
+    }
+
+    async function handleUploadFile(file) {
+      if (!file) return;
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        showToast('仅支持 JPG、JPEG、PNG 图片');
+        uploadInput.value = '';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('图片不能超过 2MB');
+        uploadInput.value = '';
+        return;
+      }
+      try {
+        const src = await fileToDataUrl(file);
+        openUploadCropper(file, src);
+      } catch (error) {
+        showToast('图片读取失败，请重试');
+        uploadInput.value = '';
+      }
+    }
+
+    function openUploadPicker() {
+      uploadInput.click();
+    }
+
+    function closeImageViewer() {
+      document.getElementById('uploadImageModal')?.classList.remove('open');
+    }
+
+    function openImageViewer() {
+      if (!hasImage) {
+        showToast('暂无可查看图片');
+        return;
+      }
+      let modal = document.getElementById('uploadImageModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'uploadImageModal';
+        modal.className = 'image-modal';
+        modal.innerHTML = `
+          <div class="image-dialog" role="dialog" aria-modal="true" aria-label="图片预览">
+            <div class="image-header">
+              <div class="image-title">图片预览</div>
+              <button class="image-close" type="button" aria-label="关闭图片预览">×</button>
+            </div>
+            <div class="image-body"><img class="image-large" alt="图片预览" /></div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', event => {
+          if (event.target === modal || event.target.closest('.image-close')) closeImageViewer();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') closeImageViewer();
+        });
+      }
+      const large = modal.querySelector('.image-large');
+      large.src = uploadedImageSrc;
+      large.alt = uploadedImageName;
+      modal.classList.add('open');
+    }
+
+    function initUploadInteractions() {
+      renderUploadPreview();
+
+      uploadInput.addEventListener('change', () => handleUploadFile(uploadInput.files?.[0]));
+
+      uploadCard.addEventListener('click', openUploadPicker);
+      uploadCard.addEventListener('keydown', event => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        openUploadPicker();
+      });
+
+      uploadPreview.addEventListener('keydown', event => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        openImageViewer();
+      });
+
+      uploadZone.addEventListener('click', event => {
+        const action = event.target.closest('[data-upload-action]')?.dataset.uploadAction;
+        if (!action) return;
+        if (action === 'view') openImageViewer();
+        if (action === 'delete') deleteUploadedImage();
+        if (action === 'reupload') openUploadPicker();
+      });
+
+      ['dragenter', 'dragover'].forEach(type => {
+        uploadZone.addEventListener(type, event => {
+          event.preventDefault();
+          if (!hasImage) uploadCard.classList.add('is-dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(type => {
+        uploadZone.addEventListener(type, event => {
+          event.preventDefault();
+          uploadCard.classList.remove('is-dragover');
+        });
+      });
+
+      uploadZone.addEventListener('drop', event => handleUploadFile(event.dataTransfer?.files?.[0]));
+    }
+
+    function closeEditPosterModal() {
+      document.getElementById('editPosterModal')?.classList.remove('open');
+    }
+
+    function ensureEditPosterModal() {
+      let modal = document.getElementById('editPosterModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editPosterModal';
+        modal.className = 'confirm-modal';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', event => {
+          if (event.target === modal || event.target.closest('[data-edit-action="cancel"]')) closeEditPosterModal();
+          if (event.target.closest('[data-edit-action="submit"]')) submitPosterEdit();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') closeEditPosterModal();
+        });
+      }
+      return modal;
+    }
+
+    function openEditPosterModal() {
+      if (!generated) {
+        showToast('请先生成素材后再编辑海报');
+        return;
+      }
+      const modal = ensureEditPosterModal();
+      const [cn, en] = languages[currentLanguageIndex] || languages[0];
+      const copy = getLanguageCopy(currentLanguageIndex);
+      modal.innerHTML = `
+        <div class="confirm-dialog poster-edit-dialog" role="dialog" aria-modal="true" aria-label="编辑海报文案">
+          <div class="confirm-title">编辑海报文案</div>
+          <div class="confirm-desc">当前语言：${cn} / ${en}。提交后会直接写入右侧预览，并作为下载结果。</div>
+          <div class="poster-edit-form">
+            <div class="poster-edit-field">
+              <label for="posterEditTitle">标题</label>
+              <input id="posterEditTitle" maxlength="40" />
+            </div>
+            <div class="poster-edit-field">
+              <label for="posterEditSubtitle">副标题</label>
+              <textarea id="posterEditSubtitle" maxlength="80"></textarea>
+            </div>
+            <div class="poster-edit-field">
+              <label for="posterEditCta">按钮文案</label>
+              <input id="posterEditCta" maxlength="20" />
+            </div>
+          </div>
+          <div class="confirm-actions">
+            <button class="modal-btn" type="button" data-edit-action="cancel">取消</button>
+            <button class="modal-btn primary" type="button" data-edit-action="submit">提交</button>
+          </div>
+        </div>
+      `;
+      modal.querySelector('#posterEditTitle').value = copy.title;
+      modal.querySelector('#posterEditSubtitle').value = copy.subtitle;
+      modal.querySelector('#posterEditCta').value = copy.cta;
+      modal.classList.add('open');
+      modal.querySelector('#posterEditTitle')?.focus();
+    }
+
+    function submitPosterEdit() {
+      const modal = document.getElementById('editPosterModal');
+      if (!modal) return;
+      const nextCopy = {
+        title: modal.querySelector('#posterEditTitle')?.value.trim() || localizedCopy[0].title,
+        subtitle: modal.querySelector('#posterEditSubtitle')?.value.trim() || localizedCopy[0].subtitle,
+        cta: modal.querySelector('#posterEditCta')?.value.trim() || localizedCopy[0].cta
+      };
+      posterCopyOverrides[currentLanguageIndex] = nextCopy;
+      if (currentLanguageIndex === 0) {
+        titleInput.value = nextCopy.title;
+        subtitleInput.value = nextCopy.subtitle;
+        ctaInput.value = nextCopy.cta;
+        updateCounters();
+      }
+      applyLanguagePreview(currentLanguageIndex);
+      closeEditPosterModal();
+      showToast('海报文案已更新，可直接下载');
+    }
+
+    function setTrustVisible(next) {
+      trustVisible = next;
+      trustSwitch.classList.toggle('off', !trustVisible);
+      trustpilot.classList.toggle('hidden', !trustVisible || !hasImage);
+    }
+
+    function runGeneration() {
+      if (!hasImage) return;
+      const nextLanguageIndices = selectedLanguageIndices();
+      if (!nextLanguageIndices.length) {
+        showToast('请至少选择一种语言');
+        return;
+      }
+      generated = false;
+      statusDock.classList.remove('visible');
+      materialCard.classList.add('hidden');
+      progressCard.classList.add('visible');
+      progressFill.style.width = '0%';
+      progressText.textContent = '0%';
+      generateButton.disabled = true;
+      let value = 0;
+      const timer = setInterval(() => {
+        value += 10 + Math.floor(Math.random() * 11);
+        if (value >= 100) value = 100;
+        progressFill.style.width = `${value}%`;
+        progressText.textContent = `${value}%`;
+        if (value === 100) {
+          clearInterval(timer);
+          setTimeout(() => {
+            generated = true;
+            generatedLanguageIndices = nextLanguageIndices;
+            if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0];
+            renderLanguagePreview(generatedLanguageIndices);
+            applyLanguagePreview(currentLanguageIndex);
+            updateGeneratedMeta();
+            generateButton.disabled = false;
+            progressCard.classList.remove('visible');
+            materialCard.classList.remove('hidden');
+            updateUploadState();
+            setTrustVisible(trustVisible);
+            statusDock.classList.add('visible');
+            setTimeout(() => statusDock.classList.remove('visible'), 1800);
+          }, 350);
+        }
+      }, 160);
+    }
+
+    function syncSelectedLogo(card) {
+      selectedLogoSrc = card?.dataset.logoSrc || 'assets/logo-market-light.png';
+      selectedLogoTheme = card?.dataset.logoTheme || 'light';
+      creativeLogoImage.src = selectedLogoSrc;
+      creativeLogoImage.alt = card?.querySelector('img')?.alt || 'SPEC logo';
+      creativeLogo.classList.toggle('logo-on-dark', selectedLogoTheme === 'dark');
+      creativeLogo.classList.remove('hidden');
+    }
+
+    function loadCanvasImage(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      });
+    }
+
+    function resetOptionCards(selector) {
+      const cards = [...document.querySelectorAll(selector)];
+      cards.forEach((item, index) => {
+        item.classList.toggle('active', index === 0);
+        const corner = item.querySelector('.check-corner');
+        if (corner) corner.remove();
+        if (index === 0) item.insertAdjacentHTML('beforeend', '<span class="check-corner"></span>');
+      });
+    }
+
+    function resetDemo() {
+      titleInput.value = 'Take control';
+      subtitleInput.value = 'Lower your trading costs\nwith Spec Markets.';
+      ctaInput.value = 'Find your edge';
+      hasImage = false;
+      generated = false;
+      uploadedImageSrc = '';
+      uploadedImageName = '未上传图片';
+      uploadInput.value = '';
+      renderUploadPreview();
+      statusDock.classList.remove('visible');
+      progressCard.classList.remove('visible');
+      materialCard.classList.remove('hidden');
+      materialCard.style.filter = 'none';
+      selectedLogoSrc = 'assets/logo-market-light.png';
+      selectedLogoTheme = 'light';
+      creativeLogoImage.src = selectedLogoSrc;
+      creativeLogoImage.alt = 'SPEC MARKETS 浅色海报字标';
+      creativeLogo.classList.remove('logo-on-dark');
+      resetOptionCards('.template-card');
+      resetOptionCards('.logo-card');
+      document.querySelector('.creative-logo').classList.remove('hidden');
+      setTrustVisible(true);
+      document.querySelectorAll('#sizeChecks input').forEach(input => input.checked = true);
+      document.querySelectorAll('.language-card').forEach((card, index) => card.classList.toggle('active', index === 0));
+      document.querySelectorAll('.size-thumb').forEach((thumb, index) => thumb.classList.toggle('active', index === 0));
+      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
+      generatedLanguageIndices = [0];
+      currentLanguageIndex = 0;
+      renderLanguagePreview(generatedLanguageIndices);
+      updateGeneratedMeta();
+      updateCounters();
+      updateUploadState();
+      setTrustVisible(true);
+    }
+
+    renderSelectors();
+    updateCounters();
+    initUploadInteractions();
+    updateGeneratedMeta();
+    updateUploadState();
+
+    [titleInput, subtitleInput, ctaInput].forEach(input => input.addEventListener('input', updateCounters));
+
+    document.querySelectorAll('.template-card').forEach(card => card.addEventListener('click', () => {
+      document.querySelectorAll('.template-card').forEach(item => {
+        item.classList.remove('active');
+        const corner = item.querySelector('.check-corner');
+        if (corner) corner.remove();
+      });
+      card.classList.add('active');
+      card.insertAdjacentHTML('beforeend', '<span class="check-corner"></span>');
+      materialCard.style.filter = card.dataset.template === 'B' ? 'saturate(.85) contrast(1.05)' : 'none';
+    }));
+
+    document.querySelectorAll('.logo-card').forEach(card => card.addEventListener('click', () => {
+      document.querySelectorAll('.logo-card').forEach(item => {
+        item.classList.remove('active');
+        const corner = item.querySelector('.check-corner');
+        if (corner) corner.remove();
+      });
+      card.classList.add('active');
+      card.insertAdjacentHTML('beforeend', '<span class="check-corner"></span>');
+      syncSelectedLogo(card);
+    }));
+
+    languageChecks.addEventListener('click', event => {
+      const card = event.target.closest('.language-card');
+      if (!card) return;
+      card.classList.toggle('active');
+    });
+
+    sizePreviewRow.addEventListener('click', event => {
+      const thumb = event.target.closest('.size-thumb');
+      if (!thumb) return;
+      document.querySelectorAll('.size-thumb').forEach(item => item.classList.remove('active'));
+      thumb.classList.add('active');
+    });
+
+    languagePreviewRow.addEventListener('click', event => {
+      const pill = event.target.closest('.language-pill');
+      if (!pill) return;
+      applyLanguagePreview(Number(pill.dataset.languagePreviewIndex));
+    });
+
+    trustSwitch.addEventListener('click', () => setTrustVisible(!trustVisible));
+    editPosterButton.addEventListener('click', openEditPosterModal);
+
+    removeUpload.addEventListener('click', event => {
+      event.stopPropagation();
+      deleteUploadedImage();
+    });
+
+    document.querySelectorAll('.select-all').forEach(button => button.addEventListener('click', () => {
+      if (button.dataset.select === 'sizes') {
+        document.querySelectorAll('#sizeChecks input').forEach(input => input.checked = true);
+      } else {
+        document.querySelectorAll('.language-card').forEach(card => card.classList.add('active'));
+      }
+    }));
+
+    generateButton.addEventListener('click', runGeneration);
+    document.getElementById('resetButton').addEventListener('click', resetDemo);
+    document.getElementById('menuButton').addEventListener('click', () => sidebar.classList.toggle('open'));
+    document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => sidebar.classList.remove('open')));
+
+    document.getElementById('downloadButton').addEventListener('click', async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 628;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#eafaff';
+      ctx.fillRect(0, 0, 1200, 628);
+      ctx.fillStyle = '#bff1fb';
+      ctx.beginPath();
+      ctx.ellipse(1010, 314, 310, 360, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (uploadedImageSrc) {
+        try {
+          const productImage = await loadCanvasImage(uploadedImageSrc);
+          ctx.drawImage(productImage, 670, 0, 530, 628);
+        } catch (error) {
+          console.warn('Uploaded image failed to load for download', error);
+        }
+      }
+      try {
+        const logo = await loadCanvasImage(selectedLogoSrc);
+        const logoW = selectedLogoTheme === 'dark' ? 330 : 286;
+        const logoH = logoW * (logo.naturalHeight / logo.naturalWidth);
+        if (selectedLogoTheme === 'dark') {
+          ctx.fillStyle = 'rgba(7, 22, 50, .92)';
+          ctx.beginPath();
+          ctx.roundRect(74, 62, logoW + 28, logoH + 20, 8);
+          ctx.fill();
+          ctx.drawImage(logo, 88, 72, logoW, logoH);
+        } else {
+          ctx.drawImage(logo, 84, 76, logoW, logoH);
+        }
+      } catch (error) {
+        console.warn('Logo failed to load for download', error);
+      }
+      const downloadCopy = getLanguageCopy(currentLanguageIndex);
+      ctx.fillStyle = '#081840';
+      ctx.font = '700 72px Arial, sans-serif';
+      ctx.fillText(downloadCopy.title, 84, 230);
+      ctx.font = '500 36px Arial, sans-serif';
+      const lines = downloadCopy.subtitle.split('\n');
+      lines.forEach((line, index) => ctx.fillText(line, 84, 310 + index * 48));
+      ctx.fillStyle = '#03B2CB';
+      ctx.beginPath();
+      ctx.roundRect(84, 430, 250, 68, 34);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '700 24px Arial, sans-serif';
+      ctx.fillText(downloadCopy.cta, 128, 473);
+      canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'promo-material-demo.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }, 'image/png');
+    });
+  </script>
+</body>
+</html>
