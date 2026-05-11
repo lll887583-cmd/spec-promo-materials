@@ -5,7 +5,10 @@
   "description": "Promo Materials static UI demo with regression tests.",
   "scripts": {
     "test": "playwright test",
-    "test:smoke": "playwright test tests/promo-materials.spec.js"
+    "test:smoke": "playwright test tests/promo-materials.spec.js",
+    "start": "python3 server.py",
+    "serve": "python3 server.py",
+    "serve:static": "python3 -m http.server 4173"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0"

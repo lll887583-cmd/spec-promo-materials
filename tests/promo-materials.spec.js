@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const { pathToFileURL } = require('url');
 
 function crc32(buffer) {
   let crc = ~0;
@@ -67,6 +68,11 @@ function readZipEntries(filePath) {
 async function openApp(page) {
   await page.route('**/cropper.min.js', route => route.abort());
   await page.goto('/index.html');
+}
+
+async function openAppFromFile(page) {
+  await page.route('**/cropper.min.js', route => route.abort());
+  await page.goto(pathToFileURL(path.resolve(__dirname, '..', 'index.html')).href);
 }
 
 async function switchView(page, name) {
@@ -164,6 +170,8 @@ test('size and language settings persist until deleted', async ({ page, isMobile
   await openApp(page);
   await switchView(page, '尺寸/语言设置');
   await expect(page.locator('#sizeLanguageSettingsView')).toBeVisible();
+  await expect(page.locator('#languageSettingsBody tr').last().locator('[data-language-field="cn"]')).toHaveValue('马来语');
+  await expect(page.locator('#languageSettingsBody tr').last().locator('[data-language-field="en"]')).toHaveValue('Melayu');
 
   await domClick(page, '#addSizeForm');
   await page.fill('#newSizeLabel', '640 x 360 Persist');
@@ -206,6 +214,8 @@ test('size and language settings persist until deleted', async ({ page, isMobile
 test('validates languages and always generates all layout rules', async ({ page }) => {
   await openApp(page);
   await uploadValidImage(page);
+  await expect(page.locator('.language-card').last()).toContainText('马来语');
+  await expect(page.locator('.language-card').last()).toContainText('Melayu');
 
   await page.locator('#sizeChecks input').evaluateAll(inputs => inputs.forEach(input => { input.checked = false; }));
   const languageCards = page.locator('.language-card');
@@ -250,15 +260,17 @@ test('generates all layouts and exports PNG assets', async ({ page }, testInfo) 
   await uploadValidImage(page);
 
   await page.locator('#sizeChecks input').evaluateAll(inputs => inputs.forEach(input => { input.checked = false; }));
-  await page.locator('.language-card').evaluateAll(cards => cards.forEach((card, index) => card.classList.toggle('active', index === 0)));
+  await page.locator('.language-card').evaluateAll(cards => cards.forEach((card, index) => card.classList.toggle('active', index < 2)));
   await page.click('#generateButton');
   await expect(page.locator('#downloadButton')).toBeEnabled({ timeout: 10_000 });
-  await expect(page.locator('#statusMeta')).toContainText('17 个尺寸 × 1 种语言，共 17 张素材');
+  await expect(page.locator('#statusMeta')).toContainText('17 个尺寸 × 2 种语言，共 34 张素材');
   await expect(page.locator('#sizePreviewRow .size-thumb')).toHaveCount(17);
 
   const download = await Promise.all([
     page.waitForEvent('download'),
     page.click('#downloadButton').then(async () => {
+      await expect(page.locator('#downloadMenu')).toHaveClass(/open/);
+      await page.locator('[data-download-kind="all"]').click();
       await expect(page.locator('#downloadOptionsModal')).toHaveClass(/open/);
       await page.selectOption('#downloadMethod', 'zip');
       await expect(page.locator('#downloadFolderName')).toHaveValue('spec-promo-materials');
@@ -270,9 +282,51 @@ test('generates all layouts and exports PNG assets', async ({ page }, testInfo) 
   await download.saveAs(target);
   expect(download.suggestedFilename()).toBe('spec-promo-test.zip');
   const entries = readZipEntries(target);
-  expect(entries).toHaveLength(17);
+  expect(entries).toHaveLength(34);
   expect(entries.every(entry => entry.name.startsWith('spec-promo-test/') && entry.name.endsWith('.png'))).toBe(true);
+  expect(entries.filter(entry => entry.name.startsWith('spec-promo-test/English/'))).toHaveLength(17);
+  expect(entries.filter(entry => entry.name.startsWith('spec-promo-test/日本語/'))).toHaveLength(17);
   expect(readPngSizeFromBuffer(entries[0].data)).toEqual({ width: 1200, height: 628 });
+});
+
+test('exports the currently previewed single PNG asset', async ({ page }, testInfo) => {
+  await openApp(page);
+  await uploadValidImage(page);
+  await page.click('#generateButton');
+  await expect(page.locator('#downloadButton')).toBeEnabled({ timeout: 10_000 });
+
+  await page.locator('#sizePreviewRow .size-thumb', { hasText: '300 x 250' }).click();
+  const download = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#downloadButton').then(async () => {
+      await expect(page.locator('#downloadMenu')).toHaveClass(/open/);
+      await page.locator('[data-download-kind="single"]').click();
+    })
+  ]).then(([downloadResult]) => downloadResult);
+  const target = path.join(testInfo.outputDir, 'single.png');
+  await download.saveAs(target);
+  expect(download.suggestedFilename()).toContain('ad_300x250');
+  expect(readPngSize(target)).toEqual({ width: 300, height: 250 });
+});
+
+
+test('exports single PNG when opened directly from the file system', async ({ page }, testInfo) => {
+  await openAppFromFile(page);
+  await uploadValidImage(page);
+  await page.click('#generateButton');
+  await expect(page.locator('#downloadButton')).toBeEnabled({ timeout: 10_000 });
+
+  const download = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#downloadButton').then(async () => {
+      await expect(page.locator('#downloadMenu')).toHaveClass(/open/);
+      await page.locator('[data-download-kind="single"]').click();
+    })
+  ]).then(([downloadResult]) => downloadResult);
+  const target = path.join(testInfo.outputDir, 'single-file-url.png');
+  await download.saveAs(target);
+  expect(download.suggestedFilename()).toContain('1200x628');
+  expect(readPngSize(target)).toEqual({ width: 1200, height: 628 });
 });
 
 test('template manager edits visual anchors, multi-aligns, and commits mapping', async ({ page, isMobile }) => {
@@ -280,20 +334,24 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await openApp(page);
   await page.getByRole('button', { name: '模板管理' }).click();
   await expect(page.locator('#templateManagerView')).toBeVisible();
-  await expect(page.locator('.anchor-box')).toHaveCount(4);
+  await expect(page.locator('.anchor-box')).toHaveCount(5);
+  await expect(page.locator('.anchor-box[data-anchor="cta"]')).toHaveCount(1);
   await expect(page.locator('#anchorSummary')).toHaveCount(0);
   await expect(page.locator('#templateManagerView .align-panel')).toBeVisible();
 
   const textAnchor = page.locator('.anchor-box[data-anchor="text"]');
+  const ctaAnchor = page.locator('.anchor-box[data-anchor="cta"]');
   const logoAnchor = page.locator('.anchor-box[data-anchor="logo"]');
   if (!isMobile) {
     const before = await textAnchor.getAttribute('style');
+    const ctaBefore = await ctaAnchor.getAttribute('style');
     const box = await textAnchor.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 20);
     await page.mouse.up();
     await expect(textAnchor).not.toHaveAttribute('style', before);
+    await expect(ctaAnchor).toHaveAttribute('style', ctaBefore);
     await expect(page.locator('#commitAnchorsButton')).toBeEnabled();
   }
 
@@ -312,6 +370,9 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await page.locator('#buttonColorInput').fill('#ff6600');
   await page.getByRole('button', { name: '亮版' }).click();
   await expect(page.locator('#anchorCanvas')).toHaveCSS('background-image', /linear-gradient/);
+  await expect(page.locator('#gradientControl')).not.toHaveClass(/visible/);
+  const canvasBox = await page.locator('#anchorCanvas').boundingBox();
+  await page.mouse.click(canvasBox.x + canvasBox.width * 0.5, canvasBox.y + canvasBox.height * 0.05);
   await expect(page.locator('#gradientControl')).toHaveClass(/visible/);
   const angleBefore = await page.locator('#gradientAngleInput').inputValue();
   const gradientHandle = page.locator('[data-gradient-handle="end"]');
@@ -343,11 +404,11 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await page.getByRole('button', { name: '素材生成' }).click();
   await page.getByRole('button', { name: '重置' }).click();
   await page.reload();
-  await expect(page.locator('#materialCard')).not.toHaveCSS('background-image', /linear-gradient/);
+  await expect(page.locator('#materialCard')).toHaveCSS('background-image', /linear-gradient/);
   await page.getByRole('button', { name: '模板管理' }).click();
-  await expect(page.locator('#backgroundModeSelect')).toHaveValue('solid');
+  await expect(page.locator('#backgroundModeSelect')).toHaveValue('gradient');
   await page.getByRole('button', { name: '素材生成' }).click();
-  await expect(page.locator('#creativeLogoImage')).toHaveAttribute('src', /logo-market-light\.png/);
+  await expect(page.locator('#creativeLogoImage')).toHaveAttribute('src', /logo-market-dark\.png/);
 });
 
 test('template manager can add a mapped template for generation', async ({ page, isMobile }) => {
@@ -379,6 +440,22 @@ test('template manager can add a mapped template for generation', async ({ page,
   await page.reload();
   await expect(page.locator('#templateGrid .template-card[data-template="template-8"]')).toBeVisible();
   await expect(page.locator('#templateGrid .template-card[data-template="template-1"]')).toHaveClass(/active/);
+});
+
+test('desktop sidebar has icons and can collapse or expand', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'mobile navigation is covered separately');
+  await openApp(page);
+  await expect(page.locator('.nav-icon')).toHaveCount(4);
+
+  const app = page.locator('.app');
+  const collapseButton = page.locator('#sidebarCollapseButton');
+  await collapseButton.click();
+  await expect(app).toHaveClass(/sidebar-collapsed/);
+  await expect(collapseButton).toHaveAttribute('aria-label', '展开侧边栏');
+
+  await collapseButton.click();
+  await expect(app).not.toHaveClass(/sidebar-collapsed/);
+  await expect(collapseButton).toHaveAttribute('aria-label', '折叠侧边栏');
 });
 
 test('mobile layout opens navigation', async ({ page, isMobile }) => {
