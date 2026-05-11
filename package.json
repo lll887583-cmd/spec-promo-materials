@@ -1,0 +1,13 @@
+{
+  "name": "spec-promo-materials",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Promo Materials static UI demo with regression tests.",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/promo-materials.spec.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}
