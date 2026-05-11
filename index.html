@@ -23,6 +23,7 @@
       --disabled: var(--spec-color-disabled, #fbfbfb);
       --shadow: var(--spec-shadow-card, 0 1px 6px 1px rgba(0, 0, 0, 0.06));
       --shadow-strong: 0 12px 30px rgba(31, 52, 114, 0.10);
+      --main-image-placeholder-text: #8a8a8a;
     }
 
     * { box-sizing: border-box; }
@@ -1195,7 +1196,7 @@
       justify-content: center;
       background: conic-gradient(from 90deg, #eeeeee 25%, #ffffff 0 50%, #eeeeee 0 75%, #ffffff 0);
       background-size: 40px 40px;
-      color: #000000;
+      color: var(--main-image-placeholder-text);
       font-size: clamp(10px, 7cqw, 68px);
       font-weight: 500;
       letter-spacing: .03em;
@@ -1728,7 +1729,7 @@
       justify-content: center;
       background: conic-gradient(from 90deg, #eeeeee 25%, #ffffff 0 50%, #eeeeee 0 75%, #ffffff 0);
       background-size: 40px 40px;
-      color: #000000;
+      color: var(--main-image-placeholder-text);
       font-size: clamp(36px, 6vw, 72px);
       font-weight: 500;
       letter-spacing: .03em;
@@ -3040,10 +3041,10 @@
     };
 
     const darkTemplateStyles = {
-      backgroundMode: 'solid',
-      backgroundColor: '#101827',
-      gradientStart: '#101827',
-      gradientEnd: '#1f3472',
+      backgroundMode: 'gradient',
+      backgroundColor: '#0E1D4C',
+      gradientStart: '#0E1D4C',
+      gradientEnd: '#2144B2',
       gradientAngle: 135,
       textColor: '#ffffff',
       buttonColor: '#4ecbe3',
@@ -3315,8 +3316,12 @@
 
     const TEMPLATE_STORAGE_KEY = 'spec-promo-template-state-v1';
     const SIZE_LANGUAGE_STORAGE_KEY = 'spec-promo-size-language-state-v1';
-    const RULES_DOCUMENT_DB = 'spec-promo-rules-documents-v1';
-    const RULES_DOCUMENT_STORE = 'documents';
+    const APP_DATABASE_NAME = 'spec-promo-materials-database-v1';
+    const APP_DATABASE_VERSION = 1;
+    const APP_STATE_STORE = 'state';
+    const RULES_DOCUMENT_STORE = 'rules_documents';
+    const LEGACY_RULES_DOCUMENT_DB = 'spec-promo-rules-documents-v1';
+    const LEGACY_RULES_DOCUMENT_STORE = 'documents';
     const DEFAULT_DOWNLOAD_FOLDER_NAME = 'spec-promo-materials';
 
     function defaultTemplates() {
@@ -3451,8 +3456,8 @@
     let isGenerating = false;
     let generationToken = 0;
     let generatedAssets = [];
-    let activeAnchor = 'image';
-    let selectedAnchorKeys = new Set(['image']);
+    let activeAnchor = 'logo';
+    let selectedAnchorKeys = new Set(['logo']);
     let templateAnchorMaps = {
       'template-1': JSON.parse(JSON.stringify(defaultTemplateAnchors)),
       'template-2': JSON.parse(JSON.stringify(defaultTemplateAnchors))
@@ -3535,6 +3540,101 @@
       return JSON.parse(JSON.stringify(styles));
     }
 
+    function cloneState(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function openAppDatabase() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          reject(new Error('IndexedDB is not available'));
+          return;
+        }
+        const request = indexedDB.open(APP_DATABASE_NAME, APP_DATABASE_VERSION);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(APP_STATE_STORE)) {
+            db.createObjectStore(APP_STATE_STORE, { keyPath: 'key' });
+          }
+          if (!db.objectStoreNames.contains(RULES_DOCUMENT_STORE)) {
+            db.createObjectStore(RULES_DOCUMENT_STORE, { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('Failed to open app database'));
+        request.onblocked = () => reject(new Error('App database upgrade was blocked'));
+      });
+    }
+
+    function appDatabaseTransaction(storeName, mode, handler) {
+      return openAppDatabase().then(db => new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, mode);
+        const store = transaction.objectStore(storeName);
+        let result;
+        transaction.oncomplete = () => {
+          db.close();
+          resolve(result);
+        };
+        transaction.onerror = () => {
+          db.close();
+          reject(transaction.error || new Error('App database transaction failed'));
+        };
+        transaction.onabort = () => {
+          db.close();
+          reject(transaction.error || new Error('App database transaction aborted'));
+        };
+        try {
+          result = handler(store);
+        } catch (error) {
+          transaction.abort();
+          db.close();
+          reject(error);
+        }
+      }));
+    }
+
+    function dbRequest(request, message = 'Database request failed') {
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error(message));
+      });
+    }
+
+    async function persistStateRecord(key, value) {
+      await appDatabaseTransaction(APP_STATE_STORE, 'readwrite', store => {
+        store.put({ key, value: cloneState(value), updatedAt: Date.now() });
+      });
+    }
+
+    async function loadStateRecord(key) {
+      const record = await appDatabaseTransaction(APP_STATE_STORE, 'readonly', store => dbRequest(store.get(key)));
+      return record?.value || null;
+    }
+
+    function loadLegacyJsonState(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        console.warn('Legacy local state failed to read', error);
+        return null;
+      }
+    }
+
+    function mirrorStateToLegacyStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        console.warn('Legacy local state failed to mirror', error);
+      }
+    }
+
+    function newestState(primaryState, legacyState) {
+      const primaryTime = Number(primaryState?.updatedAt || 0);
+      const legacyTime = Number(legacyState?.updatedAt || 0);
+      return legacyTime > primaryTime ? legacyState : primaryState;
+    }
+
     function generationRuleForSize(size) {
       if (size && generationLayoutRules[size.id]) return generationLayoutRules[size.id];
       const ratio = size ? size.width / size.height : 1200 / 628;
@@ -3574,6 +3674,13 @@
       return anchors;
     }
 
+    function isLegacyDarkDefaultStyles(styles) {
+      return styles?.backgroundMode === 'solid'
+        && String(styles?.backgroundColor || '').toLowerCase() === '#101827'
+        && String(styles?.gradientStart || '').toLowerCase() === '#101827'
+        && String(styles?.gradientEnd || '').toLowerCase() === '#1f3472';
+    }
+
     function normalizeTemplateState() {
       if (!templates.length) templates = defaultTemplates();
       const templateIds = new Set(templates.map(template => template.id));
@@ -3585,32 +3692,50 @@
       });
       templates.forEach(template => {
         templateAnchorMaps[template.id] = templateAnchorMaps[template.id] || cloneAnchors(defaultTemplateAnchors);
-        templateStyleMaps[template.id] = templateStyleMaps[template.id] || cloneStyles(template.variant === 'dark' ? darkTemplateStyles : defaultTemplateStyles);
+        if (!templateStyleMaps[template.id] || (template.id === 'template-2' && isLegacyDarkDefaultStyles(templateStyleMaps[template.id]))) {
+          templateStyleMaps[template.id] = cloneStyles(template.variant === 'dark' ? darkTemplateStyles : defaultTemplateStyles);
+        }
       });
       if (!templateIds.has(selectedTemplate)) selectedTemplate = templates[0].id;
     }
 
-    function saveTemplateState() {
+    async function saveTemplateState() {
+      let snapshot = null;
       try {
         normalizeTemplateState();
-        localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify({
+        snapshot = {
           version: 1,
+          updatedAt: Date.now(),
           selectedTemplate,
-          templates,
-          templateAnchorMaps,
-          templateStyleMaps
-        }));
+          templates: cloneState(templates),
+          templateAnchorMaps: cloneState(templateAnchorMaps),
+          templateStyleMaps: cloneState(templateStyleMaps)
+        };
+        mirrorStateToLegacyStorage(TEMPLATE_STORAGE_KEY, snapshot);
+        await persistStateRecord(TEMPLATE_STORAGE_KEY, snapshot);
+        return true;
       } catch (error) {
         console.warn('Template state failed to persist', error);
+        if (snapshot) mirrorStateToLegacyStorage(TEMPLATE_STORAGE_KEY, snapshot);
+        return false;
       }
     }
 
-    function restoreTemplateState() {
+    async function restoreTemplateState() {
       try {
-        const raw = localStorage.getItem(TEMPLATE_STORAGE_KEY);
-        if (!raw) return;
-        const saved = JSON.parse(raw);
-        if (!saved || saved.version !== 1 || !Array.isArray(saved.templates)) return;
+        const dbState = await loadStateRecord(TEMPLATE_STORAGE_KEY);
+        const legacyState = loadLegacyJsonState(TEMPLATE_STORAGE_KEY);
+        let saved = newestState(dbState, legacyState);
+        if (!saved) {
+          normalizeTemplateState();
+          await saveTemplateState();
+          return;
+        }
+        if (!saved || saved.version !== 1 || !Array.isArray(saved.templates)) {
+          normalizeTemplateState();
+          await saveTemplateState();
+          return;
+        }
         const cleanTemplates = saved.templates
           .filter(template => template && /^template-\d+$/.test(String(template.id || '')))
           .map(template => ({
@@ -3634,17 +3759,14 @@
         draftTemplateAnchors = cloneAnchors(templateAnchors);
         templateStyles = cloneStyles(templateStyleMaps[selectedTemplate]);
         draftTemplateStyles = cloneStyles(templateStyles);
+        await saveTemplateState();
       } catch (error) {
         console.warn('Template state failed to restore', error);
+        normalizeTemplateState();
       }
     }
 
-    function clearTemplateState() {
-      try {
-        localStorage.removeItem(TEMPLATE_STORAGE_KEY);
-      } catch (error) {
-        console.warn('Template state failed to clear', error);
-      }
+    function resetTemplateStateToDefaults() {
       templates = defaultTemplates();
       templateAnchorMaps = defaultTemplateAnchorMaps();
       templateStyleMaps = defaultTemplateStyleMaps();
@@ -3653,6 +3775,16 @@
       draftTemplateAnchors = cloneAnchors(templateAnchors);
       templateStyles = cloneStyles(templateStyleMaps[selectedTemplate]);
       draftTemplateStyles = cloneStyles(templateStyles);
+    }
+
+    async function clearTemplateState() {
+      try {
+        localStorage.removeItem(TEMPLATE_STORAGE_KEY);
+        await appDatabaseTransaction(APP_STATE_STORE, 'readwrite', store => store.delete(TEMPLATE_STORAGE_KEY));
+      } catch (error) {
+        console.warn('Template state failed to clear', error);
+      }
+      resetTemplateStateToDefaults();
     }
 
     function cloneDefaultCopy(index = 0) {
@@ -3698,33 +3830,47 @@
       currentLanguageIndex = Math.min(currentLanguageIndex, Math.max(0, languages.length - 1));
     }
 
-    function saveSizeLanguageState() {
+    async function saveSizeLanguageState() {
+      let snapshot = null;
       try {
         normalizeSizeLanguageState();
-        localStorage.setItem(SIZE_LANGUAGE_STORAGE_KEY, JSON.stringify({
+        snapshot = {
           version: 1,
-          materialSizes,
-          languages,
-          localizedCopy
-        }));
+          updatedAt: Date.now(),
+          materialSizes: cloneState(materialSizes),
+          languages: cloneState(languages),
+          localizedCopy: cloneState(localizedCopy)
+        };
+        mirrorStateToLegacyStorage(SIZE_LANGUAGE_STORAGE_KEY, snapshot);
+        await persistStateRecord(SIZE_LANGUAGE_STORAGE_KEY, snapshot);
+        return true;
       } catch (error) {
         console.warn('Size/language state failed to persist', error);
+        if (snapshot) mirrorStateToLegacyStorage(SIZE_LANGUAGE_STORAGE_KEY, snapshot);
+        return false;
       }
     }
 
-    function restoreSizeLanguageState() {
+    async function restoreSizeLanguageState() {
       try {
-        const raw = localStorage.getItem(SIZE_LANGUAGE_STORAGE_KEY);
-        if (!raw) {
+        const dbState = await loadStateRecord(SIZE_LANGUAGE_STORAGE_KEY);
+        const legacyState = loadLegacyJsonState(SIZE_LANGUAGE_STORAGE_KEY);
+        let saved = newestState(dbState, legacyState);
+        if (!saved) {
           normalizeSizeLanguageState();
+          await saveSizeLanguageState();
           return;
         }
-        const saved = JSON.parse(raw);
-        if (!saved || saved.version !== 1) return;
+        if (!saved || saved.version !== 1) {
+          normalizeSizeLanguageState();
+          await saveSizeLanguageState();
+          return;
+        }
         if (Array.isArray(saved.materialSizes)) materialSizes = saved.materialSizes;
         if (Array.isArray(saved.languages)) languages = saved.languages;
         if (Array.isArray(saved.localizedCopy)) localizedCopy = saved.localizedCopy;
         normalizeSizeLanguageState();
+        await saveSizeLanguageState();
       } catch (error) {
         console.warn('Size/language state failed to restore', error);
         materialSizes = JSON.parse(JSON.stringify(DEFAULT_MATERIAL_SIZES));
@@ -4118,8 +4264,8 @@
       draftTemplateAnchors = cloneAnchors(templateAnchors);
       templateStyles = cloneStyles(templateStyleMaps[selectedTemplate]);
       draftTemplateStyles = cloneStyles(templateStyles);
-      activeAnchor = 'image';
-      selectedAnchorKeys = new Set(['image']);
+      activeAnchor = 'logo';
+      selectedAnchorKeys = new Set(['logo']);
       renderTemplateOptions();
       applyTemplateAnchors();
       materialCard.style.filter = templateById(selectedTemplate)?.variant === 'dark' ? 'saturate(.85) contrast(1.05)' : 'none';
@@ -4326,29 +4472,33 @@
       return ['pdf', 'text', 'word'].includes(rulesFileKind(file));
     }
 
-    function openRulesDocumentDb() {
+    function openLegacyRulesDocumentDb() {
       return new Promise((resolve, reject) => {
         if (!window.indexedDB) {
           reject(new Error('IndexedDB is not available'));
           return;
         }
-        const request = indexedDB.open(RULES_DOCUMENT_DB, 1);
+        const request = indexedDB.open(LEGACY_RULES_DOCUMENT_DB, 1);
         request.onupgradeneeded = () => {
           const db = request.result;
-          if (!db.objectStoreNames.contains(RULES_DOCUMENT_STORE)) {
-            db.createObjectStore(RULES_DOCUMENT_STORE, { keyPath: 'id' });
+          if (!db.objectStoreNames.contains(LEGACY_RULES_DOCUMENT_STORE)) {
+            db.createObjectStore(LEGACY_RULES_DOCUMENT_STORE, { keyPath: 'id' });
           }
         };
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error || new Error('Failed to open IndexedDB'));
-        request.onblocked = () => reject(new Error('IndexedDB upgrade was blocked'));
+        request.onerror = () => reject(request.error || new Error('Failed to open legacy rules database'));
+        request.onblocked = () => reject(new Error('Legacy rules database upgrade was blocked'));
       });
     }
 
     function rulesDocumentTransaction(mode, handler) {
-      return openRulesDocumentDb().then(db => new Promise((resolve, reject) => {
-        const transaction = db.transaction(RULES_DOCUMENT_STORE, mode);
-        const store = transaction.objectStore(RULES_DOCUMENT_STORE);
+      return appDatabaseTransaction(RULES_DOCUMENT_STORE, mode, handler);
+    }
+
+    function legacyRulesDocumentTransaction(mode, handler) {
+      return openLegacyRulesDocumentDb().then(db => new Promise((resolve, reject) => {
+        const transaction = db.transaction(LEGACY_RULES_DOCUMENT_STORE, mode);
+        const store = transaction.objectStore(LEGACY_RULES_DOCUMENT_STORE);
         let result;
         transaction.oncomplete = () => {
           db.close();
@@ -4373,10 +4523,7 @@
     }
 
     function rulesDbRequest(request) {
-      return new Promise((resolve, reject) => {
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error || new Error('Rules document request failed'));
-      });
+      return dbRequest(request, 'Rules document request failed');
     }
 
     async function saveRulesDocumentsToDb() {
@@ -4408,8 +4555,7 @@
       }
     }
 
-    async function loadRulesDocumentsFromDb() {
-      const records = await rulesDocumentTransaction('readonly', store => rulesDbRequest(store.getAll()));
+    async function buildRulesDocumentsFromRecords(records) {
       return Promise.all((records || [])
         .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map(async record => {
@@ -4429,9 +4575,28 @@
         }));
     }
 
+    async function loadRulesDocumentsFromDb() {
+      const records = await rulesDocumentTransaction('readonly', store => rulesDbRequest(store.getAll()));
+      return buildRulesDocumentsFromRecords(records);
+    }
+
+    async function loadLegacyRulesDocumentsFromDb() {
+      const records = await legacyRulesDocumentTransaction('readonly', store => rulesDbRequest(store.getAll()));
+      return buildRulesDocumentsFromRecords(records);
+    }
+
     async function restoreRulesDocuments() {
       try {
-        const restoredDocuments = await loadRulesDocumentsFromDb();
+        let restoredDocuments = await loadRulesDocumentsFromDb();
+        if (!restoredDocuments.length) {
+          restoredDocuments = await loadLegacyRulesDocumentsFromDb();
+          if (restoredDocuments.length) {
+            const currentDocuments = rulesDocuments;
+            rulesDocuments = restoredDocuments;
+            await persistRulesDocuments();
+            rulesDocuments = currentDocuments;
+          }
+        }
         if (!restoredDocuments.length) return;
         rulesDocuments.forEach(doc => URL.revokeObjectURL(doc.url));
         rulesDocuments = restoredDocuments;
@@ -5617,7 +5782,7 @@
     function resetDemo() {
       generationToken += 1;
       isGenerating = false;
-      clearTemplateState();
+      normalizeTemplateState();
       titleInput.value = '标题文案';
       subtitleInput.value = '副标题文案';
       ctaInput.value = '按钮文案';
@@ -5635,7 +5800,7 @@
       materialCard.style.aspectRatio = '';
       selectedLogoBrand = 'market';
       selectedLogoVariant = 'black';
-      loadTemplateMapping('template-1');
+      loadTemplateMapping(selectedTemplate || templates[0]?.id || 'template-1');
       applyRuleLogo(currentLanguageIndex, templateStyles);
       document.querySelector('.creative-logo').classList.remove('hidden');
       setTrustVisible(true);
@@ -5739,8 +5904,8 @@
 
       resetAnchorsButton.addEventListener('click', () => {
         draftTemplateAnchors = cloneAnchors(defaultTemplateAnchors);
-        activeAnchor = 'image';
-        selectedAnchorKeys = new Set(['image']);
+        activeAnchor = 'logo';
+        selectedAnchorKeys = new Set(['logo']);
         renderAnchorEditor();
         showToast('模板锚点草稿已恢复默认，请提交模板映射');
       });
@@ -5787,18 +5952,22 @@
       if (viewId === 'generatorView') requestAnimationFrame(() => fitMaterialPreview());
     }
 
-    restoreTemplateState();
-    restoreSizeLanguageState();
-    renderSelectors();
-    applyTemplateAnchors();
-    updateCounters();
-    initAnchorInteractions();
-    initUploadInteractions();
-    initProductImageInteractions();
-    initRulesDocumentUpload();
-    restoreRulesDocuments();
-    updateGeneratedMeta();
-    updateUploadState();
+    async function initializePersistentApp() {
+      await restoreTemplateState();
+      await restoreSizeLanguageState();
+      renderSelectors();
+      applyTemplateAnchors();
+      updateCounters();
+      initAnchorInteractions();
+      initUploadInteractions();
+      initProductImageInteractions();
+      initRulesDocumentUpload();
+      await restoreRulesDocuments();
+      updateGeneratedMeta();
+      updateUploadState();
+    }
+
+    initializePersistentApp();
 
     [titleInput, subtitleInput, ctaInput].forEach(input => input.addEventListener('input', updateCounters));
 
