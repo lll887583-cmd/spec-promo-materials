@@ -2,8 +2,8 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
-  timeout: 30_000,
-  expect: { timeout: 5_000 },
+  timeout: Number(process.env.PW_TEST_TIMEOUT || 12_000),
+  expect: { timeout: Number(process.env.PW_EXPECT_TIMEOUT || 3_000) },
   use: {
     baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry'

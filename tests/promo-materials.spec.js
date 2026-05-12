@@ -167,7 +167,16 @@ async function switchView(page, name) {
   if (await page.locator('#menuButton').isVisible()) {
     await page.click('#menuButton');
   }
-  await page.getByRole('button', { name }).click();
+  const button = page.getByRole('button', { name });
+  if (await button.count()) {
+    await button.click();
+    return;
+  }
+  if (name === '生成规则') {
+    await page.evaluate(() => showView('rulesView'));
+    return;
+  }
+  throw new Error(`Navigation item not found: ${name}`);
 }
 
 async function domClick(page, selector) {
@@ -478,7 +487,7 @@ test('exports single PNG when opened directly from the file system', async ({ pa
 test('template manager edits visual anchors, multi-aligns, and commits mapping', async ({ page, isMobile }) => {
   test.skip(isMobile, 'desktop precision drag is covered in the desktop project');
   await openApp(page);
-  await page.getByRole('button', { name: '模板管理' }).click();
+  await page.getByRole('button', { name: '框架管理' }).click();
   await expect(page.locator('#templateManagerView')).toBeVisible();
   await expect(page.locator('.anchor-box')).toHaveCount(6);
   await expect(page.locator('.anchor-box[data-anchor="title"]')).toHaveCount(1);
@@ -534,7 +543,7 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await page.mouse.up();
   await expect(page.locator('#gradientAngleInput')).not.toHaveValue(angleBefore);
   await expect(page.locator('#commitAnchorsButton')).toBeEnabled();
-  await page.getByRole('button', { name: '提交模板映射' }).click();
+  await page.getByRole('button', { name: '提交框架映射' }).click();
   await expect(page.locator('#commitAnchorsButton')).toBeDisabled();
   await page.getByRole('button', { name: '素材生成' }).click();
   await expect(page.locator('#generatorView')).toBeVisible();
@@ -547,7 +556,7 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await expect(page.locator('#materialCard')).toHaveCSS('background-image', /linear-gradient/);
   await expect(page.locator('.creative-copy')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.locator('#creativeLogoImage')).toHaveAttribute('src', /logo-market-dark\.png/);
-  await page.getByRole('button', { name: '模板管理' }).click();
+  await page.getByRole('button', { name: '框架管理' }).click();
   await expect(page.locator('#backgroundModeSelect')).toHaveValue('gradient');
   await expect(page.locator('#gradientStartHexInput')).toHaveValue('#112233');
   await expect(page.locator('#gradientEndHexInput')).toHaveValue('#44CCFF');
@@ -556,59 +565,79 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await page.getByRole('button', { name: '重置' }).click();
   await page.reload();
   await expect(page.locator('#materialCard')).toHaveCSS('background-image', /linear-gradient/);
-  await page.getByRole('button', { name: '模板管理' }).click();
+  await page.getByRole('button', { name: '框架管理' }).click();
   await expect(page.locator('#backgroundModeSelect')).toHaveValue('gradient');
   await page.getByRole('button', { name: '素材生成' }).click();
   await expect(page.locator('#creativeLogoImage')).toHaveAttribute('src', /logo-market-dark\.png/);
 });
 
-test('material generation can add mapped templates while manager only switches templates', async ({ page, isMobile }) => {
+test('framework manager size preview matches generated layout sizing', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'desktop preview sizing is covered in the desktop project');
+  await openApp(page);
+  await page.getByRole('button', { name: '框架管理' }).click();
+  await page.locator('#frameworkSizePreviewRow .size-thumb', { hasText: '320 x 480' }).click();
+
+  const canvasBox = await page.locator('#anchorCanvas').boundingBox();
+  const imageBox = await page.locator('#anchorPreviewImage').boundingBox();
+  const titleBox = await page.locator('#anchorPreviewTitle').boundingBox();
+  expect(canvasBox.height).toBeLessThanOrEqual(540);
+  expect(Math.abs((canvasBox.width / canvasBox.height) - (320 / 480))).toBeLessThan(0.02);
+  expect(imageBox.y - canvasBox.y).toBeGreaterThan(canvasBox.height * 0.5);
+  expect(imageBox.width).toBeGreaterThan(canvasBox.width * 0.9);
+  expect(titleBox.x - canvasBox.x).toBeLessThan(canvasBox.width * 0.2);
+});
+
+test('material generation styles do not restyle the framework manager', async ({ page, isMobile }) => {
   test.skip(isMobile, 'desktop template mapping flow is covered in the desktop project');
   await openApp(page);
 
-  await expect(page.locator('#generatorView #addTemplateButton')).toBeVisible();
-  await expect(page.locator('#generatorView #deleteTemplateButton')).toBeVisible();
-  await page.getByRole('button', { name: '模板管理' }).click();
-  await expect(page.locator('#templateManagerView #addTemplateButton')).toHaveCount(0);
-  await expect(page.locator('#templateManagerView #deleteTemplateButton')).toHaveCount(0);
+  await expect(page.locator('#generatorView #addStyleButton')).toBeVisible();
+  await expect(page.locator('#generatorView #deleteStyleButton')).toBeVisible();
+  await expect(page.locator('#templateGrid .template-card[data-style="style-1"]')).toHaveClass(/active/);
+  await page.locator('#templateGrid .template-card[data-style="style-2"]').click();
+  await expect(page.locator('#templateGrid .template-card[data-style="style-2"]')).toHaveClass(/active/);
+
+  await page.getByRole('button', { name: '框架管理' }).click();
+  await expect(page.locator('#templateManagerView #addStyleButton')).toHaveCount(0);
+  await expect(page.locator('#templateManagerView #deleteStyleButton')).toHaveCount(0);
+  await expect(page.locator('#templateManagerView')).toBeVisible();
+  await expect(page.locator('#anchorCanvas')).toHaveCSS('background-color', 'rgb(220, 249, 255)');
+  await expect(page.locator('#anchorCanvas')).toHaveCSS('background-image', 'none');
 
   await page.getByRole('button', { name: '素材生成' }).click();
-  await page.getByRole('button', { name: '新增模板' }).click();
+  await page.getByRole('button', { name: '新增样式' }).click();
 
-  await expect(page.locator('#templateGrid .template-card[data-template="template-3"]')).toBeVisible();
-  await expect(page.locator('#templateGrid .template-card[data-template="template-3"]')).toHaveClass(/active/);
-  await page.getByRole('button', { name: '模板管理' }).click();
-  await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-3"]')).toBeVisible();
-  await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-3"]')).toHaveClass(/active/);
+  await expect(page.locator('#templateGrid .template-card[data-style="style-3"]')).toBeVisible();
+  await expect(page.locator('#templateGrid .template-card[data-style="style-3"]')).toHaveClass(/active/);
+  await page.getByRole('button', { name: '框架管理' }).click();
+  await expect(page.locator('#anchorCanvas')).toHaveCSS('background-color', 'rgb(220, 249, 255)');
+  await expect(page.locator('#anchorCanvas')).toHaveCSS('background-image', 'none');
 
   await page.getByRole('button', { name: '素材生成' }).click();
   for (let count = 0; count < 5; count += 1) {
-    await page.getByRole('button', { name: '新增模板' }).click();
+    await page.getByRole('button', { name: '新增样式' }).click();
   }
-  await page.getByRole('button', { name: '模板管理' }).click();
-  await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-8"]')).toBeVisible();
-  expect(await page.locator('#managerTemplateGrid').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
-  await page.locator('#managerTemplateGrid').evaluate(node => { node.scrollLeft = node.scrollWidth; });
-  expect(await page.locator('#managerTemplateGrid').evaluate(node => node.scrollLeft > 0)).toBe(true);
+  await page.getByRole('button', { name: '框架管理' }).click();
+  await expect(page.locator('#anchorCanvas')).toHaveCSS('background-color', 'rgb(220, 249, 255)');
 
   await page.getByRole('button', { name: '素材生成' }).click();
-  await expect(page.locator('#templateGrid .template-card[data-template="template-8"]')).toBeVisible();
-  await expect(page.locator('#templateGrid .template-card[data-template="template-8"]')).toHaveClass(/active/);
+  await expect(page.locator('#templateGrid .template-card[data-style="style-8"]')).toBeVisible();
+  await expect(page.locator('#templateGrid .template-card[data-style="style-8"]')).toHaveClass(/active/);
   expect(await page.locator('#templateGrid').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
 
-  await page.locator('#templateGrid .template-card[data-template="template-1"]').click();
-  await page.getByRole('button', { name: '模板管理' }).click();
-  await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-1"]')).toHaveClass(/active/);
+  await page.locator('#templateGrid .template-card[data-style="style-1"]').click();
+  await page.getByRole('button', { name: '框架管理' }).click();
+  await expect(page.locator('#anchorCanvas')).toHaveCSS('background-color', 'rgb(220, 249, 255)');
 
   await page.reload();
-  await expect(page.locator('#templateGrid .template-card[data-template="template-8"]')).toBeVisible();
-  await expect(page.locator('#templateGrid .template-card[data-template="template-1"]')).toHaveClass(/active/);
+  await expect(page.locator('#templateGrid .template-card[data-style="style-8"]')).toBeVisible();
+  await expect(page.locator('#templateGrid .template-card[data-style="style-1"]')).toHaveClass(/active/);
 });
 
 test('desktop sidebar has icons and can collapse or expand', async ({ page, isMobile }) => {
   test.skip(isMobile, 'mobile navigation is covered separately');
   await openApp(page);
-  await expect(page.locator('.nav-icon')).toHaveCount(4);
+  await expect(page.locator('.nav-icon')).toHaveCount(3);
 
   const app = page.locator('.app');
   const collapseButton = page.locator('#sidebarCollapseButton');
