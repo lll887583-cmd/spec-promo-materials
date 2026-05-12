@@ -65,6 +65,94 @@ function readZipEntries(filePath) {
   return entries;
 }
 
+function zipBuffer(entries) {
+  const localParts = [];
+  const centralParts = [];
+  let offset = 0;
+  for (const entry of entries) {
+    const nameBuffer = Buffer.from(entry.name);
+    const data = Buffer.from(entry.data);
+    const compressed = zlib.deflateRawSync(data);
+    const crc = crc32(data);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0, 6);
+    local.writeUInt16LE(8, 8);
+    local.writeUInt32LE(0, 10);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(compressed.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBuffer.length, 26);
+    local.writeUInt16LE(0, 28);
+    localParts.push(local, nameBuffer, compressed);
+
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8);
+    central.writeUInt16LE(8, 10);
+    central.writeUInt32LE(0, 12);
+    central.writeUInt32LE(crc, 16);
+    central.writeUInt32LE(compressed.length, 20);
+    central.writeUInt32LE(data.length, 24);
+    central.writeUInt16LE(nameBuffer.length, 28);
+    central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32);
+    central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36);
+    central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    centralParts.push(central, nameBuffer);
+    offset += local.length + nameBuffer.length + compressed.length;
+  }
+  const centralDirectory = Buffer.concat(centralParts);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(entries.length, 8);
+  end.writeUInt16LE(entries.length, 10);
+  end.writeUInt32LE(centralDirectory.length, 12);
+  end.writeUInt32LE(offset, 16);
+  end.writeUInt16LE(0, 20);
+  return Buffer.concat([...localParts, centralDirectory, end]);
+}
+
+function createDocx(text) {
+  const paragraphs = String(text).split(/\r?\n/).map(line => (
+    `<w:p><w:r><w:t>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r></w:p>`
+  )).join('');
+  const documentXml = `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraphs}</w:body></w:document>`;
+  return zipBuffer([{ name: 'word/document.xml', data: documentXml }]);
+}
+
+function createSimplePdf(text) {
+  const escapePdfText = value => String(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  const content = `BT\n/F1 12 Tf\n72 720 Td\n${String(text).split(/\r?\n/).map(line => `(${escapePdfText(line)}) Tj\nT*`).join('\n')}\nET`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    `<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(pdf));
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = Buffer.byteLength(pdf);
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach(objectOffset => {
+    pdf += `${String(objectOffset).padStart(10, '0')} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return Buffer.from(pdf);
+}
+
 async function openApp(page) {
   await page.route('**/cropper.min.js', route => route.abort());
   await page.goto('/index.html');
@@ -136,7 +224,7 @@ test('generation rules uploads multiple documents and previews markdown in modal
       buffer: Buffer.from('%PDF-1.4\n%%EOF')
     }
   ]);
-  await expect(page.locator('#rulesDocStatus')).toHaveText('2 个文档');
+  await expect(page.locator('#rulesDocStatus')).toContainText('2 个文档');
   await expect(page.locator('#rulesDocList .rules-doc-row')).toHaveCount(2);
   await expect(page.locator('#toast')).toContainText('已上传 2 个生成规则文档');
 
@@ -148,7 +236,7 @@ test('generation rules uploads multiple documents and previews markdown in modal
 
   await page.reload();
   await switchView(page, '生成规则');
-  await expect(page.locator('#rulesDocStatus')).toHaveText('2 个文档');
+  await expect(page.locator('#rulesDocStatus')).toContainText('2 个文档');
   await expect(page.locator('#rulesDocList .rules-doc-row')).toHaveCount(2);
   await expect(page.locator('#rulesDocList')).toContainText('rules.md');
   await page.locator('#rulesDocList [data-rules-action="preview"]').first().click();
@@ -157,12 +245,70 @@ test('generation rules uploads multiple documents and previews markdown in modal
   await page.locator('#rulesPreviewModal [data-rules-modal-action="close"]').click();
 
   await page.locator('#rulesDocList [data-rules-action="delete"]').first().click();
-  await expect(page.locator('#rulesDocStatus')).toHaveText('1 个文档');
+  await expect(page.locator('#rulesDocStatus')).toContainText('1 个文档');
   await expect(page.locator('#toast')).toContainText('生成规则文档已删除');
   await page.reload();
   await switchView(page, '生成规则');
-  await expect(page.locator('#rulesDocStatus')).toHaveText('1 个文档');
+  await expect(page.locator('#rulesDocStatus')).toContainText('1 个文档');
   await expect(page.locator('#rulesDocList')).not.toContainText('rules.md');
+});
+
+[
+  {
+    kind: 'MD',
+    name: 'rules.md',
+    mimeType: 'text/markdown',
+    title: 'MD Rule Title',
+    bufferFor: text => Buffer.from(text)
+  },
+  {
+    kind: 'PDF',
+    name: 'rules.pdf',
+    mimeType: 'application/pdf',
+    title: 'PDF Rule Title',
+    bufferFor: createSimplePdf
+  },
+  {
+    kind: 'Word',
+    name: 'rules.docx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    title: 'Word Rule Title',
+    bufferFor: createDocx
+  }
+].forEach(ruleFixture => {
+  test(`${ruleFixture.kind} generation rule content drives generated assets`, async ({ page }) => {
+    const ruleText = [
+      '尺寸: 640 x 360',
+      '语言: English',
+      `标题: ${ruleFixture.title}`,
+      `${ruleFixture.kind} 副标题: Ignored line without known key`,
+      '副标题: Parsed document subtitle',
+      '按钮: Parsed CTA',
+      `文件名: ${ruleFixture.kind.toLowerCase()}-rule.png`
+    ].join('\n');
+
+    await openApp(page);
+    await switchView(page, '生成规则');
+    await page.setInputFiles('#rulesFileInput', {
+      name: ruleFixture.name,
+      mimeType: ruleFixture.mimeType,
+      buffer: ruleFixture.bufferFor(ruleText)
+    });
+    await expect(page.locator('#rulesDocStatus')).toContainText('1 个文档');
+    await page.locator('#rulesDocList [data-rules-action="preview"]').first().click();
+    await expect(page.locator('#rulesPreviewModalBody')).toContainText('已解析 1 条生成规则');
+    await page.locator('#rulesPreviewModal [data-rules-modal-action="close"]').click();
+
+    await switchView(page, '素材生成');
+    await uploadValidImage(page);
+    await page.click('#generateButton');
+    await expect(page.locator('#downloadButton')).toBeEnabled({ timeout: 10_000 });
+    await expect(page.locator('#statusMeta')).toContainText('已按生成规则准备 1 张素材');
+    await expect(page.locator('#sizePreviewRow .size-thumb')).toHaveCount(1);
+    await expect(page.locator('#previewTitle')).toHaveText(ruleFixture.title);
+    await expect(page.locator('#previewSubtitle')).toContainText('Parsed document subtitle');
+    await expect(page.locator('#previewCta')).toHaveText('Parsed CTA');
+  });
 });
 
 test('size and language settings persist until deleted', async ({ page, isMobile }) => {
@@ -190,7 +336,7 @@ test('size and language settings persist until deleted', async ({ page, isMobile
   await switchView(page, '尺寸/语言设置');
   await expect(page.locator('#sizeSettingsCount')).toHaveText('18 个');
   await expect(page.locator('#languageSettingsCount')).toHaveText('10 种');
-  const restoredSizeRow = page.locator('#sizeSettingsBody tr').last();
+  const restoredSizeRow = page.locator('#sizeSettingsBody tr').filter({ has: page.locator('[data-size-field="label"][value="640 x 360 Persist"]') });
   await expect(restoredSizeRow.locator('[data-size-field="label"]')).toHaveValue('640 x 360 Persist');
   await expect(restoredSizeRow.locator('[data-size-field="width"]')).toHaveValue('640');
   await expect(restoredSizeRow.locator('[data-size-field="height"]')).toHaveValue('360');
@@ -286,7 +432,7 @@ test('generates all layouts and exports PNG assets', async ({ page }, testInfo) 
   expect(entries.every(entry => entry.name.startsWith('spec-promo-test/') && entry.name.endsWith('.png'))).toBe(true);
   expect(entries.filter(entry => entry.name.startsWith('spec-promo-test/English/'))).toHaveLength(17);
   expect(entries.filter(entry => entry.name.startsWith('spec-promo-test/日本語/'))).toHaveLength(17);
-  expect(readPngSizeFromBuffer(entries[0].data)).toEqual({ width: 1200, height: 628 });
+  expect(readPngSizeFromBuffer(entries[0].data)).toEqual({ width: 120, height: 600 });
 });
 
 test('exports the currently previewed single PNG asset', async ({ page }, testInfo) => {
@@ -325,8 +471,8 @@ test('exports single PNG when opened directly from the file system', async ({ pa
   ]).then(([downloadResult]) => downloadResult);
   const target = path.join(testInfo.outputDir, 'single-file-url.png');
   await download.saveAs(target);
-  expect(download.suggestedFilename()).toContain('1200x628');
-  expect(readPngSize(target)).toEqual({ width: 1200, height: 628 });
+  expect(download.suggestedFilename()).toContain('ad_120x600');
+  expect(readPngSize(target)).toEqual({ width: 120, height: 600 });
 });
 
 test('template manager edits visual anchors, multi-aligns, and commits mapping', async ({ page, isMobile }) => {
@@ -334,34 +480,39 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await openApp(page);
   await page.getByRole('button', { name: '模板管理' }).click();
   await expect(page.locator('#templateManagerView')).toBeVisible();
-  await expect(page.locator('.anchor-box')).toHaveCount(5);
+  await expect(page.locator('.anchor-box')).toHaveCount(6);
+  await expect(page.locator('.anchor-box[data-anchor="title"]')).toHaveCount(1);
+  await expect(page.locator('.anchor-box[data-anchor="subtitle"]')).toHaveCount(1);
   await expect(page.locator('.anchor-box[data-anchor="cta"]')).toHaveCount(1);
   await expect(page.locator('#anchorSummary')).toHaveCount(0);
   await expect(page.locator('#templateManagerView .align-panel')).toBeVisible();
 
-  const textAnchor = page.locator('.anchor-box[data-anchor="text"]');
+  const titleAnchor = page.locator('.anchor-box[data-anchor="title"]');
+  const subtitleAnchor = page.locator('.anchor-box[data-anchor="subtitle"]');
   const ctaAnchor = page.locator('.anchor-box[data-anchor="cta"]');
   const logoAnchor = page.locator('.anchor-box[data-anchor="logo"]');
   if (!isMobile) {
-    const before = await textAnchor.getAttribute('style');
+    const before = await titleAnchor.getAttribute('style');
+    const subtitleBefore = await subtitleAnchor.getAttribute('style');
     const ctaBefore = await ctaAnchor.getAttribute('style');
-    const box = await textAnchor.boundingBox();
+    const box = await titleAnchor.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 20);
     await page.mouse.up();
-    await expect(textAnchor).not.toHaveAttribute('style', before);
+    await expect(titleAnchor).not.toHaveAttribute('style', before);
+    await expect(subtitleAnchor).toHaveAttribute('style', subtitleBefore);
     await expect(ctaAnchor).toHaveAttribute('style', ctaBefore);
     await expect(page.locator('#commitAnchorsButton')).toBeEnabled();
   }
 
   await logoAnchor.click();
-  await textAnchor.click({ modifiers: ['Shift'] });
+  await titleAnchor.click({ modifiers: ['Shift'] });
   await expect(logoAnchor).toHaveClass(/is-selected/);
-  await expect(textAnchor).toHaveClass(/is-selected/);
+  await expect(titleAnchor).toHaveClass(/is-selected/);
   await expect(page.getByRole('button', { name: '顶对齐' })).toBeEnabled();
   await page.getByRole('button', { name: '顶对齐' }).click();
-  await expect(textAnchor).toHaveAttribute('style', /top: 8(?:\.0)?%/);
+  await expect(titleAnchor).toHaveAttribute('style', /top: 8(?:\.0)?%/);
 
   await page.selectOption('#backgroundModeSelect', 'gradient');
   await page.locator('#gradientStartInput').fill('#112233');
@@ -411,18 +562,30 @@ test('template manager edits visual anchors, multi-aligns, and commits mapping',
   await expect(page.locator('#creativeLogoImage')).toHaveAttribute('src', /logo-market-dark\.png/);
 });
 
-test('template manager can add a mapped template for generation', async ({ page, isMobile }) => {
+test('material generation can add mapped templates while manager only switches templates', async ({ page, isMobile }) => {
   test.skip(isMobile, 'desktop template mapping flow is covered in the desktop project');
   await openApp(page);
+
+  await expect(page.locator('#generatorView #addTemplateButton')).toBeVisible();
+  await expect(page.locator('#generatorView #deleteTemplateButton')).toBeVisible();
   await page.getByRole('button', { name: '模板管理' }).click();
+  await expect(page.locator('#templateManagerView #addTemplateButton')).toHaveCount(0);
+  await expect(page.locator('#templateManagerView #deleteTemplateButton')).toHaveCount(0);
+
+  await page.getByRole('button', { name: '素材生成' }).click();
   await page.getByRole('button', { name: '新增模板' }).click();
 
+  await expect(page.locator('#templateGrid .template-card[data-template="template-3"]')).toBeVisible();
+  await expect(page.locator('#templateGrid .template-card[data-template="template-3"]')).toHaveClass(/active/);
+  await page.getByRole('button', { name: '模板管理' }).click();
   await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-3"]')).toBeVisible();
   await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-3"]')).toHaveClass(/active/);
 
+  await page.getByRole('button', { name: '素材生成' }).click();
   for (let count = 0; count < 5; count += 1) {
     await page.getByRole('button', { name: '新增模板' }).click();
   }
+  await page.getByRole('button', { name: '模板管理' }).click();
   await expect(page.locator('#managerTemplateGrid .template-card[data-template="template-8"]')).toBeVisible();
   expect(await page.locator('#managerTemplateGrid').evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
   await page.locator('#managerTemplateGrid').evaluate(node => { node.scrollLeft = node.scrollWidth; });

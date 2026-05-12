@@ -1,39 +1,63 @@
 # AGENTS.md
 
-Last updated: 2026-05-09 (Asia/Shanghai)
+Last updated: 2026-05-12 (Asia/Shanghai)
 
-## Project
+## Project Snapshot
 
-`spec-promo-materials` is a local Promo Materials UI demo for generating SPEC Markets promotional posters.
+`spec-promo-materials` is a local SPEC Markets Promo Materials UI demo for uploading product imagery, managing layout templates, parsing generation-rule documents, and exporting localized PNG promotional assets.
 
 Primary entry points:
 
-- `index.html` - main interactive UI demo.
-- `assets/spec-ui-foundation.css` - shared SPEC UI design foundation extracted from local `spec-ui-demo/index.html`.
-- `docs/spec-ui-dependency.md` - documented SPEC UI tokens, components, and responsive rules.
-- `assets/logo.png` and logo assets - brand images used by the demo.
-- `generate_exness_posters.py` - Python/Pillow poster-generation helper.
+- `index.html` - single-page interactive UI demo with inline CSS and JS.
+- `server.py` - local HTTP server plus SQLite API for persistent data.
+- `data/spec_promo_materials.sqlite3` - local SQLite database, generated at runtime and ignored by git.
+- `assets/spec-ui-foundation.css` - shared SPEC UI design foundation from the local SPEC UI demo.
+- `docs/spec-ui-dependency.md` - SPEC UI tokens, component rules, and responsive guidance.
+- `assets/logo*.png` and `assets/trustpilot.png` - brand and trust assets used by the generator.
+- `tests/promo-materials.spec.js` - Playwright regression coverage.
+- `generate_exness_posters.py` - legacy Python/Pillow poster-generation helper.
 
 ## Run / Preview
 
-Use a local HTTP server instead of opening the file directly when testing in browser automation:
+Prefer the app server when validating real product behavior, because it enables the SQLite persistence API:
 
 ```bash
 cd "/Users/macbookpro/Documents/spec-promo-materials"
-python3 -m http.server 4173
+npm start
 ```
 
-Then open:
+Open:
 
 ```text
-http://127.0.0.1:4173/index.html
+http://127.0.0.1:4173
 ```
 
-The in-app browser may block `file://` navigation, so prefer the local server URL for verification.
+Notes:
+
+- `npm start` and `npm run serve` both run `python3 server.py`.
+- The server port defaults to `4173`; override with `PORT=4174 npm start` if needed.
+- Use `npm run serve:static` only for quick static UI checks. Without `server.py`, `/api/*` is unavailable and the app falls back to browser IndexedDB/localStorage.
+- Do not rely on `file://` for feature validation. Browser APIs, persistence, and downloads behave differently outside HTTP.
+- Stop any temporary server after verification.
+
+## Persistence Model
+
+Server-backed persistence is available only through `server.py`:
+
+- `GET /api/health` confirms the database path and server availability.
+- `GET /api/state/size-language` / `PUT /api/state/size-language` stores sizes, languages, and localized copy.
+- `GET /api/rules-documents` / `PUT /api/rules-documents` stores uploaded rule documents, extracted text, ordering, and blobs.
+
+Browser fallback persistence remains in place:
+
+- `spec-promo-materials-database-v1` IndexedDB stores local app state and rule documents.
+- Legacy `localStorage` keys are mirrored for compatibility.
+- Template state (`spec-promo-template-state-v1`) is currently local browser state, not server SQLite state.
+- The app restores the newest available server, IndexedDB, or legacy local state where applicable.
 
 ## Design Source Of Truth
 
-This project must align with the local SPEC UI demo and the extracted dependency files:
+Keep this project aligned with the local SPEC UI demo and extracted dependency files:
 
 - Source reference: `/Users/macbookpro/Documents/Codex/2026-05-07/file-users-macbookpro-documents-codex-2026/spec-ui-demo/index.html`
 - Shared CSS dependency: `assets/spec-ui-foundation.css`
@@ -43,53 +67,98 @@ Design principles:
 
 - Keep the UI simple, professional, restrained, and business-focused.
 - Use SPEC primary color `#1F3472` through `--spec-color-primary` / `--primary`.
-- Use responsive web layout; do not use a fixed 1920px canvas or global scale wrappers.
-- Prefer white cards, light borders, clear typography, and restrained shadows.
+- Reuse `--spec-*` tokens and existing component patterns before adding page-specific styles.
+- Prefer white cards, light borders, clear hierarchy, and restrained shadows.
 - Avoid decorative emoji in UI copy.
-- New UI should reuse `--spec-*` tokens and existing component patterns before adding page-specific styles.
+- Use responsive web layout; do not introduce fixed 1920px canvases or global scale wrappers.
 
-## Current Product Decisions From 2026-05-09
+## Current Product Behavior
 
-- Logo selector does not include a `No Logo` option.
-- Upload helper sentence `已载入商品图层，可批量适配 17 个尺寸。` has been removed.
-- Deleting an uploaded image is immediate; do not show a second confirmation modal.
-- Default state has no product image layer:
-  - Left upload section shows the upload/crop card.
-  - Right poster preview shows only a light gray checkerboard background.
-  - No default phone/product layer is shown.
-- Uploaded image crop target is `530 x 628`.
-- The uploaded/cropped image is rendered as the poster's right-side product layer:
-  - Poster canvas is `1200 x 628`.
-  - Product image area is `x=670, y=0, width=530, height=628`.
-- The generated/downloaded PNG must also draw the uploaded product image in the same `530 x 628` right-side area.
-- Size preview thumbnails should not have background fills, borders, or active outlines.
-- Size checkbox rows should stay compact; avoid large vertical row gaps.
+Core generator:
 
-## Implementation Notes
+- Default material sizes: 17 IAB/social-style outputs, sorted by width.
+- Default languages: 9 (`English`, `日本語`, `简体中文`, `繁體中文`, `Tiếng Việt`, `ภาษาไทย`, `한국어`, `Indonesia`, `Melayu`).
+- The ungenerated preview should align with the `1200 x 628` template preview size.
+- Generating without parsed rule documents creates every selected size/language combination.
+- Generating with parsed rule documents creates rule-driven assets and shows `已按生成规则准备 N 张素材。`.
 
-- `index.html` is a single-file demo with inline CSS and JS. Keep edits localized and readable.
-- Keep `assets/spec-ui-foundation.css` as the shared foundation; page-specific overrides can remain in `index.html`.
-- Cropper.js is loaded from CDN and used for image cropping.
-- The upload flow uses these key concepts:
-  - `uploadedImageSrc` stores the cropped image data URL.
-  - `phoneHand` currently refers to the right-side poster product image element for compatibility with existing code.
-  - `setUploadImage(...)` should update preview state and sync the uploaded image into the poster.
-  - `setUploadEmpty()` should return the UI to the checkerboard empty state.
-- If changing download behavior, keep the preview and canvas export visually consistent.
+Upload/product image flow:
+
+- Default state has no product image layer.
+- The upload panel shows the upload/crop card until an image is applied.
+- The poster preview should show only its placeholder/checkerboard state before upload.
+- Cropper.js targets a `530 x 628` product layer for the `1200 x 628` base poster.
+- Deleting an uploaded image is immediate; do not add a second confirmation modal.
+- During generation, image deletion is blocked.
+
+Template and poster editing:
+
+- Templates start with light and dark defaults; manager supports add, delete, rename, drag reorder, and visual anchor editing.
+- Template anchors are independent for `image`, `title`, `subtitle`, `cta`, `logo`, and `trust`.
+- `title` and `subtitle` replace the older single `text` editing surface for visible anchor work.
+- Committing template mapping syncs the selected template to material generation.
+- Generated posters support per-size editable anchors for `logo`, `title`, `subtitle`, `cta`, and `trust`, plus undo.
+
+Generation-rule documents:
+
+- Accepted upload types: Markdown/text, PDF, Word (`.doc`/`.docx`), and XLSX.
+- Text-like documents are parsed for structured key/value rules; XLSX rows are parsed as rule rows.
+- Supported rule concepts include size, language, template, output file name, title, subtitle, CTA, logo variant, Trustpilot visibility, colors, and element anchors.
+- Rule-provided sizes/languages may be synced into the size/language settings.
+- Rules are persisted to IndexedDB and, when `server.py` is running, SQLite.
+
+Download/export:
+
+- Single download exports the currently previewed PNG.
+- Bulk download exports generated assets grouped by language folder.
+- If the File System Access API is available, the default bulk method is folder save; otherwise fallback is ZIP.
+- Downloaded PNG dimensions must match the selected asset size exactly.
+
+## Testing
+
+Install once if dependencies are missing:
+
+```bash
+npm install
+npx playwright install chromium
+```
+
+Run regression tests:
+
+```bash
+npm test
+```
+
+Targeted run:
+
+```bash
+npm run test:smoke
+```
+
+Testing notes:
+
+- `playwright.config.js` currently starts `python3 -m http.server 4173` and reuses an existing server when present.
+- If a `server.py` process is already running at `4173`, tests may exercise server-backed persistence; otherwise they exercise static-server browser fallback behavior.
+- Test coverage includes initial state, rule document upload/preview/parsing, size/language persistence, template manager anchors, generated asset ZIP/PNG dimensions, desktop sidebar, and mobile navigation.
+- `test-results/`, `playwright-report/`, `node_modules/`, `data/`, and `.DS_Store` are ignored and should not be committed.
 
 ## Validation Checklist
 
-Before handing off UI changes:
+Before handing off UI or behavior changes:
 
-- Start a local server with `python3 -m http.server 4173`.
-- Open `http://127.0.0.1:4173/index.html` in the in-app browser.
-- Check initial state: upload card is visible and poster is checkerboard only.
-- Check upload flow: crop modal uses `530 x 628`; applying crop shows the image on the poster right side.
-- Check delete flow: image deletes immediately, with no confirmation modal.
+- Confirm `git status --short` and preserve unrelated user changes.
+- Start `npm start` for persistence-sensitive validation; use static serve only when persistence is irrelevant.
+- Open `http://127.0.0.1:4173` in the in-app browser or another browser.
+- Check initial state: upload card visible, no default product image, poster placeholder/checkerboard only.
+- Check upload flow: crop modal says `530×628`; applying crop shows the image on the poster right side.
+- Check delete flow: uploaded image deletes immediately without a confirmation dialog.
+- Check rule flow when touched: upload MD/PDF/Word/XLSX, preview parsed text/rules, generate rule-driven output.
+- Check template flow when touched: add/rename/reorder templates, move anchors, commit mapping, confirm material generation uses it.
+- Check downloads when touched: single PNG and bulk ZIP/folder export match expected dimensions and names.
 - Check browser console for warnings/errors.
-- Run a quick CSS brace balance check if editing inline styles.
+- Run `npm test` or a narrower Playwright command when behavior changes.
 
-Example CSS brace check:
+Quick inline CSS brace check after editing styles:
 
 ```bash
 python3 - <<'PY'
@@ -111,7 +180,10 @@ PY
 ## Editing Guidelines
 
 - Preserve user changes; do not reset or revert unrelated files.
-- Prefer `rg` for searching.
-- Keep CSS and JS ASCII unless existing file content requires otherwise.
-- Avoid adding new dependencies unless necessary.
-- If using a temporary local server for verification, stop it after testing.
+- Prefer `rg` for search and keep edits localized, especially in the single-file `index.html`.
+- Keep `assets/spec-ui-foundation.css` as the shared foundation; put page-specific overrides in `index.html` unless the token/component foundation itself changes.
+- Avoid new dependencies unless necessary; CDN usage already exists for Cropper.js and XLSX.
+- Keep JavaScript and CSS ASCII where practical; existing Chinese UI copy is expected.
+- Keep preview rendering and canvas export visually consistent whenever layout, image, or text behavior changes.
+- When changing persistence, validate both server-backed SQLite mode and browser fallback mode.
+- When changing rule parsing, add or update Playwright fixtures for each affected file type.

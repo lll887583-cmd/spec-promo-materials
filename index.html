@@ -2008,7 +2008,8 @@
     }
 
     .anchor-preview-image,
-    .anchor-preview-text,
+    .anchor-preview-title,
+    .anchor-preview-subtitle,
     .anchor-preview-cta,
     .anchor-preview-logo,
     .anchor-preview-trust {
@@ -2035,22 +2036,24 @@
       object-fit: contain;
     }
 
-    .anchor-preview-text {
+    .anchor-preview-title,
+    .anchor-preview-subtitle {
       color: #061c49;
       display: block;
       align-content: start;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
-    .anchor-preview-text h3 {
-      margin: 0 0 4%;
+    .anchor-preview-title {
       font-size: clamp(28px, 3.4vw, 50px);
       line-height: 1.06;
       letter-spacing: -.04em;
       font-weight: 800;
     }
 
-    .anchor-preview-text p {
-      margin: 0;
+    .anchor-preview-subtitle {
       font-size: clamp(15px, 2vw, 27px);
       line-height: 1.48;
       letter-spacing: -.02em;
@@ -2070,49 +2073,60 @@
       font-weight: 700;
     }
 
-    .anchor-box {
+    .edit-select-box {
       position: absolute;
       z-index: 2;
       border: 2px dashed transparent;
       background: transparent;
       border-radius: 8px;
       cursor: pointer;
-      display: grid;
-      align-content: start;
-      gap: 4px;
-      padding: 10px;
       color: #102044;
       font-size: 12px;
       font-weight: 700;
       user-select: none;
+      touch-action: none;
     }
 
-    .anchor-box span,
-    .anchor-box small {
-      display: none;
-    }
-
-    .anchor-box.is-active {
-      border-color: var(--anchor-color, var(--primary));
+    .edit-select-box.is-active,
+    .edit-select-box.is-selected {
+      border-color: var(--edit-select-color, var(--primary));
       background: transparent;
       box-shadow: none;
       cursor: move;
     }
 
-    .anchor-box.is-selected {
-      border-color: var(--anchor-color, var(--primary));
-      background: transparent;
-      box-shadow: none;
-      cursor: move;
+    .edit-select-box::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0;
+      top: -26px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: var(--edit-select-color, var(--primary));
+      color: #ffffff;
+      font-size: 11px;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      transform: translateY(4px);
+      transition: opacity .16s ease, transform .16s ease;
     }
 
-    .anchor-box[data-anchor="image"] { --anchor-color: #03b2cb; }
-    .anchor-box[data-anchor="text"] { --anchor-color: #1f3472; }
-    .anchor-box[data-anchor="cta"] { --anchor-color: #03b2cb; }
-    .anchor-box[data-anchor="logo"] { --anchor-color: #24a661; }
-    .anchor-box[data-anchor="trust"] { --anchor-color: #ffae57; }
+    .edit-select-box.is-active::before,
+    .edit-select-box.is-selected::before {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-    .anchor-handle {
+    .anchor-box[data-anchor="image"] { --edit-select-color: #03b2cb; }
+    .anchor-box[data-anchor="title"] { --edit-select-color: #1f3472; }
+    .anchor-box[data-anchor="subtitle"] { --edit-select-color: #6376a5; }
+    .anchor-box[data-anchor="cta"] { --edit-select-color: #03b2cb; }
+    .anchor-box[data-anchor="logo"] { --edit-select-color: #24a661; }
+    .anchor-box[data-anchor="trust"] { --edit-select-color: #ffae57; }
+
+    .edit-select-handle {
       position: absolute;
       right: -7px;
       bottom: -7px;
@@ -2120,7 +2134,7 @@
       height: 14px;
       border: 2px solid #ffffff;
       border-radius: 50%;
-      background: var(--anchor-color, var(--primary));
+      background: var(--edit-select-color, var(--primary));
       cursor: nwse-resize;
       opacity: 0;
       pointer-events: none;
@@ -2128,8 +2142,8 @@
       transition: opacity .16s ease, transform .16s ease;
     }
 
-    .anchor-box.is-active .anchor-handle,
-    .anchor-box.is-selected .anchor-handle {
+    .edit-select-box.is-active .edit-select-handle,
+    .edit-select-box.is-selected .edit-select-handle {
       opacity: 1;
       pointer-events: auto;
       transform: scale(1);
@@ -2165,72 +2179,14 @@
     }
 
     .poster-anchor-box {
-      position: absolute;
-      border: 2px dashed transparent;
-      border-radius: 8px;
-      cursor: pointer;
       pointer-events: auto;
-      user-select: none;
-      touch-action: none;
     }
 
-    .poster-anchor-box.is-active,
-    .poster-anchor-box.is-selected {
-      border-color: var(--poster-anchor-color, var(--primary));
-      cursor: move;
-    }
-
-    .poster-anchor-box::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 0;
-      top: -26px;
-      padding: 4px 7px;
-      border-radius: 999px;
-      background: var(--poster-anchor-color, var(--primary));
-      color: #fff;
-      font-size: 11px;
-      line-height: 1;
-      opacity: 0;
-      white-space: nowrap;
-      transform: translateY(4px);
-      transition: opacity .16s ease, transform .16s ease;
-    }
-
-    .poster-anchor-box.is-active::before,
-    .poster-anchor-box.is-selected::before {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .poster-anchor-box[data-poster-anchor="logo"] { --poster-anchor-color: #24a661; }
-    .poster-anchor-box[data-poster-anchor="title"] { --poster-anchor-color: #1f3472; }
-    .poster-anchor-box[data-poster-anchor="subtitle"] { --poster-anchor-color: #6376a5; }
-    .poster-anchor-box[data-poster-anchor="cta"] { --poster-anchor-color: #03b2cb; }
-    .poster-anchor-box[data-poster-anchor="trust"] { --poster-anchor-color: #ffae57; }
-
-    .poster-anchor-handle {
-      position: absolute;
-      right: -7px;
-      bottom: -7px;
-      width: 14px;
-      height: 14px;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      background: var(--poster-anchor-color, var(--primary));
-      cursor: nwse-resize;
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(.75);
-      transition: opacity .16s ease, transform .16s ease;
-    }
-
-    .poster-anchor-box.is-active .poster-anchor-handle,
-    .poster-anchor-box.is-selected .poster-anchor-handle {
-      opacity: 1;
-      pointer-events: auto;
-      transform: scale(1);
-    }
+    .poster-anchor-box[data-poster-anchor="logo"] { --edit-select-color: #24a661; }
+    .poster-anchor-box[data-poster-anchor="title"] { --edit-select-color: #1f3472; }
+    .poster-anchor-box[data-poster-anchor="subtitle"] { --edit-select-color: #6376a5; }
+    .poster-anchor-box[data-poster-anchor="cta"] { --edit-select-color: #03b2cb; }
+    .poster-anchor-box[data-poster-anchor="trust"] { --edit-select-color: #ffae57; }
 
     .gradient-control {
       position: absolute;
@@ -3298,11 +3254,11 @@
               </div>
               <div class="trustpilot" id="trustpilot"><img id="trustpilotImage" src="assets/trustpilot.png" alt="Trustpilot 评分"></div>
               <div class="poster-edit-overlay" id="posterEditOverlay" aria-label="生成结果手动编辑图层">
-                <div class="poster-anchor-box" data-poster-anchor="logo" data-label="Logo"><i class="poster-anchor-handle" aria-hidden="true"></i></div>
-                <div class="poster-anchor-box" data-poster-anchor="title" data-label="标题"><i class="poster-anchor-handle" aria-hidden="true"></i></div>
-                <div class="poster-anchor-box" data-poster-anchor="subtitle" data-label="副标题"><i class="poster-anchor-handle" aria-hidden="true"></i></div>
-                <div class="poster-anchor-box" data-poster-anchor="cta" data-label="按钮"><i class="poster-anchor-handle" aria-hidden="true"></i></div>
-                <div class="poster-anchor-box" data-poster-anchor="trust" data-label="Trustpilot"><i class="poster-anchor-handle" aria-hidden="true"></i></div>
+                <div class="edit-select-box poster-anchor-box" data-poster-anchor="logo" data-label="Logo"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
+                <div class="edit-select-box poster-anchor-box" data-poster-anchor="title" data-label="标题"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
+                <div class="edit-select-box poster-anchor-box" data-poster-anchor="subtitle" data-label="副标题"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
+                <div class="edit-select-box poster-anchor-box" data-poster-anchor="cta" data-label="按钮"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
+                <div class="edit-select-box poster-anchor-box" data-poster-anchor="trust" data-label="Trustpilot"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
               </div>
               <div class="empty-note hidden" id="emptyNote">上传图片后将生成右侧商品图层</div>
             </div>
@@ -3413,7 +3369,8 @@
             <div class="anchor-canvas" id="anchorCanvas" aria-label="模板视觉锚点编辑画布">
               <div class="anchor-preview-image placeholder-surface placeholder-surface--solid" id="anchorPreviewImage">主图区</div>
               <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png" alt="SPEC MARKETS"></div>
-              <div class="anchor-preview-text" id="anchorPreviewText"><h3>标题</h3><p>副标题</p></div>
+              <div class="anchor-preview-title" id="anchorPreviewTitle">标题</div>
+              <div class="anchor-preview-subtitle" id="anchorPreviewSubtitle">副标题</div>
               <div class="anchor-preview-cta" id="anchorPreviewCta">按钮文案</div>
               <div class="anchor-preview-trust" id="anchorPreviewTrust"><img src="assets/trustpilot.png" alt="Trustpilot 评分"></div>
               <div class="gradient-control" id="gradientControl" aria-label="渐变角度拨杆">
@@ -3421,11 +3378,12 @@
                 <button class="gradient-handle" type="button" data-gradient-handle="start" aria-label="拖动渐变起点"></button>
                 <button class="gradient-handle" type="button" data-gradient-handle="end" aria-label="拖动渐变终点"></button>
               </div>
-              <div class="anchor-box" data-anchor="image"><i class="anchor-handle" aria-hidden="true"></i></div>
-              <div class="anchor-box" data-anchor="text"><i class="anchor-handle" aria-hidden="true"></i></div>
-              <div class="anchor-box" data-anchor="cta"><i class="anchor-handle" aria-hidden="true"></i></div>
-              <div class="anchor-box" data-anchor="logo"><i class="anchor-handle" aria-hidden="true"></i></div>
-              <div class="anchor-box" data-anchor="trust"><i class="anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="image" data-label="主图"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="title" data-label="标题"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="subtitle" data-label="副标题"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="cta" data-label="按钮"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="logo" data-label="Logo"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="trust" data-label="Trustpilot"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
             </div>
           </div>
 
@@ -3567,6 +3525,8 @@
     const defaultTemplateAnchors = {
       image: { x: 0, y: 0, w: 44.2, h: 100 },
       text: { x: 48.3, y: 30, w: 44, h: 28, align: 'left' },
+      title: { x: 48.3, y: 30, w: 44, h: 12, align: 'left' },
+      subtitle: { x: 48.3, y: 45, w: 44, h: 13, align: 'left' },
       cta: { x: 48.3, y: 66.8, w: 27, h: 11.5 },
       logo: { x: 48.3, y: 8, w: 24, h: 10 },
       trust: { x: 81, y: 87, w: 15, h: 8 }
@@ -4185,7 +4145,39 @@
       return JSON.parse(JSON.stringify(anchors));
     }
 
-    function defaultCtaAnchorForText(textAnchor = defaultTemplateAnchors.text, size = CTA_TEMPLATE_RATIO_SIZE) {
+    function textAnchorFromChildren(anchors = defaultTemplateAnchors) {
+      const title = anchors.title || defaultTemplateAnchors.title;
+      const subtitle = anchors.subtitle || defaultTemplateAnchors.subtitle;
+      const left = Math.min(title.x, subtitle.x);
+      const top = Math.min(title.y, subtitle.y);
+      const right = Math.max(title.x + title.w, subtitle.x + subtitle.w);
+      const bottom = Math.max(title.y + title.h, subtitle.y + subtitle.h);
+      return {
+        x: left,
+        y: top,
+        w: right - left,
+        h: bottom - top,
+        align: title.align || subtitle.align || anchors.text?.align || 'left'
+      };
+    }
+
+    function ensureIndependentCopyAnchors(anchors = {}) {
+      const next = { ...anchors };
+      if ((!next.title || !next.subtitle) && next.text) {
+        const children = textChildAnchors(next.text, CTA_TEMPLATE_RATIO_SIZE);
+        next.title = next.title || children.title;
+        next.subtitle = next.subtitle || children.subtitle;
+      }
+      next.title = next.title || cloneAnchors(defaultTemplateAnchors.title);
+      next.subtitle = next.subtitle || cloneAnchors(defaultTemplateAnchors.subtitle);
+      const align = next.title.align || next.subtitle.align || next.text?.align || 'left';
+      next.title.align = align;
+      next.subtitle.align = align;
+      next.text = textAnchorFromChildren(next);
+      return next;
+    }
+
+    function defaultCtaAnchorForText(textAnchor = textAnchorFromChildren(defaultTemplateAnchors), size = CTA_TEMPLATE_RATIO_SIZE) {
       return normalizeCtaAnchorRatio({
         x: textAnchor.x,
         y: Math.min(88, textAnchor.y + 36.8),
@@ -4203,12 +4195,13 @@
     }
 
     function completeAnchors(anchors = defaultTemplateAnchors) {
-      const next = {
+      const next = ensureIndependentCopyAnchors({
         ...cloneAnchors(defaultTemplateAnchors),
         ...cloneAnchors(anchors || {})
-      };
+      });
       if (shouldResetCtaAnchor(next)) next.cta = defaultCtaAnchorForText(next.text);
       next.cta = normalizeCtaAnchorRatio(next.cta, CTA_TEMPLATE_RATIO_SIZE);
+      next.text = textAnchorFromChildren(next);
       return next;
     }
 
@@ -4437,7 +4430,8 @@
     function shouldFlipHorizontalRule(size, base = templateAnchors) {
       if (!size || size.width <= size.height) return false;
       const imageCenter = (base.image?.x || 0) + (base.image?.w || 0) / 2;
-      const textCenter = (base.text?.x || 0) + (base.text?.w || 0) / 2;
+      const text = textAnchorFromChildren(ensureIndependentCopyAnchors(base));
+      const textCenter = (text.x || 0) + (text.w || 0) / 2;
       return imageCenter < textCenter;
     }
 
@@ -4463,7 +4457,7 @@
       if (anchors.image.y > anchors.text.y && anchors.cta.y + anchors.cta.h > anchors.image.y - 2) {
         anchors.cta.y = clamp(anchors.image.y - anchors.cta.h - 2, 0, 100 - anchors.cta.h);
       }
-      anchors.text.align = base.text?.align || anchors.text.align || 'left';
+      anchors.text.align = base.title?.align || base.subtitle?.align || base.text?.align || anchors.text.align || 'left';
       return anchors;
     }
 
@@ -4506,6 +4500,10 @@
 
     function basePosterAnchorsForSize(size, base = templateAnchors) {
       const anchors = layoutAnchorsForSize(size, base);
+      if (anchors.title && anchors.subtitle) {
+        anchors.text = textAnchorFromChildren(anchors);
+        return anchors;
+      }
       return {
         ...anchors,
         ...textChildAnchors(anchors.text, size)
@@ -4525,6 +4523,7 @@
       posterEditableAnchorKeys.forEach(key => {
         if (overrides[key]) anchors[key] = { ...anchors[key], ...overrides[key] };
       });
+      anchors.text = textAnchorFromChildren(anchors);
       anchors.cta = normalizeCtaAnchorRatio(anchors.cta, size);
       return anchors;
     }
@@ -4893,7 +4892,7 @@
       setAnchorVars('cta', anchors.cta);
       setAnchorVars('logo', anchors.logo);
       setAnchorVars('trust', anchors.trust);
-      materialCard.style.setProperty('--text-align', anchors.text.align || 'left');
+      materialCard.style.setProperty('--text-align', anchors.title.align || anchors.subtitle.align || anchors.text.align || 'left');
       setPosterFontVars(anchors, size);
       renderPosterEditOverlay(anchors);
       schedulePosterTextFit();
@@ -4938,7 +4937,8 @@
 
     function renderAnchorPreview() {
       styleAnchorPreview('anchorPreviewImage', draftTemplateAnchors.image);
-      styleAnchorPreview('anchorPreviewText', draftTemplateAnchors.text);
+      styleAnchorPreview('anchorPreviewTitle', draftTemplateAnchors.title);
+      styleAnchorPreview('anchorPreviewSubtitle', draftTemplateAnchors.subtitle);
       styleAnchorPreview('anchorPreviewCta', draftTemplateAnchors.cta);
       styleAnchorPreview('anchorPreviewLogo', draftTemplateAnchors.logo);
       styleAnchorPreview('anchorPreviewTrust', draftTemplateAnchors.trust);
@@ -4950,11 +4950,12 @@
         logoPreview.src = logoSrcFor('market', variant);
         logoPreview.alt = logoAltFor('market', variant);
       }
-      const textPreview = document.getElementById('anchorPreviewText');
-      if (textPreview) {
-        textPreview.style.textAlign = draftTemplateAnchors.text.align || 'left';
+      ['anchorPreviewTitle', 'anchorPreviewSubtitle'].forEach(nodeId => {
+        const textPreview = document.getElementById(nodeId);
+        if (!textPreview) return;
+        textPreview.style.textAlign = draftTemplateAnchors.title.align || draftTemplateAnchors.subtitle.align || 'left';
         textPreview.style.color = draftTemplateStyles.textColor;
-      }
+      });
       const ctaPreview = document.getElementById('anchorPreviewCta');
       if (ctaPreview) {
         ctaPreview.style.background = draftTemplateStyles.buttonColor;
@@ -5002,13 +5003,21 @@
         w: 44.2,
         h: 100
       };
-      draftTemplateAnchors.text = {
-        ...draftTemplateAnchors.text,
+      draftTemplateAnchors.title = {
+        ...draftTemplateAnchors.title,
         x: imageOnLeft ? 48.3 : 7,
         y: 30,
         w: 44,
-        h: 42
+        h: 12
       };
+      draftTemplateAnchors.subtitle = {
+        ...draftTemplateAnchors.subtitle,
+        x: imageOnLeft ? 48.3 : 7,
+        y: 45,
+        w: 44,
+        h: 13
+      };
+      draftTemplateAnchors.text = textAnchorFromChildren(draftTemplateAnchors);
       draftTemplateAnchors.cta = defaultCtaAnchorForText(draftTemplateAnchors.text);
       draftTemplateAnchors.logo = {
         ...draftTemplateAnchors.logo,
@@ -5027,8 +5036,9 @@
     }
 
     function maybeSwapImageTextSides(anchorKey) {
-      if (!['image', 'text'].includes(anchorKey)) return;
-      const anchor = draftTemplateAnchors[anchorKey];
+      if (!['image', 'title', 'subtitle'].includes(anchorKey)) return;
+      const textAnchor = textAnchorFromChildren(draftTemplateAnchors);
+      const anchor = anchorKey === 'image' ? draftTemplateAnchors.image : textAnchor;
       const centerX = anchor.x + anchor.w / 2;
       const imageOnLeft = anchorKey === 'image' ? centerX < 50 : centerX >= 50;
       applyImageTextSideLayout(imageOnLeft);
@@ -5054,6 +5064,7 @@
 
     function renderAnchorEditor() {
       if (!anchorCanvas) return;
+      draftTemplateAnchors = ensureIndependentCopyAnchors(draftTemplateAnchors);
       renderAnchorPreview();
       renderStyleEditor();
       anchorCanvas.querySelectorAll('.anchor-box').forEach(box => {
@@ -5176,7 +5187,9 @@
     }
 
     function normalizedAnchor(anchorKey, nextAnchor) {
-      const minSize = anchorKey === 'logo' || anchorKey === 'trust' ? 6 : 12;
+      const minSize = anchorKey === 'logo' || anchorKey === 'trust'
+        ? 6
+        : (anchorKey === 'title' || anchorKey === 'subtitle' ? 5 : 12);
       const normalized = {
         ...draftTemplateAnchors[anchorKey],
         x: clamp(nextAnchor.x, 0, 100 - minSize),
@@ -5191,6 +5204,7 @@
 
     function updateAnchor(anchorKey, nextAnchor) {
       draftTemplateAnchors[anchorKey] = normalizedAnchor(anchorKey, nextAnchor);
+      draftTemplateAnchors = ensureIndependentCopyAnchors(draftTemplateAnchors);
       renderAnchorEditor();
     }
 
@@ -5198,6 +5212,7 @@
       anchorKeys.forEach(anchorKey => {
         draftTemplateAnchors[anchorKey] = normalizedAnchor(anchorKey, nextAnchorForKey(anchorKey));
       });
+      draftTemplateAnchors = ensureIndependentCopyAnchors(draftTemplateAnchors);
       renderAnchorEditor();
     }
 
@@ -7700,7 +7715,7 @@
         if (
           dragState?.mode === 'move'
           && dragState.anchorKeys.length === 1
-          && ['image', 'text'].includes(dragState.anchorKey)
+          && ['image', 'title', 'subtitle'].includes(dragState.anchorKey)
           && dragState.startSide
           && anchorSide(draftTemplateAnchors[dragState.anchorKey]) !== dragState.startSide
         ) {
