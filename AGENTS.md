@@ -13,7 +13,7 @@ Primary entry points:
 - `data/spec_promo_materials.sqlite3` - local SQLite database, generated at runtime and ignored by git.
 - `assets/spec-ui-foundation.css` - shared SPEC UI design foundation from the local SPEC UI demo.
 - `docs/spec-ui-dependency.md` - SPEC UI tokens, component rules, and responsive guidance.
-- `assets/logo*.png` and `assets/trustpilot.png` - brand and trust assets used by the generator.
+- `assets/logo*.png` - brand assets used by the generator.
 - `tests/promo-materials.spec.js` - Playwright regression coverage.
 - `generate_exness_posters.py` - legacy Python/Pillow poster-generation helper.
 
@@ -94,16 +94,16 @@ Upload/product image flow:
 Template and poster editing:
 
 - Templates start with light and dark defaults; manager supports add, delete, rename, drag reorder, and visual anchor editing.
-- Template anchors are independent for `image`, `title`, `subtitle`, `cta`, `logo`, and `trust`.
+- Template anchors are independent for `image`, `title`, `subtitle`, `cta`, and `logo`.
 - `title` and `subtitle` replace the older single `text` editing surface for visible anchor work.
 - Committing template mapping syncs the selected template to material generation.
-- Generated posters support per-size editable anchors for `logo`, `title`, `subtitle`, `cta`, and `trust`, plus undo.
+- Generated posters support per-size editable anchors for `logo`, `title`, `subtitle`, and `cta`, plus undo.
 
 Generation-rule documents:
 
 - Accepted upload types: Markdown/text, PDF, Word (`.doc`/`.docx`), and XLSX.
 - Text-like documents are parsed for structured key/value rules; XLSX rows are parsed as rule rows.
-- Supported rule concepts include size, language, template, output file name, title, subtitle, CTA, logo variant, Trustpilot visibility, colors, and element anchors.
+- Supported rule concepts include size, language, template, output file name, title, subtitle, CTA, logo variant, colors, and element anchors.
 - Rule-provided sizes/languages may be synced into the size/language settings.
 - Rules are persisted to IndexedDB and, when `server.py` is running, SQLite.
 

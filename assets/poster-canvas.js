@@ -14,9 +14,7 @@
       getPosterStyles,
       getLogoBrand,
       getLogoSrc,
-      getLogoVariant,
-      getTrustSrc,
-      isTrustVisible
+      getLogoVariant
     } = options;
 
     function fitCanvasFont(ctx, text, maxWidth, startSize, minSize, weight = 700) {
@@ -81,19 +79,6 @@
       ctx.restore();
     }
 
-    async function drawCanvasTrustpilot(ctx, rect, visible) {
-      if (!visible) return;
-      try {
-        const image = await loadCanvasImage(getTrustSrc());
-        const ratio = image.naturalWidth / image.naturalHeight;
-        const drawW = rect.w;
-        const drawH = drawW / ratio;
-        ctx.drawImage(image, rect.x, rect.y, drawW, drawH);
-      } catch (error) {
-        console.warn('Trustpilot image failed to load for canvas', error);
-      }
-    }
-
     async function drawPosterToCanvas(canvas, size, copy, languageIndex, asset = null) {
       const width = size.width;
       const height = size.height;
@@ -107,7 +92,6 @@
       const subtitleRect = posterRenderer.canvasRect(posterAnchors.subtitle, width, height);
       const ctaRect = posterRenderer.canvasRect(posterAnchors.cta, width, height);
       const logoRect = posterRenderer.canvasRect(posterAnchors.logo, width, height);
-      const trustRect = posterRenderer.canvasRect(posterAnchors.trust, width, height);
 
       ctx.fillStyle = posterRenderer.canvasBackgroundFill(ctx, posterStyles, width, height);
       ctx.fillRect(0, 0, width, height);
@@ -196,7 +180,6 @@
       const ctaTextStartY = ctaDrawY + (ctaDrawH - ctaFontSize * 1.15) / 2;
       ctx.fillText(ctaText, ctaRect.x + ctaDrawW / 2, ctaTextStartY);
       ctx.textBaseline = 'alphabetic';
-      await drawCanvasTrustpilot(ctx, trustRect, isTrustVisible(asset));
     }
 
     return { drawPosterToCanvas };

@@ -75,8 +75,7 @@
       logo: ['logo', 'brand', '标志', '品牌', '品牌logo'],
       title: ['title', 'headline', '标题', '标题文案'],
       subtitle: ['subtitle', 'subheadline', '副标题', '富标题', '副标题文案', '富标题文案'],
-      cta: ['cta', 'button', '按钮', '按钮文案'],
-      trust: ['trust', 'trustpilot', 'rating', '评分']
+      cta: ['cta', 'button', '按钮', '按钮文案']
     };
 
     function normalizeRuleElement(value) {
@@ -135,7 +134,6 @@
       const anchor = readRuleAnchor(row, element, useGeneric);
       if (anchor) rule.anchors[element] = { ...(rule.anchors[element] || {}), ...anchor };
       const visible = parseRuleBool(useGeneric ? ruleCell(row, ['visible', 'show', '显示']) : prefixedRuleCell(row, element, ['visible', 'show', '显示']));
-      if (element === 'trust' && visible !== null) rule.trustVisible = visible;
       const text = normalizeRuleText(useGeneric ? ruleCell(row, ['text', 'copy', '文案', '内容']) : prefixedRuleCell(row, element, ['text', 'copy', '文案', '内容']));
       if (text && element === 'title') rule.copy.title = text;
       if (text && element === 'subtitle') rule.copy.subtitle = text;
@@ -152,8 +150,6 @@
       if (cta) rule.copy.cta = cta;
       const logoVariant = normalizeRuleText(ruleCell(row, ['logovariant', 'logo版本', 'logo颜色', 'logo明暗']));
       if (logoVariant) rule.logoVariant = /white|light|亮|白/i.test(logoVariant) ? 'white' : 'black';
-      const trustVisible = parseRuleBool(ruleCell(row, ['trustvisible', 'trustpilotvisible', 'trust显示', 'trustpilot显示']));
-      if (trustVisible !== null) rule.trustVisible = trustVisible;
       const backgroundColor = parseRuleColor(ruleCell(row, ['background', 'backgroundcolor', 'bg', 'bgcolor', '背景', '背景色', '底色']));
       const gradientStart = parseRuleColor(ruleCell(row, ['gradientstart', '渐变起色', '渐变开始', '渐变色1']));
       const gradientEnd = parseRuleColor(ruleCell(row, ['gradientend', '渐变止色', '渐变结束', '渐变色2']));
@@ -167,14 +163,14 @@
       if (textColor) rule.styles.textColor = textColor;
       if (buttonColor) rule.styles.buttonColor = buttonColor;
       if (buttonTextColor) rule.styles.buttonTextColor = buttonTextColor;
-      ['image', 'logo', 'title', 'subtitle', 'cta', 'trust'].forEach(element => applyRuleRowElement(rule, element, row));
+      ['image', 'logo', 'title', 'subtitle', 'cta'].forEach(element => applyRuleRowElement(rule, element, row));
       return rule;
     }
 
     function hasRuleContent(rule) {
       return rule.width || rule.height || rule.language || rule.template || rule.fileName
         || Object.keys(rule.anchors || {}).length || Object.keys(rule.copy || {}).length
-        || Object.keys(rule.styles || {}).length || rule.logoVariant || rule.trustVisible !== undefined;
+        || Object.keys(rule.styles || {}).length || rule.logoVariant;
     }
 
     function parseNormalizedRuleRows(rows, sheetName = '文档规则') {
