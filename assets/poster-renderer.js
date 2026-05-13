@@ -127,17 +127,13 @@
     }
 
     function productDrawGeometry(image, rect, adjustment = { scale: 1, x: 0, y: 0 }) {
-      const imageRatio = image.naturalWidth / image.naturalHeight;
-      const targetRatio = rect.w / rect.h;
-      let baseW = rect.w;
-      let baseH = rect.h;
-      if (imageRatio > targetRatio) baseW = rect.h * imageRatio;
-      else baseH = rect.w / imageRatio;
+      const baseW = image.naturalWidth;
+      const baseH = image.naturalHeight;
       const scale = posterCore.clamp(Number(adjustment.scale) || 1, 0.4, 4);
       const drawW = baseW * scale;
       const drawH = baseH * scale;
-      const maxX = Math.max(0, (drawW - rect.w) / (2 * rect.w));
-      const maxY = Math.max(0, (drawH - rect.h) / (2 * rect.h));
+      const maxX = Math.abs(drawW - rect.w) / (2 * rect.w);
+      const maxY = Math.abs(drawH - rect.h) / (2 * rect.h);
       const x = posterCore.clamp(Number(adjustment.x) || 0, -maxX, maxX);
       const y = posterCore.clamp(Number(adjustment.y) || 0, -maxY, maxY);
       return {

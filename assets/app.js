@@ -1993,8 +1993,13 @@
     function renderPosterEditOverlay(anchors = effectivePosterAnchorsForSize()) {
       if (!posterEditOverlay) return;
       posterEditOverlay.querySelectorAll('.poster-anchor-box').forEach(box => {
-        ensureEdgeResizeHandles(box, 'poster-anchor-handle');
         const key = box.dataset.posterAnchor;
+        if (key === 'image') {
+          box.querySelectorAll('.poster-anchor-handle').forEach(handle => handle.remove());
+          box.dataset.edgeHandlesReady = '';
+        } else {
+          ensureEdgeResizeHandles(box, 'poster-anchor-handle');
+        }
         const anchor = anchors[key];
         if (!anchor) return;
         const overlayAnchor = posterOverlayAnchor(key, anchor);
@@ -2072,9 +2077,9 @@
         showToast('当前尺寸手动位置已恢复生成规则');
         return;
       }
-      const anchorKeys = [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key));
+      const anchorKeys = [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key) && key !== 'image');
       if (anchorKeys.length < 2) {
-        showToast('请先多选至少两个元素');
+        showToast(selectedPosterAnchorKeys.has('image') ? '主图仅支持拖动图片，不支持对齐框位置' : '请先多选至少两个元素');
         return;
       }
       const anchors = effectivePosterAnchorsForSize();
@@ -3199,13 +3204,9 @@
 
     function productImageGeometry(size = materialSizes[currentSizeIndex], frameRect = productFrame?.getBoundingClientRect()) {
       if (!phoneHand?.naturalWidth || !phoneHand?.naturalHeight || !frameRect?.width || !frameRect?.height) return null;
-      const frameRatio = frameRect.width / frameRect.height;
-      const imageRatio = phoneHand.naturalWidth / phoneHand.naturalHeight;
-      let baseW = frameRect.width;
-      let baseH = frameRect.height;
-      if (imageRatio > frameRatio) baseW = frameRect.height * imageRatio;
-      else baseH = frameRect.width / imageRatio;
       const adjustment = currentProductAdjustment(size);
+      const baseW = phoneHand.naturalWidth;
+      const baseH = phoneHand.naturalHeight;
       const drawW = baseW * adjustment.scale;
       const drawH = baseH * adjustment.scale;
       return { frameW: frameRect.width, frameH: frameRect.height, baseW, baseH, drawW, drawH, adjustment };
@@ -3217,8 +3218,8 @@
       adjustment.scale = clamp(Number(adjustment.scale) || 1, PRODUCT_MIN_SCALE, 4);
       const drawW = geometry.baseW * adjustment.scale;
       const drawH = geometry.baseH * adjustment.scale;
-      const maxX = Math.max(0, (drawW - geometry.frameW) / (2 * geometry.frameW));
-      const maxY = Math.max(0, (drawH - geometry.frameH) / (2 * geometry.frameH));
+      const maxX = Math.abs(drawW - geometry.frameW) / (2 * geometry.frameW);
+      const maxY = Math.abs(drawH - geometry.frameH) / (2 * geometry.frameH);
       adjustment.x = clamp(Number(adjustment.x) || 0, -maxX, maxX);
       adjustment.y = clamp(Number(adjustment.y) || 0, -maxY, maxY);
       return adjustment;
@@ -3703,6 +3704,18 @@
       Object.assign(adjustment, next);
       clampProductAdjustment(adjustment);
       updateProductImageFrame();
+    }
+
+    function panProductImageFromDrag(dragState, delta) {
+      if (!dragState?.frameW || !dragState?.frameH) return;
+      if (!dragState.historyCaptured) {
+        pushPosterEditHistory();
+        dragState.historyCaptured = true;
+      }
+      updateProductAdjustment({
+        x: dragState.x + delta.dx / dragState.frameW,
+        y: dragState.y + delta.dy / dragState.frameH
+      });
     }
 
     function zoomProductImage(delta, origin = null) {
@@ -4459,23 +4472,40 @@
           selectedPosterAnchorKeys = new Set([activePosterAnchor]);
         }
         const resizeHandle = event.target.closest('.poster-anchor-handle');
-        const anchorKeys = resizeHandle
-          ? [activePosterAnchor]
-          : [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key));
         const anchors = effectivePosterAnchorsForSize();
         const rect = materialCard.getBoundingClientRect();
-        dragState = {
-          anchorKey: activePosterAnchor,
-          anchorKeys,
-          mode: resizeHandle ? 'resize' : 'move',
-          resizeSide: resizeHandle?.dataset.resizeSide || 'se',
-          startX: event.clientX,
-          startY: event.clientY,
-          rect,
-          anchors: Object.fromEntries(anchorKeys.map(key => [key, { ...anchors[key] }])),
-          historyCaptured: false,
-          moved: false
-        };
+        const imageRect = productFrame?.getBoundingClientRect();
+        if (activePosterAnchor === 'image') {
+          const adjustment = currentProductAdjustment();
+          dragState = {
+            anchorKey: activePosterAnchor,
+            mode: 'image-pan',
+            startX: event.clientX,
+            startY: event.clientY,
+            frameW: imageRect?.width || rect.width,
+            frameH: imageRect?.height || rect.height,
+            x: adjustment.x,
+            y: adjustment.y,
+            historyCaptured: false,
+            moved: false
+          };
+        } else {
+          const anchorKeys = resizeHandle
+            ? [activePosterAnchor]
+            : [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key));
+          dragState = {
+            anchorKey: activePosterAnchor,
+            anchorKeys,
+            mode: resizeHandle ? 'resize' : 'move',
+            resizeSide: resizeHandle?.dataset.resizeSide || 'se',
+            startX: event.clientX,
+            startY: event.clientY,
+            rect,
+            anchors: Object.fromEntries(anchorKeys.map(key => [key, { ...anchors[key] }])),
+            historyCaptured: false,
+            moved: false
+          };
+        }
         box.setPointerCapture?.(event.pointerId);
         renderPosterEditOverlay(anchors);
         event.preventDefault();
@@ -4483,6 +4513,18 @@
 
       posterEditOverlay.addEventListener('pointermove', event => {
         if (!dragState) return;
+        if (dragState.mode === 'image-pan') {
+          const delta = axisLockedDelta(
+            event.clientX - dragState.startX,
+            event.clientY - dragState.startY,
+            dragState,
+            event.shiftKey,
+            2
+          );
+          dragState.moved = dragState.moved || Math.abs(event.clientX - dragState.startX) > 3 || Math.abs(event.clientY - dragState.startY) > 3;
+          panProductImageFromDrag(dragState, delta);
+          return;
+        }
         const dx = ((event.clientX - dragState.startX) / dragState.rect.width) * 100;
         const dy = ((event.clientY - dragState.startY) / dragState.rect.height) * 100;
         const delta = dragState.mode === 'move'
@@ -4511,6 +4553,10 @@
         if (!dragState) return;
         const completedDrag = dragState;
         dragState = null;
+        if (completedDrag.mode === 'image-pan') {
+          if (completedDrag.moved) showToast('主图已在框内移动，超出部分会被裁切');
+          return;
+        }
         if (
           completedDrag.mode === 'move'
           && !completedDrag.moved
@@ -4540,12 +4586,9 @@
         const box = event.target.closest('.poster-anchor-box');
         const key = box?.dataset.posterAnchor;
         if (!['title', 'subtitle', 'cta'].includes(key) || event.target.closest('.poster-anchor-handle, .font-size-toolbar')) return;
+        // Single click only keeps the current selection; double click opens inline edit.
         event.preventDefault();
         event.stopPropagation();
-        activePosterAnchor = key;
-        selectedPosterAnchorKeys = new Set([key]);
-        renderPosterEditOverlay();
-        openInlineCopyEditor('poster', key);
       });
 
       posterEditOverlay.addEventListener('dblclick', event => {

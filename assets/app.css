@@ -1572,6 +1572,18 @@
 
     .poster-product-layer.is-selected::after { opacity: 1; }
 
+    .poster-anchor-box[data-poster-anchor="image"] .poster-anchor-handle {
+      display: none !important;
+    }
+
+    .poster-anchor-box[data-poster-anchor="image"] {
+      cursor: grab;
+    }
+
+    .poster-anchor-box[data-poster-anchor="image"]:active {
+      cursor: grabbing;
+    }
+
     .poster-product-image {
       position: absolute;
       left: 0;
