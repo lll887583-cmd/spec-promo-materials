@@ -1253,8 +1253,9 @@
       max-height: calc(100vh - 48px);
       position: sticky;
       top: 24px;
-      display: block;
-      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       padding: 20px;
     }
 
@@ -1361,10 +1362,11 @@
       border-bottom: 0;
       width: min(100%, 980px);
       aspect-ratio: 1200 / 628;
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 360px;
       background: transparent;
     }
 
@@ -1420,6 +1422,10 @@
       display: flex;
     }
 
+    .material-card.generated.no-upload:not(.hide-poster-image) .poster-image-placeholder {
+      display: flex;
+    }
+
     .creative-logo {
       position: absolute;
       left: var(--logo-x, 7%);
@@ -1427,6 +1433,8 @@
       display: block;
       width: var(--logo-w, 24%);
       height: var(--logo-h, 10%);
+      z-index: 4;
+      pointer-events: none;
     }
 
     .creative-logo img {
@@ -1475,6 +1483,7 @@
       width: var(--subtitle-w, var(--text-w, 48%));
       height: var(--subtitle-h, 20%);
       margin: 0;
+      font-weight: 400;
       font-size: var(--subtitle-font, clamp(7px, 3.1cqw, 27px));
       line-height: 1.48;
       letter-spacing: -.02em;
@@ -1494,13 +1503,13 @@
       width: fit-content;
       max-width: calc(100% - var(--cta-x, 7%) - 2%);
       min-width: 0;
-      min-height: var(--cta-h, 12%);
+      min-height: 0;
       height: auto;
       box-sizing: border-box;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: clamp(2px, 1.67cqw, 20px) clamp(4px, 3.33cqw, 40px);
+      padding: var(--cta-pad-y, clamp(2px, 1.67cqw, 20px)) var(--cta-pad-x, clamp(4px, 3.33cqw, 40px));
       border-radius: 999px;
       background: var(--cta-bg, #03B2CB);
       color: var(--cta-fg, #FFFFFF);
@@ -1512,6 +1521,15 @@
       overflow: hidden;
       overflow-wrap: normal;
       word-break: normal;
+    }
+
+    .material-card.hide-poster-image .poster-product-layer,
+    .material-card.hide-poster-image .poster-image-placeholder,
+    .material-card.hide-poster-logo .creative-logo,
+    .material-card.hide-poster-title .creative-copy h1,
+    .material-card.hide-poster-subtitle .creative-copy p,
+    .material-card.hide-poster-cta .creative-cta {
+      display: none;
     }
 
     .poster-product-layer {
@@ -1566,10 +1584,13 @@
       pointer-events: none;
     }
 
-    .creative-logo,
     .creative-copy,
     .creative-cta {
       z-index: 2;
+    }
+
+    .creative-logo {
+      z-index: 4;
     }
 
     .phone-hand {
@@ -1904,6 +1925,45 @@
       font-weight: 400;
     }
 
+    .preview-bottom-switcher {
+      margin: 18px auto 0;
+      width: min(100%, 1100px);
+      flex: 0 0 auto;
+      display: grid;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--soft-line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .preview-bottom-strip {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .bottom-thumb-row,
+    .bottom-language-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 2px 2px 8px;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .bottom-thumb-row .size-thumb {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 104px;
+    }
+
+    .bottom-language-row .language-pill {
+      flex: 0 0 104px;
+    }
+
     .status-dock {
       position: fixed;
       right: 24px;
@@ -2000,7 +2060,7 @@
       border: 1px solid var(--soft-line);
       border-radius: 8px;
       background: #dcf9ff;
-      overflow: visible;
+      overflow: hidden;
       touch-action: none;
       container-type: size;
     }
@@ -2013,6 +2073,10 @@
       position: absolute;
       pointer-events: none;
       z-index: 1;
+    }
+
+    .anchor-preview-logo {
+      z-index: 4;
     }
 
     .anchor-preview-image {
@@ -2035,12 +2099,14 @@
 
     .anchor-preview-title,
     .anchor-preview-subtitle {
+      box-sizing: border-box;
       color: #061c49;
       display: block;
       align-content: start;
       overflow: hidden;
       overflow-wrap: anywhere;
       word-break: break-word;
+      white-space: pre-wrap;
     }
 
     .anchor-preview-title {
@@ -2054,7 +2120,7 @@
       font-size: clamp(15px, 2vw, 27px);
       line-height: 1.48;
       letter-spacing: -.02em;
-      font-weight: 700;
+      font-weight: 400;
     }
 
     .anchor-preview-cta {

@@ -152,10 +152,26 @@
     }
 
     function layoutAnchorsForSize(size, base = defaultAnchors) {
+      const rule = generationRuleForSize(size);
+      if (rule.exact) {
+        const anchors = {
+          image: { ...rule.image },
+          logo: { ...rule.logo },
+          title: { ...rule.title },
+          subtitle: { ...rule.subtitle },
+          text: { ...(rule.text || {}) },
+          cta: normalizeCtaAnchorRatio({ ...(rule.cta || defaultCtaAnchorForText(rule.text, size)) }, size),
+          trust: { ...rule.trust }
+        };
+        if (!Object.keys(anchors.text).length) {
+          anchors.text = textAnchorFromChildren(anchors);
+        }
+        anchors.text.align = anchors.title.align || anchors.subtitle.align || base.text?.align || anchors.text.align || 'left';
+        return anchors;
+      }
       if (size?.id === 'landscape_1200x628' || (size?.width === 1200 && size?.height === 628)) {
         return completeAnchors(base);
       }
-      const rule = generationRuleForSize(size);
       const anchors = {
         image: { ...rule.image },
         text: { ...rule.text },

@@ -18,7 +18,23 @@
       const ctaFont = Number(anchors.cta.font) || Math.max(1, anchors.cta.h * 0.38);
       materialCard.style.setProperty('--title-font', `clamp(6px, ${titleFont}cqh, 84px)`);
       materialCard.style.setProperty('--subtitle-font', `clamp(5px, ${subtitleFont}cqh, 44px)`);
-      materialCard.style.setProperty('--cta-font', `clamp(5px, ${ctaFont}cqh, 34px)`);
+      materialCard.style.setProperty('--cta-font', `clamp(5px, ${ctaFont}cqh, 72px)`);
+      if (Number.isFinite(Number(anchors.cta.padX))) {
+        materialCard.style.setProperty('--cta-pad-x', `${Number(anchors.cta.padX)}cqw`);
+      } else {
+        materialCard.style.removeProperty('--cta-pad-x');
+      }
+      if (Number.isFinite(Number(anchors.cta.padY))) {
+        materialCard.style.setProperty('--cta-pad-y', `${Number(anchors.cta.padY)}cqh`);
+      } else {
+        materialCard.style.removeProperty('--cta-pad-y');
+      }
+    }
+
+    function setAnchorVisibility(anchors) {
+      ['image', 'logo', 'title', 'subtitle', 'cta'].forEach(key => {
+        materialCard.classList.toggle(`hide-poster-${key}`, Boolean(anchors[key]?.hidden));
+      });
     }
 
     function fitTextElement(element, minSize = 6, resetFontSize = true) {
@@ -57,6 +73,7 @@
       setAnchorVars('cta', anchors.cta);
       setAnchorVars('logo', anchors.logo);
       setAnchorVars('trust', anchors.trust);
+      setAnchorVisibility(anchors);
       materialCard.style.setProperty('--text-align', anchors.title.align || anchors.subtitle.align || anchors.text.align || 'left');
       setPosterFontVars(anchors, size);
     }
@@ -141,7 +158,8 @@
       canvasAnchorFontSize,
       canvasBackgroundFill,
       drawRoundedRectPath,
-      productDrawGeometry
+      productDrawGeometry,
+      setAnchorVisibility
     };
   }
 

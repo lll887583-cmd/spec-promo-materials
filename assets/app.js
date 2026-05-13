@@ -1,5 +1,5 @@
     let materialSizes = [
-      { id: 'ad_120x600', label: '120 x 600', width: 120, height: 600 },
+      { id: 'ad_120x50', label: '120 x 50', width: 120, height: 50 },
       { id: 'ad_160x600', label: '160 x 600', width: 160, height: 600 },
       { id: 'ad_300x250', label: '300 x 250', width: 300, height: 250 },
       { id: 'ad_300x600', label: '300 x 600', width: 300, height: 600 },
@@ -18,6 +18,11 @@
       { id: 'ad_1200x1500', label: '1200 x 1500', width: 1200, height: 1500 }
     ];
 
+    if (window.SpecPromoFrameLayouts?.getSizes) {
+      const figmaFrameSizes = window.SpecPromoFrameLayouts.getSizes();
+      if (Array.isArray(figmaFrameSizes) && figmaFrameSizes.length) materialSizes = figmaFrameSizes;
+    }
+
     let languages = [
       ['英语', 'English'], ['日语', '日本語'], ['简体中文', '简体中文'], ['繁体中文', '繁體中文'],
       ['越南语', 'Tiếng Việt'], ['泰语', 'ภาษาไทย'], ['韩语', '한국어'], ['印尼语', 'Indonesia'],
@@ -26,7 +31,7 @@
 
 
     let localizedCopy = [
-      { title: '标题文案', subtitle: '副标题文案', cta: '按钮文案' },
+      { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
       { title: '主導権を握る', subtitle: 'Spec Marketsで\n取引コストを抑えましょう。', cta: '優位性を見つける' },
       { title: '掌控交易', subtitle: '使用 Spec Markets\n降低您的交易成本。', cta: '找到你的优势' },
       { title: '掌控交易', subtitle: '使用 Spec Markets\n降低您的交易成本。', cta: '找到你的優勢' },
@@ -41,6 +46,10 @@
     const DEFAULT_LANGUAGES = JSON.parse(JSON.stringify(languages));
     const DEFAULT_LOCALIZED_COPY = JSON.parse(JSON.stringify(localizedCopy));
     const TEMPLATE_PREVIEW_SIZE_ID = 'landscape_1200x628';
+    const FIGMA_BUTTON_TEXT_COLOR = '#27376F';
+    const FIGMA_BUTTON_FILL_COLOR = '#72DBF1';
+    const LEGACY_BUTTON_TEXT_COLOR = '#ffffff';
+    const LEGACY_BUTTON_FILL_COLORS = new Set(['#03b2cb', '#4ecbe3']);
 
     function templatePreviewSizeIndex() {
       const index = materialSizes.findIndex(size =>
@@ -72,8 +81,8 @@
       gradientEnd: '#ffffff',
       gradientAngle: 135,
       textColor: '#081840',
-      buttonColor: '#03b2cb',
-      buttonTextColor: '#ffffff',
+      buttonColor: FIGMA_BUTTON_FILL_COLOR,
+      buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
       logoVariant: 'black'
     };
 
@@ -84,8 +93,8 @@
       gradientEnd: '#2144B2',
       gradientAngle: 135,
       textColor: '#ffffff',
-      buttonColor: '#4ecbe3',
-      buttonTextColor: '#ffffff',
+      buttonColor: FIGMA_BUTTON_FILL_COLOR,
+      buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
       logoVariant: 'white'
     };
 
@@ -355,6 +364,8 @@
       }
     });
 
+    Object.assign(generationLayoutRules, window.SpecPromoFrameLayouts?.getLayouts?.() || {});
+
     const TEMPLATE_STORAGE_KEY = 'spec-promo-template-state-v1';
     const SIZE_LANGUAGE_STORAGE_KEY = 'spec-promo-size-language-state-v1';
     const APP_DATABASE_NAME = 'spec-promo-materials-database-v1';
@@ -418,6 +429,11 @@
     const languageChecks = document.getElementById('languageChecks');
     const sizePreviewRow = document.getElementById('sizePreviewRow');
     const languagePreviewRow = document.getElementById('languagePreviewRow');
+    const previewBottomSwitcher = document.getElementById('previewBottomSwitcher');
+    const bottomSizePreviewRow = document.getElementById('bottomSizePreviewRow');
+    const bottomLanguagePreviewRow = document.getElementById('bottomLanguagePreviewRow');
+    const bottomSizePreviewTitle = document.getElementById('bottomSizePreviewTitle');
+    const bottomLanguagePreviewTitle = document.getElementById('bottomLanguagePreviewTitle');
     const titleInput = document.getElementById('titleInput');
     const subtitleInput = document.getElementById('subtitleInput');
     const ctaInput = document.getElementById('ctaInput');
@@ -529,6 +545,8 @@
     let selectedTemplate = 'template-1';
     let selectedStyle = 'style-1';
     let isGenerating = false;
+    let appInitialized = false;
+    let pendingGenerationAfterInit = false;
     let generationToken = 0;
     let generatedAssets = [];
     let sizeOptionsExpanded = true;
@@ -602,8 +620,10 @@
       if (sizeChoiceLabel) sizeChoiceLabel.textContent = `尺寸选择（${materialSizes.length} 个）`;
       if (languageChoiceLabel) languageChoiceLabel.textContent = `语言选择（${languages.length} 种）`;
       if (sizePreviewTitle) sizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
+      if (bottomSizePreviewTitle) bottomSizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
       if (frameworkSizePreviewTitle) frameworkSizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
       if (languagePreviewTitle) languagePreviewTitle.textContent = `语言预览（${languages.length}种）`;
+      if (bottomLanguagePreviewTitle) bottomLanguagePreviewTitle.textContent = `语言预览（${languages.length}种）`;
       sizeChecks.innerHTML = materialSizes.map((size, index) => `
         <label class="check-item"><input type="checkbox" checked data-size-index="${index}"> ${size.label}</label>
       `).join('');
@@ -1017,6 +1037,19 @@
         && String(styles?.gradientEnd || '').toLowerCase() === '#1f3472';
     }
 
+    function normalizeButtonColors(styles) {
+      if (!styles || typeof styles !== 'object') return styles;
+      const buttonColor = String(styles.buttonColor || '').toLowerCase();
+      if (!buttonColor || LEGACY_BUTTON_FILL_COLORS.has(buttonColor)) {
+        styles.buttonColor = FIGMA_BUTTON_FILL_COLOR;
+      }
+      const buttonTextColor = String(styles.buttonTextColor || '').toLowerCase();
+      if (!buttonTextColor || buttonTextColor === LEGACY_BUTTON_TEXT_COLOR) {
+        styles.buttonTextColor = FIGMA_BUTTON_TEXT_COLOR;
+      }
+      return styles;
+    }
+
     function normalizeTemplateState() {
       const defaultFrameworks = defaultTemplates();
       templates = defaultFrameworks.map(framework => ({
@@ -1048,6 +1081,7 @@
         if (!styleMaps[style.id] || isLegacyDarkDefaultStyles(styleMaps[style.id])) {
           styleMaps[style.id] = cloneStyles(style.id === 'style-2' ? darkTemplateStyles : defaultTemplateStyles);
         }
+        normalizeButtonColors(styleMaps[style.id]);
       });
       if (!styleIds.has(selectedStyle)) selectedStyle = stylePresets[0].id;
     }
@@ -1091,6 +1125,8 @@
 
     function normalizeCopy(copy, index = 0) {
       const fallback = cloneDefaultCopy(index);
+      const legacyEnglishCopy = index === 0 && copy?.title === '标题文案' && copy?.subtitle === '副标题文案' && copy?.cta === '按钮文案';
+      if (legacyEnglishCopy) return fallback;
       return {
         title: String(copy?.title || fallback.title || ''),
         subtitle: String(copy?.subtitle || fallback.subtitle || ''),
@@ -1111,6 +1147,24 @@
       });
     }
 
+    function mergeFigmaFrameSizes() {
+      const figmaSizes = window.SpecPromoFrameLayouts?.getSizes?.() || [];
+      if (!Array.isArray(figmaSizes) || !figmaSizes.length) return;
+      const figmaById = new Map(figmaSizes.map(size => [size.id, size]));
+      const figma120x50 = figmaById.get('ad_120x50');
+      if (figma120x50) {
+        materialSizes = materialSizes.map(size =>
+          size.width === 120 && size.height === 600 ? cloneState(figma120x50) : size
+        );
+      }
+      figmaSizes.forEach(size => {
+        const exists = materialSizes.some(item =>
+          item.id === size.id || (item.width === size.width && item.height === size.height)
+        );
+        if (!exists) materialSizes.push(cloneState(size));
+      });
+    }
+
     function normalizeSizeLanguageState() {
       const activeSizeId = materialSizes[currentSizeIndex]?.id;
       materialSizes = (Array.isArray(materialSizes) ? materialSizes : [])
@@ -1126,6 +1180,7 @@
           };
         })
         .filter(Boolean);
+      mergeFigmaFrameSizes();
       if (!materialSizes.length) materialSizes = JSON.parse(JSON.stringify(DEFAULT_MATERIAL_SIZES));
       sortMaterialSizesByWidth(materialSizes);
       if (activeSizeId) {
@@ -1313,11 +1368,17 @@
       applyRuleVisualStyles();
     }
 
+    function frameLayoutStylesForAsset(asset = currentPreviewAsset()) {
+      const size = materialSizes[asset?.sizeIndex ?? currentSizeIndex] || materialSizes[currentSizeIndex] || materialSizes[0];
+      return generationLayoutRules[size?.id]?.styles || {};
+    }
+
     function effectivePosterStyles(asset = currentPreviewAsset()) {
-      return {
+      return normalizeButtonColors({
+        ...frameLayoutStylesForAsset(asset),
         ...templateStyles,
         ...(asset?.rule?.styles || {})
-      };
+      });
     }
 
     function applyRuleVisualStyles(asset = currentPreviewAsset()) {
@@ -1326,8 +1387,8 @@
       materialCard.style.setProperty('--poster-bg', posterBg);
       uploadPreview.style.setProperty('--poster-bg', posterBg);
       materialCard.style.setProperty('--copy-color', styles.textColor);
-      materialCard.style.setProperty('--cta-bg', styles.buttonColor);
-      materialCard.style.setProperty('--cta-fg', styles.buttonTextColor || '#ffffff');
+      materialCard.style.setProperty('--cta-bg', styles.buttonColor || FIGMA_BUTTON_FILL_COLOR);
+      materialCard.style.setProperty('--cta-fg', styles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR);
       applyRuleLogo(currentLanguageIndex, styles);
     }
 
@@ -1395,9 +1456,9 @@
       styleAnchorPreview('anchorPreviewLogo', previewAnchors.logo);
       anchorCanvas.style.background = templateBackgroundCss(previewStyles);
       const sourceCopy = getSourceCopy();
-      if (anchorPreviewTitle) anchorPreviewTitle.textContent = sourceCopy.title || '标题';
-      if (anchorPreviewSubtitle) renderMultilineText(anchorPreviewSubtitle, sourceCopy.subtitle || '副标题');
-      if (anchorPreviewCta) anchorPreviewCta.textContent = sourceCopy.cta || '按钮文案';
+      if (anchorPreviewTitle) anchorPreviewTitle.textContent = sourceCopy.title || 'Headline Text';
+      if (anchorPreviewSubtitle) renderMultilineText(anchorPreviewSubtitle, sourceCopy.subtitle || 'More information and key features can be detailed here.');
+      if (anchorPreviewCta) anchorPreviewCta.textContent = sourceCopy.cta || 'Button Text';
       renderGradientControl(previewStyles);
       const logoPreview = document.querySelector('#anchorPreviewLogo img');
       if (logoPreview) {
@@ -1423,8 +1484,8 @@
       });
       const ctaPreview = document.getElementById('anchorPreviewCta');
       if (ctaPreview) {
-        ctaPreview.style.background = previewStyles.buttonColor;
-        ctaPreview.style.color = previewStyles.buttonTextColor || '#ffffff';
+        ctaPreview.style.background = previewStyles.buttonColor || FIGMA_BUTTON_FILL_COLOR;
+        ctaPreview.style.color = previewStyles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR;
       }
       requestAnimationFrame(fitAnchorPreviewTextBoxes);
     }
@@ -1582,8 +1643,8 @@
       syncColorControl(gradientEndInput, gradientEndHexInput, draftTemplateStyles.gradientEnd);
       gradientAngleInput.value = String(draftTemplateStyles.gradientAngle ?? 135);
       syncColorControl(textColorInput, textColorHexInput, draftTemplateStyles.textColor);
-      syncColorControl(buttonColorInput, buttonColorHexInput, draftTemplateStyles.buttonColor);
-      syncColorControl(buttonTextColorInput, buttonTextColorHexInput, draftTemplateStyles.buttonTextColor || '#ffffff');
+      syncColorControl(buttonColorInput, buttonColorHexInput, draftTemplateStyles.buttonColor || FIGMA_BUTTON_FILL_COLOR);
+      syncColorControl(buttonTextColorInput, buttonTextColorHexInput, draftTemplateStyles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR);
       document.querySelectorAll('.logo-tone-card').forEach(button => {
         button.classList.toggle('active', button.dataset.logoVariant === (draftTemplateStyles.logoVariant || 'black'));
       });
@@ -1844,7 +1905,7 @@
         const anchor = anchors[key];
         if (!anchor) return;
         const overlayAnchor = posterOverlayAnchor(key, anchor);
-        box.classList.toggle('hidden', key === 'trust' && !effectiveTrustVisible());
+        box.classList.toggle('hidden', Boolean(anchor.hidden) || (key === 'trust' && !effectiveTrustVisible()));
         box.style.left = formatPct(overlayAnchor.x);
         box.style.top = formatPct(overlayAnchor.y);
         box.style.width = formatPct(overlayAnchor.w);
@@ -2171,9 +2232,9 @@
 
     function defaultLocalizedCopy() {
       return {
-        title: titleInput.value || localizedCopy[0]?.title || '标题文案',
-        subtitle: subtitleInput.value || localizedCopy[0]?.subtitle || '副标题文案',
-        cta: ctaInput.value || localizedCopy[0]?.cta || '按钮文案'
+        title: titleInput.value || localizedCopy[0]?.title || 'Headline Text',
+        subtitle: subtitleInput.value || localizedCopy[0]?.subtitle || 'More information and key features can be detailed here.',
+        cta: ctaInput.value || localizedCopy[0]?.cta || 'Button Text'
       };
     }
 
@@ -2808,9 +2869,9 @@
 
     function getSourceCopy() {
       return {
-        title: titleInput.value.trim() || localizedCopy[0]?.title || '标题文案',
-        subtitle: subtitleInput.value.trim() || localizedCopy[0]?.subtitle || '副标题文案',
-        cta: ctaInput.value.trim() || localizedCopy[0]?.cta || '按钮文案'
+        title: titleInput.value.trim() || localizedCopy[0]?.title || 'Headline Text',
+        subtitle: subtitleInput.value.trim() || localizedCopy[0]?.subtitle || 'More information and key features can be detailed here.',
+        cta: ctaInput.value.trim() || localizedCopy[0]?.cta || 'Button Text'
       };
     }
 
@@ -2884,13 +2945,13 @@
       if (scope === 'template') {
         if (key === 'title') {
           titleInput.value = cleanValue;
-          anchorPreviewTitle.textContent = cleanValue || '标题';
+          anchorPreviewTitle.textContent = cleanValue || 'Headline Text';
         } else if (key === 'subtitle') {
           subtitleInput.value = cleanValue;
-          renderMultilineText(anchorPreviewSubtitle, cleanValue || '副标题');
+          renderMultilineText(anchorPreviewSubtitle, cleanValue || 'More information and key features can be detailed here.');
         } else if (key === 'cta') {
           ctaInput.value = cleanValue;
-          anchorPreviewCta.textContent = cleanValue || '按钮文案';
+          anchorPreviewCta.textContent = cleanValue || 'Button Text';
         }
         localizedCopy[0] = { ...(localizedCopy[0] || defaultLocalizedCopy()), [key]: cleanValue };
         updateCounters();
@@ -2968,11 +3029,13 @@
     }
 
     function renderSizePreview(indices = generatedSizeIndices) {
-      sizePreviewRow.innerHTML = indices.map(index => {
+      const html = indices.map(index => {
         const size = materialSizes[index];
         if (!size) return '';
         return `<button class="size-thumb ${index === currentSizeIndex ? 'active' : ''}" type="button" data-size-preview-index="${index}" aria-label="预览 ${size.label} 尺寸">${size.label}</button>`;
       }).join('');
+      sizePreviewRow.innerHTML = html;
+      if (bottomSizePreviewRow) bottomSizePreviewRow.innerHTML = html;
       syncResultCollapseState();
     }
 
@@ -3085,10 +3148,12 @@
     }
 
     function renderLanguagePreview(indices = generatedLanguageIndices) {
-      languagePreviewRow.innerHTML = indices.map(index => {
+      const html = indices.map(index => {
         const [cn, en] = languages[index] || languages[0];
         return `<button class="language-pill ${index === currentLanguageIndex ? 'active' : ''}" type="button" data-language-preview-index="${index}">${cn}<span>${en}</span></button>`;
       }).join('');
+      languagePreviewRow.innerHTML = html;
+      if (bottomLanguagePreviewRow) bottomLanguagePreviewRow.innerHTML = html;
       syncResultCollapseState();
     }
 
@@ -3106,11 +3171,23 @@
         : `${generatedSizeIndices.length} 个尺寸 × ${generatedLanguageIndices.length} 种语言，共 ${generatedAssetCount()} 张素材已准备下载。`;
     }
 
+    function resetGeneratorPanelScroll(targetPanel = null) {
+      [settingsPanel, resultPreviewPanel, generatorLayout, document.scrollingElement]
+        .filter(Boolean)
+        .forEach(element => {
+          element.scrollTop = 0;
+          element.scrollLeft = 0;
+        });
+      if (targetPanel?.scrollIntoView) {
+        requestAnimationFrame(() => targetPanel.scrollIntoView({ block: 'start', inline: 'nearest' }));
+      }
+    }
+
     function syncCopyPlaceholderState() {
       [
-        [titleInput, localizedCopy[0]?.title || '标题文案'],
-        [subtitleInput, localizedCopy[0]?.subtitle || '副标题文案'],
-        [ctaInput, localizedCopy[0]?.cta || '按钮文案']
+        [titleInput, localizedCopy[0]?.title || 'Headline Text'],
+        [subtitleInput, localizedCopy[0]?.subtitle || 'More information and key features can be detailed here.'],
+        [ctaInput, localizedCopy[0]?.cta || 'Button Text']
       ].forEach(([input, placeholderCopy]) => {
         input?.classList.toggle('copy-placeholder', input.value === placeholderCopy);
       });
@@ -3127,29 +3204,28 @@
     }
 
     function isGenerationReady() {
-      return hasImage
-        && titleInput.value.trim()
+      return titleInput.value.trim()
         && subtitleInput.value.trim()
         && ctaInput.value.trim()
         && selectedLanguageIndices().length > 0;
     }
 
     function updateUploadState() {
-      generated = hasImage && generated;
       uploadPreview.classList.toggle('hidden', !hasImage);
       uploadMeta.classList.toggle('hidden', !hasImage);
       uploadCard.classList.toggle('hidden', hasImage);
       productFrame.classList.toggle('hidden', !hasImage);
       if (!hasImage) selectProductFrame(false);
       emptyNote.classList.add('hidden');
-      materialCard.classList.toggle('empty', !hasImage);
-      materialCard.classList.toggle('generated', hasImage && generated);
+      materialCard.classList.toggle('empty', !generated && !hasImage);
+      materialCard.classList.toggle('generated', generated);
+      materialCard.classList.toggle('no-upload', !hasImage);
       if (!generated) {
         activePosterAnchor = null;
         selectedPosterAnchorKeys = new Set();
       }
       renderPosterEditOverlay();
-      generateButton.disabled = !isGenerationReady();
+      generateButton.disabled = !appInitialized || !isGenerationReady();
       downloadButton.disabled = !generated;
       editPosterButton.disabled = !generated;
       regenerateButton.disabled = !generated;
@@ -3159,6 +3235,7 @@
       regenerateButton.classList.toggle('hidden', !generated);
       settingsPanel.classList.toggle('hidden', generated);
       resultPreviewPanel.classList.toggle('hidden', !generated);
+      previewBottomSwitcher?.classList.toggle('hidden', !generated);
       generatorLayout.classList.toggle('result-mode', generated);
       sizePreviewSection.classList.toggle('is-empty', !generated);
       languagePreviewSection.classList.toggle('is-empty', !generated);
@@ -3177,7 +3254,7 @@
 
     function setGeneratingState(next) {
       isGenerating = next;
-      generateButton.disabled = next || !isGenerationReady();
+      generateButton.disabled = next || !appInitialized || !isGenerationReady();
       downloadButton.disabled = next || !generated;
       if (next) closeDownloadMenu();
       editPosterButton.disabled = next || !generated;
@@ -3400,7 +3477,7 @@
         const src = await fileToDataUrl(file);
         await validateUploadImage(src);
         setUploadImage(file, src);
-        showToast('图片已上传，可在素材预览中拖拽或滚轮缩放');
+        showToast('图片已上传，可在预览区拖拽或滚轮缩放');
       } catch (error) {
         const message = error.message === 'image too large'
             ? '图片像素过大，请压缩后上传'
@@ -3804,21 +3881,59 @@
       return false;
     }
 
+    function validIndices(indices, collection) {
+      return [...new Set(indices)]
+        .filter(index => Number.isInteger(index) && index >= 0 && index < collection.length);
+    }
+
+    function recoverGenerationFailure(error) {
+      console.error('Generation failed', error);
+      generated = false;
+      generatedAssets = [];
+      progressCard.classList.remove('visible');
+      materialCard.classList.remove('hidden');
+      setGeneratingState(false);
+      updateUploadState();
+      showToast('生成失败，已恢复预览界面，请重试');
+    }
+
     function runGeneration() {
       if (isGenerating) return;
+      if (!appInitialized) {
+        pendingGenerationAfterInit = true;
+        generateButton.disabled = true;
+        showToast('素材配置加载中，请稍候');
+        return;
+      }
+      normalizeSizeLanguageState();
+      currentSizeIndex = Math.min(currentSizeIndex, Math.max(0, materialSizes.length - 1));
+      currentLanguageIndex = Math.min(currentLanguageIndex, Math.max(0, languages.length - 1));
       if (!isGenerationReady()) {
-        showToast('请先上传图片并填写标题、副标题和按钮文案');
+        showToast('请先填写标题、副标题、按钮文案并至少选择一种语言');
         updateUploadState();
         return;
       }
       syncSpreadsheetRulesToOptions();
-      const ruleAssets = spreadsheetGenerationRules.map(buildRuleAsset);
+      const ruleAssets = spreadsheetGenerationRules.map(buildRuleAsset).filter(asset =>
+        Number.isInteger(asset?.sizeIndex) && materialSizes[asset.sizeIndex]
+        && Number.isInteger(asset?.languageIndex) && languages[asset.languageIndex]
+      );
       if (rulesDocuments.length && !ruleAssets.length) {
         showToast('已上传生成规则文档，但未解析到可执行规则，将按默认设置生成');
       }
-      const nextSizeIndices = ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'sizeIndex') : materialSizes.map((_, index) => index);
-      const nextLanguageIndices = ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'languageIndex') : selectedLanguageIndices();
+      const nextSizeIndices = validIndices(
+        ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'sizeIndex') : materialSizes.map((_, index) => index),
+        materialSizes
+      );
+      const nextLanguageIndices = validIndices(
+        ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'languageIndex') : selectedLanguageIndices(),
+        languages
+      );
       document.querySelectorAll('#sizeChecks input').forEach(input => { input.checked = true; });
+      if (!nextSizeIndices.length) {
+        showToast('请至少选择一个尺寸');
+        return;
+      }
       if (!nextLanguageIndices.length) {
         showToast('请至少选择一种语言');
         return;
@@ -3828,6 +3943,7 @@
       generationToken += 1;
       const token = generationToken;
       statusDock.classList.remove('visible');
+      resetGeneratorPanelScroll(settingsPanel);
       materialCard.classList.add('hidden');
       progressCard.classList.add('visible');
       progressFill.style.width = '0%';
@@ -3847,36 +3963,54 @@
           clearInterval(timer);
           setTimeout(() => {
             if (token !== generationToken) return;
-            generated = true;
-            generatedSizeIndices = nextSizeIndices;
-            generatedLanguageIndices = nextLanguageIndices;
-            generatedAssets = ruleAssets.length ? ruleAssets : generatedSizeIndices.flatMap(sizeIndex =>
-              generatedLanguageIndices.map(languageIndex => ({
-                sizeIndex,
-                languageIndex,
-                fileName: buildAssetFileName(sizeIndex, languageIndex)
-              }))
-            );
-            // 生成完成后从结果列表的第一个尺寸开始预览，而不是继续停留在模板预览尺寸。
-            if (generatedSizeIndices.length) currentSizeIndex = generatedSizeIndices[0];
-            if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0];
-            renderSizePreview(generatedSizeIndices);
-            renderLanguagePreview(generatedLanguageIndices);
-            clearPosterEditHistory();
-            applySizePreview(currentSizeIndex);
-            applyLanguagePreview(currentLanguageIndex);
-            updateGeneratedMeta();
-            progressCard.classList.remove('visible');
-            materialCard.classList.remove('hidden');
-            updateUploadState();
-            setTrustVisible(trustVisible);
-            setGeneratingState(false);
-            statusDock.classList.add('visible');
-            setTimeout(() => statusDock.classList.remove('visible'), 1800);
+            try {
+              resetGeneratorPanelScroll(resultPreviewPanel);
+              generated = true;
+              generatedSizeIndices = nextSizeIndices;
+              generatedLanguageIndices = nextLanguageIndices;
+              generatedAssets = ruleAssets.length ? ruleAssets : generatedSizeIndices.flatMap(sizeIndex =>
+                generatedLanguageIndices.map(languageIndex => ({
+                  sizeIndex,
+                  languageIndex,
+                  fileName: buildAssetFileName(sizeIndex, languageIndex)
+                }))
+              );
+              // 生成完成后从结果列表的第一个尺寸开始预览，而不是继续停留在模板预览尺寸。
+              if (generatedSizeIndices.length) currentSizeIndex = generatedSizeIndices[0];
+              if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0];
+              renderSizePreview(generatedSizeIndices);
+              renderLanguagePreview(generatedLanguageIndices);
+              clearPosterEditHistory();
+              applySizePreview(currentSizeIndex);
+              applyLanguagePreview(currentLanguageIndex);
+              updateGeneratedMeta();
+              progressCard.classList.remove('visible');
+              materialCard.classList.remove('hidden');
+              updateUploadState();
+              resetGeneratorPanelScroll(resultPreviewPanel);
+              setTrustVisible(trustVisible);
+              setGeneratingState(false);
+              statusDock.classList.add('visible');
+              setTimeout(() => statusDock.classList.remove('visible'), 1800);
+            } catch (error) {
+              recoverGenerationFailure(error);
+            }
           }, 350);
         }
       }, 160);
     }
+
+    window.specRunGeneration = runGeneration;
+
+    function triggerGenerationFromButton(event) {
+      const button = event.target?.closest?.('#generateButton');
+      if (!button || button.disabled) return;
+      event.preventDefault();
+      event.stopPropagation();
+      runGeneration(event);
+    }
+
+    document.addEventListener('pointerdown', triggerGenerationFromButton, true);
 
     function prepareRegeneration() {
       if (isGenerating) return;
@@ -3907,9 +4041,9 @@
       generationToken += 1;
       isGenerating = false;
       normalizeTemplateState();
-      titleInput.value = '标题文案';
-      subtitleInput.value = '副标题文案';
-      ctaInput.value = '按钮文案';
+      titleInput.value = 'Headline Text';
+      subtitleInput.value = 'More information and key features can be detailed here.';
+      ctaInput.value = 'Button Text';
       hasImage = false;
       generated = false;
       uploadedImageSrc = '';
@@ -4296,6 +4430,8 @@
       sidebar.classList.remove('open');
       if (viewId === 'templateManagerView') renderAnchorEditor();
       if (viewId === 'generatorView') {
+        resetGeneratorPanelScroll(settingsPanel);
+        updateUploadState();
         applyTemplateAnchors();
         requestAnimationFrame(() => fitMaterialPreview());
       }
@@ -4326,7 +4462,12 @@
       initRulesDocumentUpload();
       await restoreRulesDocuments();
       updateGeneratedMeta();
+      appInitialized = true;
       updateUploadState();
+      if (pendingGenerationAfterInit) {
+        pendingGenerationAfterInit = false;
+        runGeneration();
+      }
     }
 
     initializePersistentApp();
@@ -4455,6 +4596,12 @@
       applySizePreview(Number(thumb.dataset.sizePreviewIndex));
     });
 
+    bottomSizePreviewRow?.addEventListener('click', event => {
+      const thumb = event.target.closest('.size-thumb');
+      if (!thumb) return;
+      applySizePreview(Number(thumb.dataset.sizePreviewIndex));
+    });
+
     frameworkSizePreviewRow?.addEventListener('click', event => {
       const thumb = event.target.closest('.size-thumb');
       if (!thumb) return;
@@ -4462,6 +4609,12 @@
     });
 
     languagePreviewRow.addEventListener('click', event => {
+      const pill = event.target.closest('.language-pill');
+      if (!pill) return;
+      applyLanguagePreview(Number(pill.dataset.languagePreviewIndex));
+    });
+
+    bottomLanguagePreviewRow?.addEventListener('click', event => {
       const pill = event.target.closest('.language-pill');
       if (!pill) return;
       applyLanguagePreview(Number(pill.dataset.languagePreviewIndex));
@@ -4607,7 +4760,10 @@
       }
     });
 
-    generateButton.addEventListener('click', runGeneration);
+    generateButton.addEventListener('click', event => {
+      if (event.defaultPrevented) return;
+      triggerGenerationFromButton(event);
+    });
     document.getElementById('resetButton').addEventListener('click', resetDemo);
     window.addEventListener('resize', () => {
       fitMaterialPreview();
