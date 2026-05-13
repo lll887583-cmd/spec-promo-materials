@@ -4,14 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Promo Materials UIDemo</title>
-  <script>
-    if (window.location.protocol === 'file:') {
-      window.location.replace('http://127.0.0.1:4173/index.html');
-    }
-  </script>
   <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260513-9" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="assets/app.css?v=20260513-18" />
+  <link rel="stylesheet" href="assets/app.css?v=20260513-21" />
+
 
 </head>
 <body class="spec-ui-root">
@@ -277,9 +273,10 @@
                 <img class="poster-product-image" id="phoneHand" alt="上传图片图层">
               </div>
               <div class="poster-edit-overlay" id="posterEditOverlay" aria-label="生成结果手动编辑图层">
+                <div class="edit-select-box poster-anchor-box" data-poster-anchor="image" data-label="主图"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
                 <div class="edit-select-box poster-anchor-box" data-poster-anchor="logo" data-label="Logo"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
-              <div class="edit-select-box poster-anchor-box" data-poster-anchor="title" data-label="标题"><div class="font-size-toolbar" aria-label="调整标题字号"><span class="font-size-current" data-font-size-value>--</span><button class="font-size-step" type="button" data-font-size-action="increase" aria-label="增大标题字号">+</button><button class="font-size-step" type="button" data-font-size-action="decrease" aria-label="减小标题字号">-</button></div><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
-              <div class="edit-select-box poster-anchor-box" data-poster-anchor="subtitle" data-label="副标题"><div class="font-size-toolbar" aria-label="调整副标题字号"><span class="font-size-current" data-font-size-value>--</span><button class="font-size-step" type="button" data-font-size-action="increase" aria-label="增大副标题字号">+</button><button class="font-size-step" type="button" data-font-size-action="decrease" aria-label="减小副标题字号">-</button></div><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box poster-anchor-box" data-poster-anchor="title" data-label="标题"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box poster-anchor-box" data-poster-anchor="subtitle" data-label="副标题"><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
                 <div class="edit-select-box poster-anchor-box" data-poster-anchor="cta" data-label="按钮"><div class="font-size-toolbar" aria-label="调整按钮字号"><span class="font-size-current" data-font-size-value>--</span><button class="font-size-step" type="button" data-font-size-action="increase" aria-label="增大按钮字号">+</button><button class="font-size-step" type="button" data-font-size-action="decrease" aria-label="减小按钮字号">-</button></div><i class="edit-select-handle poster-anchor-handle" aria-hidden="true"></i></div>
               </div>
               <div class="empty-note hidden" id="emptyNote">上传图片后将生成右侧商品图层</div>
@@ -309,9 +306,9 @@
               </div>
               <div class="thumb-row" id="frameworkSizePreviewRow"></div>
             </div>
-            <div class="align-panel">
-              <div class="label-row"><span>基础对齐</span></div>
-              <div class="anchor-toolbar" aria-label="基础对齐工具">
+            <div class="align-panel" data-frame-layout-rule="alignment-params-from-figma" data-alignment-source="figma" data-figma-alignment-url="https://www.figma.com/design/PN1Aikh14mpsA21sLVmHnU/%E6%8E%A8%E5%B9%BF%E7%B4%A0%E6%9D%90?node-id=3-464&amp;t=sdlYeGCManUsCYVt-11">
+              <div class="label-row"><span>基础对齐</span><span class="muted" data-frame-layout-note="alignment-params-from-figma">对齐参数以 Figma 节点 3:464 为准</span></div>
+              <div class="anchor-toolbar" aria-label="基础对齐工具" data-frame-layout-rule="alignment-params-from-figma">
                 <button class="anchor-align-btn" type="button" data-align-action="left"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v13"/><path d="M8 6h8"/><path d="M8 10h6"/><path d="M8 14h9"/></svg><span>左对齐</span></button>
                 <button class="anchor-align-btn" type="button" data-align-action="hcenter"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v13"/><path d="M6 6h8"/><path d="M7.5 10h5"/><path d="M5 14h10"/></svg><span>水平居中</span></button>
                 <button class="anchor-align-btn" type="button" data-align-action="right"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3.5v13"/><path d="M4 6h8"/><path d="M6 10h6"/><path d="M3 14h9"/></svg><span>右对齐</span></button>
@@ -342,8 +339,8 @@
                 <button class="gradient-handle" type="button" data-gradient-handle="end" aria-label="拖动渐变终点"></button>
               </div>
               <div class="edit-select-box anchor-box" data-anchor="image" data-label="主图"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
-              <div class="edit-select-box anchor-box" data-anchor="title" data-label="标题"><div class="font-size-toolbar" aria-label="调整标题字号"><span class="font-size-current" data-font-size-value>--</span><button class="font-size-step" type="button" data-font-size-action="increase" aria-label="增大标题字号">+</button><button class="font-size-step" type="button" data-font-size-action="decrease" aria-label="减小标题字号">-</button></div><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
-              <div class="edit-select-box anchor-box" data-anchor="subtitle" data-label="副标题"><div class="font-size-toolbar" aria-label="调整副标题字号"><span class="font-size-current" data-font-size-value>--</span><button class="font-size-step" type="button" data-font-size-action="increase" aria-label="增大副标题字号">+</button><button class="font-size-step" type="button" data-font-size-action="decrease" aria-label="减小副标题字号">-</button></div><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="title" data-label="标题"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
+              <div class="edit-select-box anchor-box" data-anchor="subtitle" data-label="副标题"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
               <div class="edit-select-box anchor-box" data-anchor="cta" data-label="按钮"><div class="font-size-toolbar" aria-label="调整按钮字号"><span class="font-size-current" data-font-size-value>--</span><button class="font-size-step" type="button" data-font-size-action="increase" aria-label="增大按钮字号">+</button><button class="font-size-step" type="button" data-font-size-action="decrease" aria-label="减小按钮字号">-</button></div><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
               <div class="edit-select-box anchor-box" data-anchor="logo" data-label="Logo"><i class="edit-select-handle anchor-handle" aria-hidden="true"></i></div>
             </div>
@@ -426,24 +423,33 @@
 
   <script async src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/poster-core.js?v=20260513-9"></script>
+  <script src="assets/poster-core.js?v=20260513-10"></script>
   <script src="assets/frame-store.js?v=20260513-9"></script>
-  <script src="assets/poster-renderer.js?v=20260513-9"></script>
-  <script src="assets/frame-editor.js?v=20260513-9"></script>
-  <script src="assets/poster-canvas.js?v=20260513-17"></script>
+  <script src="assets/poster-renderer.js?v=20260513-10"></script>
+  <script src="assets/frame-editor.js?v=20260513-10"></script>
+  <script src="assets/poster-canvas.js?v=20260513-18"></script>
   <script src="assets/export-assets.js?v=20260513-9"></script>
   <script src="assets/rules-parser.js?v=20260513-9"></script>
-  <script src="assets/frame-layouts/registry.js?v=20260513-20"></script>
+  <!-- frame-layouts rule: every alignment parameter must be read from the Figma node below, not guessed from the local baseline align buttons. -->
+  <script>
+    window.SpecPromoFrameLayoutRules = {
+      alignmentParameterSource: 'figma',
+      figmaUrl: 'https://www.figma.com/design/PN1Aikh14mpsA21sLVmHnU/%E6%8E%A8%E5%B9%BF%E7%B4%A0%E6%9D%90?node-id=3-464&t=sdlYeGCManUsCYVt-11',
+      figmaNodeId: '3:464',
+      rule: 'When creating or updating assets/frame-layouts/*.js, fetch and apply alignment coordinates from this Figma node for each size.'
+    };
+  </script>
+  <script src="assets/frame-layouts/registry.js?v=20260513-21"></script>
   <script src="assets/frame-layouts/120x50.js?v=20260513-25"></script>
   <script src="assets/frame-layouts/320x50.js?v=20260513-12"></script>
   <script src="assets/frame-layouts/320x100.js?v=20260513-18"></script>
-  <script src="assets/frame-layouts/720x90.js?v=20260513-12"></script>
-  <script src="assets/frame-layouts/728x90.js?v=20260513-12"></script>
+  <script src="assets/frame-layouts/720x90.js?v=20260513-13"></script>
+  <script src="assets/frame-layouts/728x90.js?v=20260513-13"></script>
   <script src="assets/frame-layouts/160x600.js?v=20260513-14"></script>
   <script src="assets/frame-layouts/300x250.js?v=20260513-21"></script>
   <script src="assets/frame-layouts/300x600.js?v=20260513-13"></script>
   <script src="assets/frame-layouts/320x480.js?v=20260513-13"></script>
-  <script src="assets/frame-layouts/800x800.js?v=20260513-23"></script>
+  <script src="assets/frame-layouts/800x800.js?v=20260513-24"></script>
   <script src="assets/frame-layouts/828x1200.js?v=20260513-24"></script>
   <script src="assets/frame-layouts/970x250.js?v=20260513-18"></script>
   <script src="assets/frame-layouts/980x250.js?v=20260513-18"></script>
@@ -451,7 +457,8 @@
   <script src="assets/frame-layouts/1200x628.js?v=20260513-12"></script>
   <script src="assets/frame-layouts/1200x1500.js?v=20260513-19"></script>
   <script src="assets/frame-layouts/1200x1200.js?v=20260513-19"></script>
-  <script src="assets/app.js?v=20260513-25"></script>
+  <script src="assets/app.js?v=20260513-37"></script>
+
 
 </body>
 </html>

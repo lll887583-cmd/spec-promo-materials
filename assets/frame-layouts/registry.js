@@ -7,6 +7,10 @@
 
   registry.register = function register(frame) {
     if (!frame || !frame.id || !frame.layout) return;
+    if (frame.layout.image) {
+      frame.layout.image.layer = 'bottom';
+      frame.layout.image.zIndex = 0;
+    }
     if (frame.layout.cta) {
       frame.layout.styles = {
         ...(frame.layout.styles || {}),

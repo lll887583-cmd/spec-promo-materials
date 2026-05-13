@@ -32,7 +32,7 @@
       if (!anchor) return anchor;
       const maxWidth = ctaMaxWidthPercentForSize(size);
       const w = clamp(Number(anchor.w) || 24, ctaMinWidthPercent, maxWidth);
-      const h = clamp(Number(anchor.h) || 11.5, 4, 32);
+      const h = clamp(Number(anchor.h) || 11.5, 4, 100);
       return {
         ...anchor,
         x: clamp(Number(anchor.x || 0), 0, 100 - w),

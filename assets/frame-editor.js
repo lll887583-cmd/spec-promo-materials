@@ -20,19 +20,14 @@
       anchorCanvas.style.setProperty('--anchor-preview-h', `${dimensions.height}px`);
     }
 
-    function styleAnchorPreview(node, anchor, isCta = false) {
+    function styleAnchorPreview(node, anchor) {
       if (!node || !anchor) return;
       node.style.left = formatPct(anchor.x);
       node.style.top = formatPct(anchor.y);
-      if (isCta) {
-        node.style.removeProperty('width');
-        node.style.removeProperty('height');
-        node.style.setProperty('--anchor-cta-x', formatPct(anchor.x));
-        node.style.setProperty('--anchor-cta-h', formatPct(anchor.h));
-      } else {
-        node.style.width = formatPct(anchor.w);
-        node.style.height = formatPct(anchor.h);
-      }
+      node.style.width = formatPct(anchor.w);
+      node.style.height = formatPct(anchor.h);
+      node.style.setProperty('--anchor-cta-x', formatPct(anchor.x));
+      node.style.setProperty('--anchor-cta-h', formatPct(anchor.h));
     }
 
     function fitTextElement(element, minSize = 6) {

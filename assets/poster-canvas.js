@@ -164,21 +164,19 @@
         ? Math.max(1, (Number(posterAnchors.cta.padY) / 100) * height)
         : Math.max(2, 20 * ctaPaddingScale);
       const ctaStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
-      const ctaAvailableW = Math.max(8, width - ctaRect.x - Math.max(2, 12 * ctaPaddingScale));
+      const ctaDrawW = ctaRect.w;
+      const ctaDrawH = ctaRect.h;
+      const ctaDrawY = ctaRect.y;
       const ctaFontSize = fitCanvasFont(
         ctx,
         copy.cta,
-        Math.max(8, ctaAvailableW - ctaPaddingX * 2),
+        Math.max(8, ctaDrawW - ctaPaddingX * 2),
         ctaStartSize,
-        Math.max(6, Math.round(ctaRect.h * 0.18)),
+        Math.max(6, Math.round(ctaDrawH * 0.18)),
         700
       );
       ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
       const ctaText = String(copy.cta || '');
-      const ctaTextWidth = ctx.measureText(ctaText).width;
-      const ctaDrawW = Math.min(ctaTextWidth + ctaPaddingX * 2, ctaAvailableW);
-      const ctaDrawH = ctaFontSize * 1.15 + ctaPaddingY * 2;
-      const ctaDrawY = posterCore.clamp(ctaRect.y, 0, Math.max(0, height - ctaDrawH));
       if (!posterAnchors.cta.hidden) {
         ctx.fillStyle = posterStyles.buttonColor || '#72DBF1';
         ctx.beginPath();
@@ -186,10 +184,9 @@
         ctx.fill();
         ctx.fillStyle = posterStyles.buttonTextColor || '#27376F';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = 'middle';
         ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
-        const ctaTextStartY = ctaDrawY + (ctaDrawH - ctaFontSize * 1.15) / 2;
-        ctx.fillText(ctaText, ctaRect.x + ctaDrawW / 2, ctaTextStartY);
+        ctx.fillText(ctaText, ctaRect.x + ctaDrawW / 2, ctaDrawY + ctaDrawH / 2);
       }
       ctx.textBaseline = 'alphabetic';
     }

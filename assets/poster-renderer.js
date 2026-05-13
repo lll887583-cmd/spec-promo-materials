@@ -133,7 +133,7 @@
       let baseH = rect.h;
       if (imageRatio > targetRatio) baseW = rect.h * imageRatio;
       else baseH = rect.w / imageRatio;
-      const scale = posterCore.clamp(Number(adjustment.scale) || 1, 1, 4);
+      const scale = posterCore.clamp(Number(adjustment.scale) || 1, 0.4, 4);
       const drawW = baseW * scale;
       const drawH = baseH * scale;
       const maxX = Math.max(0, (drawW - rect.w) / (2 * rect.w));

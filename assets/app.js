@@ -30,16 +30,28 @@
     ];
 
 
+    const LEGACY_TRADING_LOCALIZED_COPY = [
+      { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
+      { title: '主導権を握る', subtitle: 'Spec Marketsで取引コストを抑えましょう。', cta: '優位性を見つける' },
+      { title: '掌控交易', subtitle: '使用 Spec Markets 降低您的交易成本。', cta: '找到你的优势' },
+      { title: '掌控交易', subtitle: '使用 Spec Markets 降低您的交易成本。', cta: '找到你的優勢' },
+      { title: 'Làm chủ giao dịch', subtitle: 'Giảm chi phí giao dịch cùng Spec Markets.', cta: 'Tìm lợi thế của bạn' },
+      { title: 'ควบคุมการเทรด', subtitle: 'ลดต้นทุนการเทรดของคุณกับ Spec Markets', cta: 'ค้นหาจุดได้เปรียบ' },
+      { title: '거래를 주도하세요', subtitle: 'Spec Markets와 함께 거래 비용을 낮추세요.', cta: '나만의 우위 찾기' },
+      { title: 'Kendalikan trading', subtitle: 'Turunkan biaya trading Anda bersama Spec Markets.', cta: 'Temukan keunggulan Anda' },
+      { title: 'Kuasai dagangan', subtitle: 'Kurangkan kos dagangan anda bersama Spec Markets.', cta: 'Cari kelebihan anda' }
+    ];
+
     let localizedCopy = [
       { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
-      { title: '主導権を握る', subtitle: 'Spec Marketsで\n取引コストを抑えましょう。', cta: '優位性を見つける' },
-      { title: '掌控交易', subtitle: '使用 Spec Markets\n降低您的交易成本。', cta: '找到你的优势' },
-      { title: '掌控交易', subtitle: '使用 Spec Markets\n降低您的交易成本。', cta: '找到你的優勢' },
-      { title: 'Làm chủ giao dịch', subtitle: 'Giảm chi phí giao dịch\ncùng Spec Markets.', cta: 'Tìm lợi thế của bạn' },
-      { title: 'ควบคุมการเทรด', subtitle: 'ลดต้นทุนการเทรดของคุณ\nกับ Spec Markets', cta: 'ค้นหาจุดได้เปรียบ' },
-      { title: '거래를 주도하세요', subtitle: 'Spec Markets와 함께\n거래 비용을 낮추세요.', cta: '나만의 우위 찾기' },
-      { title: 'Kendalikan trading', subtitle: 'Turunkan biaya trading Anda\nbersama Spec Markets.', cta: 'Temukan keunggulan Anda' },
-      { title: 'Kuasai dagangan', subtitle: 'Kurangkan kos dagangan anda\nbersama Spec Markets.', cta: 'Cari kelebihan anda' }
+      { title: '見出しテキスト', subtitle: '詳細情報や主な機能をここに記載できます。', cta: 'ボタンテキスト' },
+      { title: '标题文本', subtitle: '可在此处详细说明更多信息和主要功能。', cta: '按钮文本' },
+      { title: '標題文字', subtitle: '可在此處詳細說明更多資訊和主要功能。', cta: '按鈕文字' },
+      { title: 'Văn bản tiêu đề', subtitle: 'Có thể trình bày thêm thông tin và các tính năng chính tại đây.', cta: 'Văn bản nút' },
+      { title: 'ข้อความหัวข้อ', subtitle: 'สามารถใส่ข้อมูลเพิ่มเติมและฟีเจอร์หลักได้ที่นี่', cta: 'ข้อความปุ่ม' },
+      { title: '제목 텍스트', subtitle: '자세한 정보와 주요 기능을 여기에 설명할 수 있습니다.', cta: '버튼 텍스트' },
+      { title: 'Teks Judul', subtitle: 'Informasi tambahan dan fitur utama dapat dijelaskan di sini.', cta: 'Teks Tombol' },
+      { title: 'Teks Tajuk', subtitle: 'Maklumat lanjut dan ciri utama boleh diterangkan di sini.', cta: 'Teks Butang' }
     ];
 
     const DEFAULT_MATERIAL_SIZES = JSON.parse(JSON.stringify(materialSizes));
@@ -538,6 +550,7 @@
     let generatedSizeIndices = [templatePreviewSizeIndex()];
     let currentLanguageIndex = 0;
     let currentSizeIndex = templatePreviewSizeIndex();
+    let frameworkSizeIndex = templatePreviewSizeIndex();
     let selectedLogoBrand = 'market';
     let selectedLogoVariant = 'black';
     let selectedLogoSrc = 'assets/logo-market-light.png';
@@ -699,6 +712,7 @@
 
     const CTA_MIN_WIDTH_PERCENT = 10;
     const CTA_TEMPLATE_RATIO_SIZE = { width: 1200, height: 628 };
+    const PRODUCT_MIN_SCALE = 0.4;
     const posterCore = window.createPosterCore({
       defaultAnchors: defaultTemplateAnchors,
       layoutRules: generationLayoutRules,
@@ -1000,7 +1014,7 @@
       return posterCore.layoutAnchorsForSize(size, base);
     }
 
-    const posterEditableAnchorKeys = ['logo', 'title', 'subtitle', 'cta'];
+    const posterEditableAnchorKeys = ['image', 'logo', 'title', 'subtitle', 'cta'];
     const posterTextScale = posterCore.posterTextScale;
     const textChildAnchors = posterCore.textChildAnchors;
     function basePosterAnchorsForSize(size, base = templateAnchors) {
@@ -1123,15 +1137,47 @@
       return { ...(DEFAULT_LOCALIZED_COPY[index] || DEFAULT_LOCALIZED_COPY[0]) };
     }
 
+    function normalizeCopyText(value) {
+      return String(value || '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    }
+
     function normalizeCopy(copy, index = 0) {
       const fallback = cloneDefaultCopy(index);
       const legacyEnglishCopy = index === 0 && copy?.title === '标题文案' && copy?.subtitle === '副标题文案' && copy?.cta === '按钮文案';
-      if (legacyEnglishCopy) return fallback;
+      const legacyTradingCopy = LEGACY_TRADING_LOCALIZED_COPY[index]
+        && copy?.title === LEGACY_TRADING_LOCALIZED_COPY[index].title
+        && copy?.subtitle === LEGACY_TRADING_LOCALIZED_COPY[index].subtitle
+        && copy?.cta === LEGACY_TRADING_LOCALIZED_COPY[index].cta;
+      if (legacyEnglishCopy || legacyTradingCopy) return fallback;
       return {
-        title: String(copy?.title || fallback.title || ''),
-        subtitle: String(copy?.subtitle || fallback.subtitle || ''),
-        cta: String(copy?.cta || fallback.cta || '')
+        title: normalizeCopyText(copy?.title || fallback.title || ''),
+        subtitle: normalizeCopyText(copy?.subtitle || fallback.subtitle || ''),
+        cta: normalizeCopyText(copy?.cta || fallback.cta || '')
       };
+    }
+
+
+    const COPY_TRANSLATION_MAP = {
+      'Headline Text': ['Headline Text', '見出しテキスト', '标题文本', '標題文字', 'Văn bản tiêu đề', 'ข้อความหัวข้อ', '제목 텍스트', 'Teks Judul', 'Teks Tajuk'],
+      'More information and key features can be detailed here.': ['More information and key features can be detailed here.', '詳細情報や主な機能をここに記載できます。', '可在此处详细说明更多信息和主要功能。', '可在此處詳細說明更多資訊和主要功能。', 'Có thể trình bày thêm thông tin và các tính năng chính tại đây.', 'สามารถใส่ข้อมูลเพิ่มเติมและฟีเจอร์หลักได้ที่นี่', '자세한 정보와 주요 기능을 여기에 설명할 수 있습니다.', 'Informasi tambahan dan fitur utama dapat dijelaskan di sini.', 'Maklumat lanjut dan ciri utama boleh diterangkan di sini.'],
+      'Button Text': ['Button Text', 'ボタンテキスト', '按钮文本', '按鈕文字', 'Văn bản nút', 'ข้อความปุ่ม', '버튼 텍스트', 'Teks Tombol', 'Teks Butang'],
+      'Trade Gold with Confidence': ['Trade Gold with Confidence', '自信を持ってゴールドを取引', '自信交易黄金', '自信交易黃金', 'Giao dịch vàng với sự tự tin', 'เทรดทองอย่างมั่นใจ', '자신 있게 금 거래', 'Trading Emas dengan Percaya Diri', 'Dagang Emas dengan Yakin'],
+      'Low Spreads, High Liquidity, 24/5 Access.': ['Low Spreads, High Liquidity, 24/5 Access.', '低スプレッド、高い流動性、週5日24時間アクセス。', '低点差、高流动性，24/5 访问。', '低點差、高流動性，24/5 存取。', 'Spread thấp, thanh khoản cao, truy cập 24/5.', 'สเปรดต่ำ สภาพคล่องสูง เข้าถึงได้ 24/5', '낮은 스프레드, 높은 유동성, 주 5일 24시간 접속.', 'Spread rendah, likuiditas tinggi, akses 24/5.', 'Spread rendah, kecairan tinggi, akses 24/5.'],
+      'Start Trading': ['Start Trading', '取引を始める', '开始交易', '開始交易', 'Bắt đầu giao dịch', 'เริ่มเทรด', '거래 시작', 'Mulai Trading', 'Mula Berdagang']
+    };
+
+    function translatedCopyValue(value, languageIndex, fallbackValue = '') {
+      const key = String(value || '').trim();
+      const translations = COPY_TRANSLATION_MAP[key];
+      return normalizeCopyText(translations?.[languageIndex] || (languageIndex === 0 ? key : fallbackValue || key));
+    }
+
+    function buildLocalizedCopyFromSource(sourceCopy) {
+      return languages.map((_, index) => ({
+        title: translatedCopyValue(sourceCopy.title, index, cloneDefaultCopy(index).title),
+        subtitle: translatedCopyValue(sourceCopy.subtitle, index, cloneDefaultCopy(index).subtitle),
+        cta: translatedCopyValue(sourceCopy.cta, index, cloneDefaultCopy(index).cta)
+      }));
     }
 
     function isLegacySpanishLanguage(language) {
@@ -1167,6 +1213,7 @@
 
     function normalizeSizeLanguageState() {
       const activeSizeId = materialSizes[currentSizeIndex]?.id;
+      const activeFrameworkSizeId = materialSizes[frameworkSizeIndex]?.id;
       materialSizes = (Array.isArray(materialSizes) ? materialSizes : [])
         .map((size, index) => {
           const width = parsePositiveInt(size?.width);
@@ -1186,6 +1233,9 @@
       if (activeSizeId) {
         currentSizeIndex = Math.max(0, materialSizes.findIndex(size => size.id === activeSizeId));
       }
+      if (activeFrameworkSizeId) {
+        frameworkSizeIndex = Math.max(0, materialSizes.findIndex(size => size.id === activeFrameworkSizeId));
+      }
 
       languages = (Array.isArray(languages) ? languages : [])
         .map(language => {
@@ -1199,6 +1249,7 @@
 
       localizedCopy = languages.map((_, index) => normalizeCopy(localizedCopy?.[index], index));
       currentSizeIndex = Math.min(currentSizeIndex, Math.max(0, materialSizes.length - 1));
+      frameworkSizeIndex = Math.min(frameworkSizeIndex, Math.max(0, materialSizes.length - 1));
       currentLanguageIndex = Math.min(currentLanguageIndex, Math.max(0, languages.length - 1));
     }
 
@@ -1392,19 +1443,19 @@
       applyRuleLogo(currentLanguageIndex, styles);
     }
 
-    function fitAnchorCanvasPreview(size = materialSizes[currentSizeIndex]) {
+    function fitAnchorCanvasPreview(size = materialSizes[frameworkSizeIndex]) {
       frameEditorHelpers.fitAnchorCanvasPreview(size, anchorCanvas?.parentElement);
     }
 
-    function templateSizeKey(size = materialSizes[currentSizeIndex]) {
+    function templateSizeKey(size = materialSizes[frameworkSizeIndex]) {
       return size?.id || `${size?.width || 0}x${size?.height || 0}`;
     }
 
-    function isTemplateBaseSize(size = materialSizes[currentSizeIndex]) {
+    function isTemplateBaseSize(size = materialSizes[frameworkSizeIndex]) {
       return size?.id === TEMPLATE_PREVIEW_SIZE_ID || (size?.width === 1200 && size?.height === 628);
     }
 
-    function mergeTemplateAnchorSet(baseAnchors, overrideAnchors, size = materialSizes[currentSizeIndex]) {
+    function mergeTemplateAnchorSet(baseAnchors, overrideAnchors, size = materialSizes[frameworkSizeIndex]) {
       let anchors = cloneAnchors(baseAnchors || defaultTemplateAnchors);
       Object.entries(overrideAnchors || {}).forEach(([key, anchor]) => {
         if (!anchors[key] || !anchor || typeof anchor !== 'object') return;
@@ -1416,13 +1467,13 @@
       return anchors;
     }
 
-    function anchorEditorPreviewAnchors(size = materialSizes[currentSizeIndex]) {
+    function anchorEditorPreviewAnchors(size = materialSizes[frameworkSizeIndex]) {
       const baseAnchors = basePosterAnchorsForSize(size, draftTemplateAnchors);
       if (isTemplateBaseSize(size)) return baseAnchors;
       return mergeTemplateAnchorSet(baseAnchors, draftTemplateAnchors.sizeAnchors?.[templateSizeKey(size)], size);
     }
 
-    function ensureDraftAnchorsForActiveSize(size = materialSizes[currentSizeIndex]) {
+    function ensureDraftAnchorsForActiveSize(size = materialSizes[frameworkSizeIndex]) {
       if (isTemplateBaseSize(size)) return draftTemplateAnchors;
       const sizeKey = templateSizeKey(size);
       if (!draftTemplateAnchors.sizeAnchors || typeof draftTemplateAnchors.sizeAnchors !== 'object') {
@@ -1447,7 +1498,7 @@
       fitAnchorPreviewTextElement(anchorPreviewCta, 5);
     }
 
-    function renderAnchorPreview(previewAnchors = anchorEditorPreviewAnchors(), size = materialSizes[currentSizeIndex]) {
+    function renderAnchorPreview(previewAnchors = anchorEditorPreviewAnchors(), size = materialSizes[frameworkSizeIndex]) {
       const previewStyles = frameworkPreviewStyles();
       styleAnchorPreview('anchorPreviewImage', previewAnchors.image);
       styleAnchorPreview('anchorPreviewTitle', previewAnchors.title);
@@ -1581,15 +1632,54 @@
       return frameEditorHelpers.axisLockedDelta(dx, dy, dragState, lockAxis, threshold);
     }
 
+    function ensureEdgeResizeHandles(box, handleClass) {
+      if (!box || box.dataset.edgeHandlesReady === 'true') return;
+      ['n', 'e', 's', 'w'].forEach(side => {
+        const handle = document.createElement('span');
+        handle.className = `edit-resize-handle ${handleClass}`;
+        handle.dataset.resizeSide = side;
+        handle.setAttribute('aria-hidden', 'true');
+        box.appendChild(handle);
+      });
+      box.dataset.edgeHandlesReady = 'true';
+    }
+
+    function resizeAnchorFromSide(base, delta, side, proportional = false) {
+      const next = { ...base };
+      const right = Number(base.x) + Number(base.w);
+      const bottom = Number(base.y) + Number(base.h);
+      if (!proportional) {
+        if (side === 'e') next.w = base.w + delta.dx;
+        else if (side === 'w') { next.x = base.x + delta.dx; next.w = base.w - delta.dx; }
+        else if (side === 's') next.h = base.h + delta.dy;
+        else if (side === 'n') { next.y = base.y + delta.dy; next.h = base.h - delta.dy; }
+        return next;
+      }
+      let scale = 1;
+      if (side === 'e') scale = 1 + delta.dx / Math.max(base.w, 1);
+      else if (side === 'w') scale = 1 - delta.dx / Math.max(base.w, 1);
+      else if (side === 's') scale = 1 + delta.dy / Math.max(base.h, 1);
+      else if (side === 'n') scale = 1 - delta.dy / Math.max(base.h, 1);
+      scale = Math.max(0.15, scale);
+      next.w = base.w * scale;
+      next.h = base.h * scale;
+      if (side === 'w') next.x = right - next.w;
+      else if (side === 'n' || side === 's') next.x = base.x + (base.w - next.w) / 2;
+      if (side === 'n') next.y = bottom - next.h;
+      else if (side === 'e' || side === 'w') next.y = base.y + (base.h - next.h) / 2;
+      return next;
+    }
+
     function renderAnchorEditor() {
       if (!anchorCanvas) return;
       draftTemplateAnchors = ensureIndependentCopyAnchors(draftTemplateAnchors);
-      const size = materialSizes[currentSizeIndex] || materialSizes[0];
+      const size = materialSizes[frameworkSizeIndex] || materialSizes[0];
       fitAnchorCanvasPreview(size);
       const previewAnchors = anchorEditorPreviewAnchors(size);
       renderAnchorPreview(previewAnchors, size);
       renderStyleEditor();
       anchorCanvas.querySelectorAll('.anchor-box').forEach(box => {
+        ensureEdgeResizeHandles(box, 'anchor-handle');
         const anchor = previewAnchors[box.dataset.anchor];
         if (!anchor) return;
         box.style.left = formatPct(anchor.x);
@@ -1714,7 +1804,7 @@
       updatePosterAlignToolbar();
     }
 
-    function normalizedAnchor(anchorKey, nextAnchor, baseAnchor = null, size = materialSizes[currentSizeIndex]) {
+    function normalizedAnchor(anchorKey, nextAnchor, baseAnchor = null, size = materialSizes[frameworkSizeIndex]) {
       const minSize = anchorKey === 'logo' || anchorKey === 'trust'
         ? 6
         : (anchorKey === 'title' || anchorKey === 'subtitle' ? 5 : 12);
@@ -1727,7 +1817,7 @@
         w: clamp(numericOrBase(nextAnchor.w, base.w || minSize), minSize, 100),
         h: clamp(numericOrBase(nextAnchor.h, base.h || minSize), minSize, 100)
       };
-      if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 18);
+      if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 40);
       normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
       normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size || CTA_TEMPLATE_RATIO_SIZE) : normalized;
@@ -1741,7 +1831,7 @@
     }
 
     function updateAnchor(anchorKey, nextAnchor) {
-      const size = materialSizes[currentSizeIndex] || materialSizes[0];
+      const size = materialSizes[frameworkSizeIndex] || materialSizes[0];
       const targetAnchors = ensureDraftAnchorsForActiveSize(size);
       targetAnchors[anchorKey] = normalizedAnchor(anchorKey, nextAnchor, targetAnchors[anchorKey], size);
       if (isTemplateBaseSize(size)) {
@@ -1753,7 +1843,7 @@
     }
 
     function updateAnchors(anchorKeys, nextAnchorForKey) {
-      const size = materialSizes[currentSizeIndex] || materialSizes[0];
+      const size = materialSizes[frameworkSizeIndex] || materialSizes[0];
       const targetAnchors = ensureDraftAnchorsForActiveSize(size);
       anchorKeys.forEach(anchorKey => {
         targetAnchors[anchorKey] = normalizedAnchor(anchorKey, nextAnchorForKey(anchorKey), targetAnchors[anchorKey], size);
@@ -1875,6 +1965,7 @@
       if (key === 'subtitle') return elementTextBounds(previewSubtitle);
       if (key === 'cta') return previewCta?.getBoundingClientRect() || null;
       if (key === 'logo') return containedImageBounds(creativeLogoImage);
+      if (key === 'image') return productFrame?.getBoundingClientRect() || null;
       return null;
     }
 
@@ -1901,11 +1992,12 @@
     function renderPosterEditOverlay(anchors = effectivePosterAnchorsForSize()) {
       if (!posterEditOverlay) return;
       posterEditOverlay.querySelectorAll('.poster-anchor-box').forEach(box => {
+        ensureEdgeResizeHandles(box, 'poster-anchor-handle');
         const key = box.dataset.posterAnchor;
         const anchor = anchors[key];
         if (!anchor) return;
         const overlayAnchor = posterOverlayAnchor(key, anchor);
-        box.classList.toggle('hidden', Boolean(anchor.hidden) || (key === 'trust' && !effectiveTrustVisible()));
+        box.classList.toggle('hidden', Boolean(anchor.hidden) || (key === 'image' && !hasImage) || (key === 'trust' && !effectiveTrustVisible()));
         box.style.left = formatPct(overlayAnchor.x);
         box.style.top = formatPct(overlayAnchor.y);
         box.style.width = formatPct(overlayAnchor.w);
@@ -1941,7 +2033,7 @@
         w: clamp(nextAnchor.w, minSize, 100),
         h: clamp(nextAnchor.h, minSize, 100)
       };
-      if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 18);
+      if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 40);
       normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
       normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size) : normalized;
@@ -1954,6 +2046,7 @@
       posterAnchorOverrides[key] = posterAnchorOverrides[key] || {};
       posterAnchorOverrides[key][anchorKey] = normalizedPosterAnchor(anchorKey, nextAnchor, base, size);
       applyPosterLayoutForSize(currentSizeIndex);
+      requestAnimationFrame(updateProductImageFrame);
     }
 
     function setPosterOverrides(anchorKeys, nextAnchorForKey) {
@@ -1965,6 +2058,7 @@
         posterAnchorOverrides[key][anchorKey] = normalizedPosterAnchor(anchorKey, nextAnchorForKey(anchorKey), baseAnchors[anchorKey], size);
       });
       applyPosterLayoutForSize(currentSizeIndex);
+      requestAnimationFrame(updateProductImageFrame);
     }
 
     function alignSelectedPosterAnchors(action) {
@@ -2761,6 +2855,7 @@
       Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
       normalizeSizeLanguageState();
       currentSizeIndex = Math.min(currentSizeIndex, Math.max(0, materialSizes.length - 1));
+      frameworkSizeIndex = Math.min(frameworkSizeIndex, Math.max(0, materialSizes.length - 1));
       currentLanguageIndex = Math.min(currentLanguageIndex, Math.max(0, languages.length - 1));
       alignUngeneratedPreviewWithTemplateManager();
       generatedSizeIndices = generated && materialSizes.length ? materialSizes.map((_, index) => index) : (materialSizes.length ? [currentSizeIndex] : []);
@@ -2876,17 +2971,13 @@
     }
 
     function getLanguageCopy(languageIndex) {
-      if (posterCopyOverrides[languageIndex]) return posterCopyOverrides[languageIndex];
-      if (languageIndex === 0) return getSourceCopy();
-      return localizedCopy[languageIndex] || getSourceCopy();
+      const copy = posterCopyOverrides[languageIndex]
+        || (languageIndex === 0 ? getSourceCopy() : localizedCopy[languageIndex] || getSourceCopy());
+      return normalizeCopy(copy, languageIndex);
     }
 
     function renderMultilineText(element, text) {
-      element.textContent = '';
-      String(text || '').split('\n').forEach((line, index) => {
-        if (index) element.appendChild(document.createElement('br'));
-        element.appendChild(document.createTextNode(line));
-      });
+      element.textContent = normalizeCopyText(text);
     }
 
     let inlineCopyEditor = null;
@@ -2980,7 +3071,7 @@
     function setCopyFontForInlineEditor(scope, key, pxValue) {
       const host = scope === 'template' ? anchorCanvas : materialCard;
       const hostHeight = Math.max(1, host.clientHeight || 628);
-      const font = clamp((Number(pxValue) || 1) / hostHeight * 100, 0.6, 18);
+      const font = clamp((Number(pxValue) || 1) / hostHeight * 100, 0.6, 40);
       if (scope === 'template') {
         const anchors = anchorEditorPreviewAnchors();
         updateAnchor(key, { ...anchors[key], font });
@@ -2996,8 +3087,39 @@
     }
 
     function openInlineCopyEditor(scope, key) {
-      if (!['title', 'subtitle'].includes(key)) return;
+      if (!['title', 'subtitle', 'cta'].includes(key)) return;
+      const host = scope === 'template' ? anchorCanvas : materialCard;
+      const anchors = scope === 'template' ? anchorEditorPreviewAnchors() : effectivePosterAnchorsForSize();
+      const anchor = anchors[key];
+      if (!host || !anchor) return;
       closeInlineCopyEditor();
+      const editor = document.createElement('div');
+      editor.className = 'inline-copy-editor';
+      editor.dataset.inlineCopyEditor = scope;
+      editor.dataset.inlineCopyKey = key;
+      editor.style.left = formatPct(anchor.x);
+      editor.style.top = formatPct(anchor.y);
+      editor.style.width = formatPct(anchor.w);
+      editor.style.height = formatPct(anchor.h);
+      const canEditFontSize = key === 'cta';
+      const editorHint = canEditFontSize ? '拖动边框调整折行，+ / - 调整字号' : '拖动边框调整折行';
+      editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${key === 'cta' ? 20 : (key === 'title' ? 40 : 80)}"></textarea><label>${editorHint}</label>`;
+      const textarea = editor.querySelector('textarea');
+      const source = scope === 'template' ? getSourceCopy() : copyForAsset(currentPreviewAsset());
+      textarea.value = source[key] || '';
+      host.appendChild(editor);
+      inlineCopyEditor = editor;
+      syncFontSizeToolbar(editor, scope, key, anchor);
+      textarea.addEventListener('input', () => {
+        syncInlineTextareaSize(textarea);
+        setCopyTextForInlineEditor(scope, key, textarea.value);
+      });
+      editor.addEventListener('pointerdown', event => event.stopPropagation());
+      requestAnimationFrame(() => {
+        syncInlineTextareaSize(textarea);
+        textarea.focus();
+        textarea.select();
+      });
     }
 
     function applyLanguagePreview(languageIndex) {
@@ -3042,14 +3164,14 @@
     function renderFrameworkSizePreview() {
       if (!frameworkSizePreviewRow) return;
       frameworkSizePreviewRow.innerHTML = materialSizes.map((size, index) => (
-        `<button class="size-thumb ${index === currentSizeIndex ? 'active' : ''}" type="button" data-size-preview-index="${index}" aria-label="预览 ${size.label} 尺寸">${size.label}</button>`
+        `<button class="size-thumb ${index === frameworkSizeIndex ? 'active' : ''}" type="button" data-size-preview-index="${index}" aria-label="预览 ${size.label} 尺寸">${size.label}</button>`
       )).join('');
       syncResultCollapseState();
     }
 
     function applyFrameworkSizePreview(sizeIndex) {
       if (!materialSizes[sizeIndex] || !anchorCanvas) return;
-      currentSizeIndex = sizeIndex;
+      frameworkSizeIndex = sizeIndex;
       const size = materialSizes[sizeIndex];
       anchorCanvas.style.aspectRatio = `${size.width} / ${size.height}`;
       renderAnchorEditor();
@@ -3089,7 +3211,7 @@
     function clampProductAdjustment(adjustment = currentProductAdjustment()) {
       const geometry = productImageGeometry();
       if (!geometry) return adjustment;
-      adjustment.scale = clamp(Number(adjustment.scale) || 1, 1, 4);
+      adjustment.scale = clamp(Number(adjustment.scale) || 1, PRODUCT_MIN_SCALE, 4);
       const drawW = geometry.baseW * adjustment.scale;
       const drawH = geometry.baseH * adjustment.scale;
       const maxX = Math.max(0, (drawW - geometry.frameW) / (2 * geometry.frameW));
@@ -3141,7 +3263,7 @@
       applyPosterLayoutForSize(sizeIndex);
       applyLanguagePreview(currentLanguageIndex);
       requestAnimationFrame(updateProductImageFrame);
-      document.querySelectorAll('.size-thumb').forEach(thumb => {
+      document.querySelectorAll('#sizePreviewRow .size-thumb, #bottomSizePreviewRow .size-thumb').forEach(thumb => {
         thumb.classList.toggle('active', Number(thumb.dataset.sizePreviewIndex) === sizeIndex);
       });
       updatePager();
@@ -3207,6 +3329,8 @@
       return titleInput.value.trim()
         && subtitleInput.value.trim()
         && ctaInput.value.trim()
+        && hasImage
+        && selectedSizeIndices().length > 0
         && selectedLanguageIndices().length > 0;
     }
 
@@ -3582,7 +3706,7 @@
       if (!hasImage || isGenerating) return;
       const adjustment = currentProductAdjustment();
       const beforeScale = adjustment.scale || 1;
-      const nextScale = clamp(beforeScale * delta, 1, 4);
+      const nextScale = clamp(beforeScale * delta, PRODUCT_MIN_SCALE, 4);
       if (origin && productFrame) {
         const rect = productFrame.getBoundingClientRect();
         const offsetX = ((origin.clientX - rect.left) / rect.width) - 0.5;
@@ -3702,7 +3826,7 @@
       });
 
     document.addEventListener('click', event => {
-      if (event.target.closest('#productFrame')) return;
+      if (event.target.closest('#productFrame, .poster-anchor-box[data-poster-anchor="image"]')) return;
       selectProductFrame(false);
     });
 
@@ -3873,8 +3997,9 @@
 
     function copyForAsset(asset = currentPreviewAsset()) {
       if (!asset) return getLanguageCopy(currentLanguageIndex);
-      if (posterCopyOverrides[asset.languageIndex]) return posterCopyOverrides[asset.languageIndex];
-      return { ...getLanguageCopy(asset.languageIndex), ...(asset.rule?.copy || {}) };
+      const copy = posterCopyOverrides[asset.languageIndex]
+        || { ...getLanguageCopy(asset.languageIndex), ...(asset.rule?.copy || {}) };
+      return normalizeCopy(copy, asset.languageIndex);
     }
 
     function effectiveTrustVisible() {
@@ -3907,13 +4032,16 @@
       }
       normalizeSizeLanguageState();
       currentSizeIndex = Math.min(currentSizeIndex, Math.max(0, materialSizes.length - 1));
+      frameworkSizeIndex = Math.min(frameworkSizeIndex, Math.max(0, materialSizes.length - 1));
       currentLanguageIndex = Math.min(currentLanguageIndex, Math.max(0, languages.length - 1));
       if (!isGenerationReady()) {
-        showToast('请先填写标题、副标题、按钮文案并至少选择一种语言');
+        showToast('请先填写标题、副标题、按钮文案，上传主图并至少选择一个尺寸和一种语言');
         updateUploadState();
         return;
       }
       syncSpreadsheetRulesToOptions();
+      localizedCopy = buildLocalizedCopyFromSource(getSourceCopy());
+      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
       const ruleAssets = spreadsheetGenerationRules.map(buildRuleAsset).filter(asset =>
         Number.isInteger(asset?.sizeIndex) && materialSizes[asset.sizeIndex]
         && Number.isInteger(asset?.languageIndex) && languages[asset.languageIndex]
@@ -3922,14 +4050,13 @@
         showToast('已上传生成规则文档，但未解析到可执行规则，将按默认设置生成');
       }
       const nextSizeIndices = validIndices(
-        ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'sizeIndex') : materialSizes.map((_, index) => index),
+        ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'sizeIndex') : selectedSizeIndices(),
         materialSizes
       );
       const nextLanguageIndices = validIndices(
         ruleAssets.length ? uniqueAssetIndices(ruleAssets, 'languageIndex') : selectedLanguageIndices(),
         languages
       );
-      document.querySelectorAll('#sizeChecks input').forEach(input => { input.checked = true; });
       if (!nextSizeIndices.length) {
         showToast('请至少选择一个尺寸');
         return;
@@ -4130,7 +4257,8 @@
           selectedAnchorKeys = new Set([activeAnchor]);
         }
         const currentAnchors = anchorEditorPreviewAnchors();
-        const anchorKeys = event.target.closest('.anchor-handle')
+        const resizeHandle = event.target.closest('.anchor-handle');
+        const anchorKeys = resizeHandle
           ? [activeAnchor]
           : [...selectedAnchorKeys].filter(key => currentAnchors[key]);
         const anchors = Object.fromEntries(anchorKeys.map(key => [key, { ...currentAnchors[key] }]));
@@ -4138,7 +4266,8 @@
         dragState = {
           anchorKey: activeAnchor,
           anchorKeys,
-          mode: event.target.closest('.anchor-handle') ? 'resize' : 'move',
+          mode: resizeHandle ? 'resize' : 'move',
+          resizeSide: resizeHandle?.dataset.resizeSide || 'se',
           startX: event.clientX,
           startY: event.clientY,
           rect,
@@ -4167,11 +4296,10 @@
         dragState.moved = dragState.moved || Math.abs(event.clientX - dragState.startX) > 3 || Math.abs(event.clientY - dragState.startY) > 3;
         if (dragState.mode === 'resize') {
           const base = dragState.anchors[dragState.anchorKey];
-          if (dragState.anchorKey === 'cta') {
-            updateAnchor(dragState.anchorKey, { ...base, w: base.w + delta.dx });
-          } else {
-            updateAnchor(dragState.anchorKey, { ...base, w: base.w + delta.dx, h: base.h + delta.dy });
-          }
+          updateAnchor(
+            dragState.anchorKey,
+            resizeAnchorFromSide(base, delta, dragState.resizeSide, dragState.anchorKey === 'image')
+          );
         } else {
           updateAnchors(dragState.anchorKeys, anchorKey => {
             const base = dragState.anchors[anchorKey];
@@ -4203,7 +4331,7 @@
           completedDrag
           && completedDrag.mode === 'move'
           && !completedDrag.moved
-          && ['title', 'subtitle'].includes(completedDrag.anchorKey)
+          && ['title', 'subtitle', 'cta'].includes(completedDrag.anchorKey)
         ) {
           openInlineCopyEditor('template', completedDrag.anchorKey);
         }
@@ -4213,7 +4341,7 @@
         const box = event.target.closest('.anchor-box');
         const key = box?.dataset.anchor;
         if (
-          !['title', 'subtitle'].includes(key)
+          !['title', 'subtitle', 'cta'].includes(key)
           || event.shiftKey
           || event.metaKey
           || event.ctrlKey
@@ -4230,7 +4358,7 @@
       anchorCanvas.addEventListener('dblclick', event => {
         const box = event.target.closest('.anchor-box');
         const key = box?.dataset.anchor;
-        if (!['title', 'subtitle'].includes(key)) return;
+        if (!['title', 'subtitle', 'cta'].includes(key)) return;
         event.preventDefault();
         event.stopPropagation();
         activeAnchor = key;
@@ -4316,6 +4444,7 @@
           return;
         }
         activePosterAnchor = box.dataset.posterAnchor;
+        selectProductFrame(activePosterAnchor === 'image');
         const isMultiSelect = event.shiftKey || event.metaKey || event.ctrlKey;
         if (isMultiSelect) {
           if (selectedPosterAnchorKeys.has(activePosterAnchor) && selectedPosterAnchorKeys.size > 1) {
@@ -4326,7 +4455,8 @@
         } else if (!selectedPosterAnchorKeys.has(activePosterAnchor)) {
           selectedPosterAnchorKeys = new Set([activePosterAnchor]);
         }
-        const anchorKeys = event.target.closest('.poster-anchor-handle')
+        const resizeHandle = event.target.closest('.poster-anchor-handle');
+        const anchorKeys = resizeHandle
           ? [activePosterAnchor]
           : [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key));
         const anchors = effectivePosterAnchorsForSize();
@@ -4334,7 +4464,8 @@
         dragState = {
           anchorKey: activePosterAnchor,
           anchorKeys,
-          mode: event.target.closest('.poster-anchor-handle') ? 'resize' : 'move',
+          mode: resizeHandle ? 'resize' : 'move',
+          resizeSide: resizeHandle?.dataset.resizeSide || 'se',
           startX: event.clientX,
           startY: event.clientY,
           rect,
@@ -4361,14 +4492,10 @@
         }
         if (dragState.mode === 'resize') {
           const base = dragState.anchors[dragState.anchorKey];
-          if (dragState.anchorKey === 'cta') {
-            setPosterOverride(dragState.anchorKey, { ...base, w: base.w + delta.dx });
-          } else if (['title', 'subtitle'].includes(dragState.anchorKey)) {
-            setPosterOverride(dragState.anchorKey, { ...base, w: base.w + delta.dx, h: base.h + delta.dy });
-          } else {
-            const scale = Math.max(0.15, 1 + Math.max(delta.dx / Math.max(base.w, 1), delta.dy / Math.max(base.h, 1)));
-            setPosterOverride(dragState.anchorKey, { ...base, w: base.w * scale, h: base.h * scale });
-          }
+          setPosterOverride(
+            dragState.anchorKey,
+            resizeAnchorFromSide(base, delta, dragState.resizeSide, dragState.anchorKey === 'image')
+          );
         } else {
           setPosterOverrides(dragState.anchorKeys, anchorKey => {
             const base = dragState.anchors[anchorKey];
@@ -4384,7 +4511,7 @@
         if (
           completedDrag.mode === 'move'
           && !completedDrag.moved
-          && ['title', 'subtitle'].includes(completedDrag.anchorKey)
+          && ['title', 'subtitle', 'cta'].includes(completedDrag.anchorKey)
         ) {
           openInlineCopyEditor('poster', completedDrag.anchorKey);
           return;
@@ -4392,11 +4519,24 @@
         showToast('当前尺寸手动编辑已应用到预览和下载');
       });
 
+      posterEditOverlay.addEventListener('wheel', event => {
+        const box = event.target.closest('.poster-anchor-box[data-poster-anchor="image"]');
+        if (!generated || !box || !hasImage || isGenerating) return;
+        activePosterAnchor = 'image';
+        selectedPosterAnchorKeys = new Set(['image']);
+        selectProductFrame(true);
+        renderPosterEditOverlay();
+        event.preventDefault();
+        beginProductWheelUndo();
+        zoomProductImage(event.deltaY < 0 ? 1.08 : 0.925, event);
+        finishProductWheelUndoSoon();
+      }, { passive: false });
+
       posterEditOverlay.addEventListener('click', event => {
         if (!generated) return;
         const box = event.target.closest('.poster-anchor-box');
         const key = box?.dataset.posterAnchor;
-        if (!['title', 'subtitle'].includes(key) || event.target.closest('.poster-anchor-handle, .font-size-toolbar')) return;
+        if (!['title', 'subtitle', 'cta'].includes(key) || event.target.closest('.poster-anchor-handle, .font-size-toolbar')) return;
         event.preventDefault();
         event.stopPropagation();
         activePosterAnchor = key;
@@ -4409,7 +4549,7 @@
         if (!generated) return;
         const box = event.target.closest('.poster-anchor-box');
         const key = box?.dataset.posterAnchor;
-        if (!['title', 'subtitle'].includes(key)) return;
+        if (!['title', 'subtitle', 'cta'].includes(key)) return;
         event.preventDefault();
         event.stopPropagation();
         activePosterAnchor = key;
@@ -4582,6 +4722,8 @@
       }
       loadTemplateMapping(nextTemplate);
     });
+
+    sizeChecks.addEventListener('change', updateUploadState);
 
     languageChecks.addEventListener('click', event => {
       const card = event.target.closest('.language-card');

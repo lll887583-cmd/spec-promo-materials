@@ -25,18 +25,18 @@
     "title": {
       "x": 5.5,
       "y": 31.625,
-      "w": 46.625,
-      "h": 8.875,
+      "w": 43.25,
+      "h": 7.75,
       "align": "left",
-      "font": 6.75
+      "font": 5.25
     },
     "subtitle": {
       "x": 5.5,
       "y": 45.75,
-      "w": 44.75,
+      "w": 43.25,
       "h": 18.375,
       "align": "left",
-      "font": 4.25
+      "font": 4.125
     },
     "cta": {
       "x": 5.5,
@@ -56,7 +56,7 @@
     },
     "type": "Square",
     "figmaNodeId": "2:294",
-    "note": "Figma 800 x 800 frame imported from node 2:294."
+    "note": "Figma 800 x 800 frame synced from node 2:294 on 2026-05-13."
   }
 }
   );

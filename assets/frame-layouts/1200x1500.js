@@ -45,7 +45,7 @@
       "h": 9.4293,
       "font": 2.9333,
       "padX": 5.8333,
-      "padY": 2.2667
+      "padY": 2.748
     },
     "trust": {
       "hidden": true,
