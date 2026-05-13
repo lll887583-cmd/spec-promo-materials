@@ -62,6 +62,7 @@
     const FIGMA_BUTTON_FILL_COLOR = '#72DBF1';
     const LEGACY_BUTTON_TEXT_COLOR = '#ffffff';
     const LEGACY_BUTTON_FILL_COLORS = new Set(['#03b2cb', '#4ecbe3']);
+    const INLINE_COPY_EDITOR_ENABLED = false;
 
     function templatePreviewSizeIndex() {
       const index = materialSizes.findIndex(size =>
@@ -3024,6 +3025,7 @@
       const inlineEditor = button.closest('.inline-copy-editor');
       const scope = inlineEditor?.dataset.inlineCopyEditor || (box?.classList.contains('anchor-box') ? 'template' : 'poster');
       const key = inlineEditor?.dataset.inlineCopyKey || box?.dataset.anchor || box?.dataset.posterAnchor;
+      if (scope === 'poster') return;
       if (!['template', 'poster'].includes(scope) || !['title', 'subtitle', 'cta'].includes(key)) return;
       const anchors = scope === 'template' ? anchorEditorPreviewAnchors() : effectivePosterAnchorsForSize();
       const currentPx = anchorFontPx(scope, key, anchors[key]);
@@ -3087,6 +3089,7 @@
     }
 
     function openInlineCopyEditor(scope, key) {
+      if (!INLINE_COPY_EDITOR_ENABLED) return;
       if (!['title', 'subtitle', 'cta'].includes(key)) return;
       const host = scope === 'template' ? anchorCanvas : materialCard;
       const anchors = scope === 'template' ? anchorEditorPreviewAnchors() : effectivePosterAnchorsForSize();
@@ -3101,7 +3104,7 @@
       editor.style.top = formatPct(anchor.y);
       editor.style.width = formatPct(anchor.w);
       editor.style.height = formatPct(anchor.h);
-      const canEditFontSize = key === 'cta';
+      const canEditFontSize = scope === 'template' && key === 'cta';
       const editorHint = canEditFontSize ? '拖动边框调整折行，+ / - 调整字号' : '拖动边框调整折行';
       editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${key === 'cta' ? 20 : (key === 'title' ? 40 : 80)}"></textarea><label>${editorHint}</label>`;
       const textarea = editor.querySelector('textarea');

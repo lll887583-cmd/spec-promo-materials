@@ -1473,7 +1473,7 @@
       word-break: break-word;
       display: block;
       white-space: pre-wrap;
-      cursor: text;
+      cursor: default;
     }
 
     .creative-copy p {
@@ -1493,7 +1493,7 @@
       word-break: break-word;
       display: block;
       white-space: pre-wrap;
-      cursor: text;
+      cursor: default;
     }
 
     .creative-cta {
@@ -2149,15 +2149,7 @@
     .inline-copy-editor {
       position: absolute;
       z-index: 20;
-      display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
-      gap: 6px;
-      min-width: 90px;
-      padding: 6px;
-      border: 1px solid rgba(31, 52, 114, .35);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, .94);
-      box-shadow: 0 14px 34px rgba(16, 32, 68, .18);
+      display: none !important;
     }
 
     .inline-copy-editor textarea {
