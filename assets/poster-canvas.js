@@ -50,8 +50,10 @@
     }
 
     function fitWrappedCanvasText(ctx, text, maxWidth, maxHeight, startSize, minSize, weight = 700, lineHeight = 1.15) {
-      let best = { size: minSize, lines: [] };
-      for (let size = startSize; size >= minSize; size -= 1) {
+      const safeStartSize = Math.max(1, Number(startSize) || 1);
+      const safeMinSize = Math.max(1, Math.min(Number(minSize) || safeStartSize, safeStartSize));
+      let best = { size: safeMinSize, lines: [] };
+      for (let size = safeStartSize; size >= safeMinSize; size -= 1) {
         ctx.font = `${weight} ${size}px ${CANVAS_FONT_FAMILY}`;
         const maxLines = Math.max(1, Math.floor(maxHeight / Math.max(1, size * lineHeight)));
         const lines = wrapCanvasText(ctx, text, maxWidth, Number.POSITIVE_INFINITY);
@@ -61,16 +63,17 @@
           best = { size, lines };
           break;
         }
-        best = { size: minSize, lines };
+        best = { size: safeMinSize, lines };
       }
       ctx.font = `${weight} ${best.size}px ${CANVAS_FONT_FAMILY}`;
+      if (!best.lines.length) best.lines = wrapCanvasText(ctx, text, maxWidth, Number.POSITIVE_INFINITY);
       const visibleLines = Math.max(1, Math.floor(maxHeight / Math.max(1, best.size * lineHeight)));
       best.lines = best.lines.slice(0, visibleLines);
       return best;
     }
 
     function drawAdjustedProductImage(ctx, image, rect, size) {
-      const draw = posterRenderer.productDrawGeometry(image, rect, getProductAdjustment(size));
+      const draw = posterRenderer.productDrawGeometry(image, rect, getProductAdjustment(size, image, rect));
       ctx.save();
       ctx.beginPath();
       ctx.rect(rect.x, rect.y, rect.w, rect.h);

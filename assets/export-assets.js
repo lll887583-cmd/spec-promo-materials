@@ -12,9 +12,32 @@
         .slice(0, 80) || defaultFolderName;
     }
 
+    function sanitizeZipPathSegment(name, fallback) {
+      const asciiName = String(name || '')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\x20-\x7e]+/g, '')
+        .replace(/[\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 80);
+      return asciiName || fallback;
+    }
+
     function exportLanguageFolderName(languageIndex) {
       const [cn = '', en = ''] = getLanguages()[languageIndex] || [];
-      return sanitizeFolderName(en || cn || `language-${languageIndex + 1}`);
+      const fallbackNames = [
+        'English',
+        'Japanese',
+        'Simplified Chinese',
+        'Traditional Chinese',
+        'Vietnamese',
+        'Thai',
+        'Korean',
+        'Indonesia',
+        'Melayu'
+      ];
+      return sanitizeZipPathSegment(en || cn, fallbackNames[languageIndex] || `Language ${languageIndex + 1}`);
     }
 
     function exportAssetRelativePath(asset, fileName) {
@@ -43,6 +66,7 @@
 
     async function createZipBlob(entries) {
       const encoder = new TextEncoder();
+      const utf8FileNameFlag = 0x0800;
       const localParts = [];
       const centralParts = [];
       let offset = 0;
@@ -54,6 +78,7 @@
         const local = zipHeader(30 + nameBytes.length);
         local.view.setUint32(0, 0x04034b50, true);
         local.view.setUint16(4, 20, true);
+        local.view.setUint16(6, utf8FileNameFlag, true);
         local.view.setUint16(8, 0, true);
         local.view.setUint16(10, time, true);
         local.view.setUint16(12, day, true);
@@ -68,6 +93,7 @@
         central.view.setUint32(0, 0x02014b50, true);
         central.view.setUint16(4, 20, true);
         central.view.setUint16(6, 20, true);
+        central.view.setUint16(8, utf8FileNameFlag, true);
         central.view.setUint16(10, 0, true);
         central.view.setUint16(12, time, true);
         central.view.setUint16(14, day, true);
@@ -124,10 +150,50 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    async function saveBlobWithPicker(blob, fileName) {
+      if (!window.showSaveFilePicker) throw new Error('save file picker unsupported');
+      const handle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{
+          description: 'ZIP archive',
+          accept: { 'application/zip': ['.zip'] }
+        }]
+      });
+      const writer = await handle.createWritable();
+      await writer.write(blob);
+      await writer.close();
+      return handle;
+    }
+
     async function downloadPngAsset(asset, index, total) {
       const { blob, fileName } = await renderPngAsset(asset);
       triggerBlobDownload(blob, fileName);
       if (total > 1) await new Promise(resolve => setTimeout(resolve, index === total - 1 ? 0 : 120));
+    }
+
+    async function renderZipEntries(assets, safeFolderName, folderHandle = null) {
+      const entries = [];
+      for (const asset of assets) {
+        const rendered = await renderPngAsset(asset);
+        const relativePath = exportAssetRelativePath(asset, rendered.fileName);
+        entries.push({ ...rendered, path: folderHandle ? relativePath : `${safeFolderName}/${relativePath}` });
+      }
+      return entries;
+    }
+
+    async function downloadAssetsAsZip(assets, safeFolderName, messagePrefix = '') {
+      const entries = await renderZipEntries(assets, safeFolderName);
+      const zipBlob = await createZipBlob(entries);
+      triggerBlobDownload(zipBlob, `${safeFolderName}.zip`);
+      showToast(`${messagePrefix}已打包 ${entries.length} 张 PNG 素材`);
+    }
+
+    async function saveAssetsAsZip(assets, safeFolderName) {
+      const entries = await renderZipEntries(assets, safeFolderName);
+      const zipBlob = await createZipBlob(entries);
+      const fileName = `${safeFolderName}.zip`;
+      await saveBlobWithPicker(zipBlob, fileName);
+      showToast(`已保存 ZIP 文件：${fileName}（${entries.length} 张 PNG）`);
     }
 
     async function exportAssetsWithOptions({ folderName, method }) {
@@ -138,29 +204,39 @@
       }
       const safeFolderName = sanitizeFolderName(folderName);
       const saveToFolder = method === 'folder' && Boolean(window.showDirectoryPicker);
+      const saveZip = method === 'savezip' && Boolean(window.showSaveFilePicker);
       const downloadButton = getDownloadButton();
       downloadButton.disabled = true;
       try {
-        const folderHandle = saveToFolder ? await pickDownloadFolderHandle(safeFolderName) : null;
-        const entries = [];
-        for (const asset of assets) {
-          const rendered = await renderPngAsset(asset);
-          const relativePath = exportAssetRelativePath(asset, rendered.fileName);
-          entries.push({ ...rendered, path: folderHandle ? relativePath : `${safeFolderName}/${relativePath}` });
+        if (saveZip) {
+          await saveAssetsAsZip(assets, safeFolderName);
+          return;
         }
+        const folderHandle = saveToFolder ? await pickDownloadFolderHandle(safeFolderName) : null;
         if (folderHandle) {
+          const entries = await renderZipEntries(assets, safeFolderName, folderHandle);
           await saveAssetsToFolder(entries, folderHandle);
           showToast(`已保存 ${entries.length} 张 PNG 到 ${safeFolderName}`);
         } else {
-          const zipBlob = await createZipBlob(entries);
-          triggerBlobDownload(zipBlob, `${safeFolderName}.zip`);
-          const fallbackText = method === 'folder' ? '当前浏览器不支持选择文件夹，已改为 ZIP 下载。' : '';
-          showToast(`${fallbackText}已打包 ${entries.length} 张 PNG 素材`);
+          const fallbackText = (method === 'folder' || method === 'savezip') ? '当前浏览器不支持直接保存，已改为浏览器 ZIP 下载。' : '';
+          await downloadAssetsAsZip(assets, safeFolderName, fallbackText);
         }
       } catch (error) {
         console.warn('Assets export failed', error);
-        if (error?.name === 'AbortError') showToast('已取消下载');
-        else showToast('素材导出失败，请重试');
+        if (error?.name === 'AbortError' && saveZip) {
+          showToast('已取消保存，未下载文件');
+        } else if (error?.name === 'AbortError' && saveToFolder) {
+          try {
+            await downloadAssetsAsZip(assets, safeFolderName, '已取消文件夹选择，已改为 ZIP 下载。');
+          } catch (fallbackError) {
+            console.warn('ZIP fallback export failed', fallbackError);
+            showToast('素材导出失败，请重试');
+          }
+        } else if (error?.name === 'AbortError') {
+          showToast('已取消下载');
+        } else {
+          showToast('素材导出失败，请重试');
+        }
       } finally {
         downloadButton.disabled = !getGenerated();
       }

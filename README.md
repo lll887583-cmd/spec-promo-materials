@@ -6,7 +6,7 @@ A static browser tool for creating promo material previews and exports.
 
 The project is being narrowed to a simple Figma-template mapping tool:
 
-- Recreate 17 Figma size templates in code.
+- Recreate 18 Figma size templates in code.
 - Keep template layout/positioning separate from visual styles.
 - Let style presets adjust colors, logo variants, and small visual details.
 - Preserve the existing UI/UX while replacing or extending the template data model.

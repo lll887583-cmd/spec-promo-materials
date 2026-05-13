@@ -1,5 +1,5 @@
     let materialSizes = [
-      { id: 'ad_120x50', label: '120 x 50', width: 120, height: 50 },
+      { id: 'ad_120x600', label: '120 x 600', width: 120, height: 600 },
       { id: 'ad_160x600', label: '160 x 600', width: 160, height: 600 },
       { id: 'ad_300x250', label: '300 x 250', width: 300, height: 250 },
       { id: 'ad_300x600', label: '300 x 600', width: 300, height: 600 },
@@ -9,6 +9,7 @@
       { id: 'ad_720x90', label: '720 x 90', width: 720, height: 90 },
       { id: 'ad_728x90', label: '728 x 90', width: 728, height: 90 },
       { id: 'square_800x800', label: '800 x 800', width: 800, height: 800 },
+      { id: 'ad_628x1200', label: '628 x 1200', width: 628, height: 1200 },
       { id: 'ad_828x1200', label: '828 x 1200', width: 828, height: 1200 },
       { id: 'ad_970x250', label: '970 x 250', width: 970, height: 250 },
       { id: 'ad_980x250', label: '980 x 250', width: 980, height: 250 },
@@ -713,7 +714,7 @@
 
     const CTA_MIN_WIDTH_PERCENT = 10;
     const CTA_TEMPLATE_RATIO_SIZE = { width: 1200, height: 628 };
-    const PRODUCT_MIN_SCALE = 0.4;
+    const PRODUCT_MIN_SCALE = 0.05;
     const posterCore = window.createPosterCore({
       defaultAnchors: defaultTemplateAnchors,
       layoutRules: generationLayoutRules,
@@ -757,7 +758,7 @@
       posterRenderer,
       loadCanvasImage,
       getUploadedImageSrc: () => uploadedImageSrc,
-      getProductAdjustment: size => productImageAdjustments[productAdjustmentKey(size)],
+      getProductAdjustment: (size, image, rect) => resolvedProductAdjustment(size, rect, image),
       getPosterAnchors: (size, asset) => effectivePosterAnchorsForSize(size, asset),
       getPosterStyles: asset => effectivePosterStyles(asset),
       getLogoBrand: languageIndex => logoBrandForLanguage(languageIndex),
@@ -1065,6 +1066,16 @@
       return styles;
     }
 
+    function removeExactFrameLayoutOverrides(anchors) {
+      const sizeAnchors = anchors?.sizeAnchors;
+      if (!sizeAnchors || typeof sizeAnchors !== 'object') return anchors;
+      Object.keys(sizeAnchors).forEach(sizeKey => {
+        if (generationLayoutRules[sizeKey]?.exact) delete sizeAnchors[sizeKey];
+      });
+      if (!Object.keys(sizeAnchors).length) delete anchors.sizeAnchors;
+      return anchors;
+    }
+
     function normalizeTemplateState() {
       const defaultFrameworks = defaultTemplates();
       templates = defaultFrameworks.map(framework => ({
@@ -1076,7 +1087,9 @@
         if (!templateIds.has(templateKey)) delete templateAnchorMaps[templateKey];
       });
       templates.forEach(template => {
-        templateAnchorMaps[template.id] = completeAnchors(templateAnchorMaps[template.id] || defaultTemplateAnchors);
+        templateAnchorMaps[template.id] = removeExactFrameLayoutOverrides(
+          completeAnchors(templateAnchorMaps[template.id] || defaultTemplateAnchors)
+        );
       });
       if (!templateIds.has(selectedTemplate)) selectedTemplate = templates[0].id;
 
@@ -1197,13 +1210,6 @@
     function mergeFigmaFrameSizes() {
       const figmaSizes = window.SpecPromoFrameLayouts?.getSizes?.() || [];
       if (!Array.isArray(figmaSizes) || !figmaSizes.length) return;
-      const figmaById = new Map(figmaSizes.map(size => [size.id, size]));
-      const figma120x50 = figmaById.get('ad_120x50');
-      if (figma120x50) {
-        materialSizes = materialSizes.map(size =>
-          size.width === 120 && size.height === 600 ? cloneState(figma120x50) : size
-        );
-      }
       figmaSizes.forEach(size => {
         const exists = materialSizes.some(item =>
           item.id === size.id || (item.width === size.width && item.height === size.height)
@@ -1212,23 +1218,67 @@
       });
     }
 
-    function normalizeSizeLanguageState() {
-      const activeSizeId = materialSizes[currentSizeIndex]?.id;
-      const activeFrameworkSizeId = materialSizes[frameworkSizeIndex]?.id;
-      materialSizes = (Array.isArray(materialSizes) ? materialSizes : [])
-        .map((size, index) => {
-          const width = parsePositiveInt(size?.width);
-          const height = parsePositiveInt(size?.height);
-          if (!width || !height) return null;
-          return {
-            id: String(size?.id || `custom_${width}x${height}_${index}`),
-            label: normalizeSizeLabel(width, height, size?.label),
-            width,
-            height
-          };
-        })
+    function canonicalSizeId(id = '') {
+      return id === 'ad_120x50' ? 'ad_120x600' : id;
+    }
+
+    function isLegacyMaterialSize(size = {}) {
+      const id = String(size.id || '');
+      const width = parsePositiveInt(size.width);
+      const height = parsePositiveInt(size.height);
+      return id === 'ad_120x50' || (width === 120 && height === 50);
+    }
+
+    function normalizeMaterialSizeEntry(size, index = 0) {
+      const width = parsePositiveInt(size?.width);
+      const height = parsePositiveInt(size?.height);
+      if (!width || !height) return null;
+      return {
+        id: canonicalSizeId(String(size?.id || `custom_${width}x${height}_${index}`)),
+        label: normalizeSizeLabel(width, height, size?.label),
+        width,
+        height
+      };
+    }
+
+    function migrateMaterialSizes() {
+      const figmaSizes = (window.SpecPromoFrameLayouts?.getSizes?.() || [])
+        .map((size, index) => normalizeMaterialSizeEntry(size, index))
         .filter(Boolean);
-      mergeFigmaFrameSizes();
+      const figmaIds = new Set(figmaSizes.map(size => size.id));
+      const figmaDimensions = new Set(figmaSizes.map(size => `${size.width}x${size.height}`));
+      const nextSizes = [];
+      const seenIds = new Set();
+      const seenDimensions = new Set();
+
+      function addSize(size) {
+        if (!size || isLegacyMaterialSize(size)) return;
+        const dimensionKey = `${size.width}x${size.height}`;
+        if (seenIds.has(size.id) || seenDimensions.has(dimensionKey)) return;
+        seenIds.add(size.id);
+        seenDimensions.add(dimensionKey);
+        nextSizes.push(cloneState(size));
+      }
+
+      figmaSizes.forEach(addSize);
+      materialSizes.forEach((size, index) => {
+        const normalized = normalizeMaterialSizeEntry(size, index);
+        if (!normalized || isLegacyMaterialSize(normalized)) return;
+        if (figmaIds.has(normalized.id) || figmaDimensions.has(`${normalized.width}x${normalized.height}`)) return;
+        addSize(normalized);
+      });
+
+      if (nextSizes.length) materialSizes = nextSizes;
+      else mergeFigmaFrameSizes();
+    }
+
+    function normalizeSizeLanguageState() {
+      const activeSizeId = canonicalSizeId(materialSizes[currentSizeIndex]?.id);
+      const activeFrameworkSizeId = canonicalSizeId(materialSizes[frameworkSizeIndex]?.id);
+      materialSizes = (Array.isArray(materialSizes) ? materialSizes : [])
+        .map(normalizeMaterialSizeEntry)
+        .filter(Boolean);
+      migrateMaterialSizes();
       if (!materialSizes.length) materialSizes = JSON.parse(JSON.stringify(DEFAULT_MATERIAL_SIZES));
       sortMaterialSizesByWidth(materialSizes);
       if (activeSizeId) {
@@ -1456,6 +1506,10 @@
       return size?.id === TEMPLATE_PREVIEW_SIZE_ID || (size?.width === 1200 && size?.height === 628);
     }
 
+    function isExactFigmaFrameSize(size = materialSizes[frameworkSizeIndex]) {
+      return Boolean(size?.id && generationLayoutRules[size.id]?.exact);
+    }
+
     function mergeTemplateAnchorSet(baseAnchors, overrideAnchors, size = materialSizes[frameworkSizeIndex]) {
       let anchors = cloneAnchors(baseAnchors || defaultTemplateAnchors);
       Object.entries(overrideAnchors || {}).forEach(([key, anchor]) => {
@@ -1469,6 +1523,9 @@
     }
 
     function anchorEditorPreviewAnchors(size = materialSizes[frameworkSizeIndex]) {
+      if (isExactFigmaFrameSize(size) && !isTemplateBaseSize(size)) {
+        return basePosterAnchorsForSize(size, defaultTemplateAnchors);
+      }
       const baseAnchors = basePosterAnchorsForSize(size, draftTemplateAnchors);
       if (isTemplateBaseSize(size)) return baseAnchors;
       return mergeTemplateAnchorSet(baseAnchors, draftTemplateAnchors.sizeAnchors?.[templateSizeKey(size)], size);
@@ -1527,7 +1584,11 @@
         const fallbackFont = key === 'title'
           ? Math.max(1, anchor.h * 0.58 * textScale)
           : (key === 'subtitle' ? Math.max(1, anchor.h * 0.30 * textScale) : Math.max(1, anchor.h * 0.38));
-        const fontPct = Number(anchor?.font) || fallbackFont;
+        const fontPx = Number(anchor?.fontPx);
+        const fontScale = Number(anchor?.fontScale);
+        const fontPct = Number.isFinite(fontPx) && fontPx > 0
+          ? (fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1) / Math.max(1, Number(size?.height) || 1)) * 100
+          : (Number(anchor?.font) || fallbackFont);
         if (key !== 'cta') {
           textPreview.style.textAlign = previewAnchors.title.align || previewAnchors.subtitle.align || previewAnchors.text?.align || 'left';
           textPreview.style.color = previewStyles.textColor;
@@ -1819,6 +1880,7 @@
         h: clamp(numericOrBase(nextAnchor.h, base.h || minSize), minSize, 100)
       };
       if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 40);
+      if (Number.isFinite(Number(nextAnchor.fontScale))) normalized.fontScale = clamp(Number(nextAnchor.fontScale), 0.05, 8);
       normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
       normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size || CTA_TEMPLATE_RATIO_SIZE) : normalized;
@@ -2040,6 +2102,7 @@
         h: clamp(nextAnchor.h, minSize, 100)
       };
       if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 40);
+      if (Number.isFinite(Number(nextAnchor.fontScale))) normalized.fontScale = clamp(Number(nextAnchor.fontScale), 0.05, 8);
       normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
       normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size) : normalized;
@@ -3005,6 +3068,11 @@
         ? (key === 'title' ? anchorPreviewTitle : (key === 'subtitle' ? anchorPreviewSubtitle : anchorPreviewCta))
         : (key === 'title' ? previewTitle : (key === 'subtitle' ? previewSubtitle : previewCta));
       const computed = fallback ? Number.parseFloat(window.getComputedStyle(fallback).fontSize) : 16;
+      const fontPx = Number(anchor?.fontPx);
+      const fontScale = Number(anchor?.fontScale);
+      if (Number.isFinite(fontPx) && fontPx > 0) {
+        return Math.round(fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1));
+      }
       return Math.round(Number(anchor?.font) ? (host.clientHeight || 628) * Number(anchor.font) / 100 : computed || 16);
     }
 
@@ -3078,14 +3146,21 @@
     function setCopyFontForInlineEditor(scope, key, pxValue) {
       const host = scope === 'template' ? anchorCanvas : materialCard;
       const hostHeight = Math.max(1, host.clientHeight || 628);
-      const font = clamp((Number(pxValue) || 1) / hostHeight * 100, 0.6, 40);
       if (scope === 'template') {
         const anchors = anchorEditorPreviewAnchors();
-        updateAnchor(key, { ...anchors[key], font });
+        const fontPx = Number(anchors[key]?.fontPx);
+        const nextAnchor = Number.isFinite(fontPx) && fontPx > 0
+          ? { ...anchors[key], fontScale: clamp((Number(pxValue) || fontPx) / fontPx, 0.05, 8) }
+          : { ...anchors[key], font: clamp((Number(pxValue) || 1) / hostHeight * 100, 0.6, 40) };
+        updateAnchor(key, nextAnchor);
       } else {
         pushPosterEditHistory();
         const anchors = effectivePosterAnchorsForSize();
-        setPosterOverride(key, { ...anchors[key], font });
+        const fontPx = Number(anchors[key]?.fontPx);
+        const nextAnchor = Number.isFinite(fontPx) && fontPx > 0
+          ? { ...anchors[key], fontScale: clamp((Number(pxValue) || fontPx) / fontPx, 0.05, 8) }
+          : { ...anchors[key], font: clamp((Number(pxValue) || 1) / hostHeight * 100, 0.6, 40) };
+        setPosterOverride(key, nextAnchor);
       }
       if (inlineCopyEditor?.dataset.inlineCopyEditor === scope && inlineCopyEditor.dataset.inlineCopyKey === key) {
         const nextAnchors = scope === 'template' ? anchorEditorPreviewAnchors() : effectivePosterAnchorsForSize();
@@ -3196,6 +3271,26 @@
       return { scale: 1, x: 0, y: 0 };
     }
 
+    function productFitScale(frameRect = productFrame?.getBoundingClientRect(), image = phoneHand) {
+      const frameW = Number(frameRect?.width || frameRect?.w);
+      const frameH = Number(frameRect?.height || frameRect?.h);
+      const imageW = Number(image?.naturalWidth || image?.width);
+      const imageH = Number(image?.naturalHeight || image?.height);
+      if (!frameW || !frameH || !imageW || !imageH) return 1;
+      return Math.min(frameW / imageW, frameH / imageH);
+    }
+
+    function resolvedProductAdjustment(size = materialSizes[currentSizeIndex], frameRect = productFrame?.getBoundingClientRect(), image = phoneHand, adjustment = null) {
+      const baseAdjustment = adjustment || productImageAdjustments[productAdjustmentKey(size)] || defaultProductAdjustment();
+      const fitScale = productFitScale(frameRect, image);
+      return {
+        ...baseAdjustment,
+        scale: clamp(fitScale * (Number(baseAdjustment.scale) || 1), 0.01, 4),
+        x: Number(baseAdjustment.x) || 0,
+        y: Number(baseAdjustment.y) || 0
+      };
+    }
+
     function currentProductAdjustment(size = materialSizes[currentSizeIndex]) {
       const key = productAdjustmentKey(size);
       productImageAdjustments[key] = productImageAdjustments[key] || defaultProductAdjustment();
@@ -3205,19 +3300,21 @@
     function productImageGeometry(size = materialSizes[currentSizeIndex], frameRect = productFrame?.getBoundingClientRect()) {
       if (!phoneHand?.naturalWidth || !phoneHand?.naturalHeight || !frameRect?.width || !frameRect?.height) return null;
       const adjustment = currentProductAdjustment(size);
+      const resolvedAdjustment = resolvedProductAdjustment(size, frameRect, phoneHand, adjustment);
       const baseW = phoneHand.naturalWidth;
       const baseH = phoneHand.naturalHeight;
-      const drawW = baseW * adjustment.scale;
-      const drawH = baseH * adjustment.scale;
-      return { frameW: frameRect.width, frameH: frameRect.height, baseW, baseH, drawW, drawH, adjustment };
+      const drawW = baseW * resolvedAdjustment.scale;
+      const drawH = baseH * resolvedAdjustment.scale;
+      return { frameW: frameRect.width, frameH: frameRect.height, baseW, baseH, drawW, drawH, adjustment, resolvedAdjustment };
     }
 
     function clampProductAdjustment(adjustment = currentProductAdjustment()) {
       const geometry = productImageGeometry();
       if (!geometry) return adjustment;
-      adjustment.scale = clamp(Number(adjustment.scale) || 1, PRODUCT_MIN_SCALE, 4);
-      const drawW = geometry.baseW * adjustment.scale;
-      const drawH = geometry.baseH * adjustment.scale;
+      adjustment.scale = clamp(Number(adjustment.scale) || 1, PRODUCT_MIN_SCALE, 8);
+      const resolvedAdjustment = resolvedProductAdjustment(materialSizes[currentSizeIndex], productFrame?.getBoundingClientRect(), phoneHand, adjustment);
+      const drawW = geometry.baseW * resolvedAdjustment.scale;
+      const drawH = geometry.baseH * resolvedAdjustment.scale;
       const maxX = Math.abs(drawW - geometry.frameW) / (2 * geometry.frameW);
       const maxY = Math.abs(drawH - geometry.frameH) / (2 * geometry.frameH);
       adjustment.x = clamp(Number(adjustment.x) || 0, -maxX, maxX);
@@ -3230,8 +3327,9 @@
       const geometry = productImageGeometry();
       if (!geometry) return;
       const adjustment = clampProductAdjustment(geometry.adjustment);
-      const drawW = geometry.baseW * adjustment.scale;
-      const drawH = geometry.baseH * adjustment.scale;
+      const resolvedAdjustment = resolvedProductAdjustment(materialSizes[currentSizeIndex], productFrame?.getBoundingClientRect(), phoneHand, adjustment);
+      const drawW = geometry.baseW * resolvedAdjustment.scale;
+      const drawH = geometry.baseH * resolvedAdjustment.scale;
       phoneHand.style.width = `${drawW}px`;
       phoneHand.style.height = `${drawH}px`;
       phoneHand.style.left = `${(geometry.frameW - drawW) / 2 + adjustment.x * geometry.frameW}px`;
@@ -5073,21 +5171,23 @@
         });
       }
       const supportsFolderDownload = Boolean(window.showDirectoryPicker);
+      const supportsZipSave = Boolean(window.showSaveFilePicker);
       modal.innerHTML = `
         <div class="confirm-dialog download-dialog" role="dialog" aria-modal="true" aria-label="下载全部素材">
           <div class="confirm-title">下载全部素材</div>
           <div class="download-form">
             <label class="download-field">下载方式
               <select id="downloadMethod">
-                <option value="folder" ${supportsFolderDownload ? 'selected' : ''}>本地文件夹下载（默认）</option>
-                <option value="zip" ${supportsFolderDownload ? '' : 'selected'}>本地下载（ZIP 备选）</option>
+                <option value="savezip" ${supportsZipSave ? 'selected' : 'disabled'}>保存 ZIP 文件（推荐）</option>
+                <option value="zip" ${supportsZipSave ? '' : 'selected'}>浏览器下载 ZIP</option>
+                <option value="folder" ${supportsFolderDownload ? '' : 'disabled'}>本地文件夹下载${supportsFolderDownload ? '' : '（当前浏览器不支持）'}</option>
               </select>
             </label>
             <label class="download-field">文件夹名称
               <input id="downloadFolderName" value="${escapeHtml(DEFAULT_DOWNLOAD_FOLDER_NAME)}" maxlength="80" spellcheck="false">
             </label>
           </div>
-          <p class="download-note">导出内容全部为 PNG。默认会在你选择的位置创建 ${escapeHtml(DEFAULT_DOWNLOAD_FOLDER_NAME)} 文件夹；文件夹名称可修改。若浏览器不支持文件夹写入，可改用 ZIP 下载，压缩包内同样包含该文件夹。</p>
+          <p class="download-note">导出内容全部为 PNG。推荐使用“保存 ZIP 文件”，选择保存位置并写入完成后才会提示已保存；ZIP 内包含 ${escapeHtml(DEFAULT_DOWNLOAD_FOLDER_NAME)} 文件夹和语言子文件夹。</p>
           <div class="confirm-actions">
             <button class="modal-btn" type="button" data-download-modal-action="cancel">取消</button>
             <button class="modal-btn primary" type="button" data-download-modal-action="submit">开始下载</button>

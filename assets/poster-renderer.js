@@ -13,9 +13,18 @@
 
     function setPosterFontVars(anchors, size) {
       const textScale = posterCore.posterTextScale(size);
-      const titleFont = Number(anchors.title.font) || Math.max(1, anchors.title.h * 0.58 * textScale);
-      const subtitleFont = Number(anchors.subtitle.font) || Math.max(1, anchors.subtitle.h * 0.30 * textScale);
-      const ctaFont = Number(anchors.cta.font) || Math.max(1, anchors.cta.h * 0.38);
+      const sizeHeight = Math.max(1, Number(size?.height) || 1);
+      const fontPercentForPreview = (anchor, fallbackPercent) => {
+        const fontPx = Number(anchor?.fontPx);
+        const fontScale = Number(anchor?.fontScale);
+        if (Number.isFinite(fontPx) && fontPx > 0) {
+          return (fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1) / sizeHeight) * 100;
+        }
+        return Number(anchor?.font) || fallbackPercent;
+      };
+      const titleFont = fontPercentForPreview(anchors.title, Math.max(1, anchors.title.h * 0.58 * textScale));
+      const subtitleFont = fontPercentForPreview(anchors.subtitle, Math.max(1, anchors.subtitle.h * 0.30 * textScale));
+      const ctaFont = fontPercentForPreview(anchors.cta, Math.max(1, anchors.cta.h * 0.38));
       materialCard.style.setProperty('--title-font', `clamp(6px, ${titleFont}cqh, 84px)`);
       materialCard.style.setProperty('--subtitle-font', `clamp(5px, ${subtitleFont}cqh, 44px)`);
       materialCard.style.setProperty('--cta-font', `clamp(5px, ${ctaFont}cqh, 72px)`);
@@ -88,6 +97,11 @@
     }
 
     function canvasAnchorFontSize(anchor, fallbackSize, canvasHeight) {
+      const fontPx = Number(anchor?.fontPx);
+      const fontScale = Number(anchor?.fontScale);
+      if (Number.isFinite(fontPx) && fontPx > 0) {
+        return Math.max(1, Math.round(fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1)));
+      }
       const font = Number(anchor?.font);
       return Number.isFinite(font) && font > 0 ? Math.round((font / 100) * canvasHeight) : fallbackSize;
     }
@@ -129,7 +143,7 @@
     function productDrawGeometry(image, rect, adjustment = { scale: 1, x: 0, y: 0 }) {
       const baseW = image.naturalWidth;
       const baseH = image.naturalHeight;
-      const scale = posterCore.clamp(Number(adjustment.scale) || 1, 0.4, 4);
+      const scale = posterCore.clamp(Number(adjustment.scale) || 1, 0.01, 4);
       const drawW = baseW * scale;
       const drawH = baseH * scale;
       const maxX = Math.abs(drawW - rect.w) / (2 * rect.w);
