@@ -1,26 +1,21 @@
 # Agent Notes
 
-This repo is intentionally scoped as a static promo-material template tool.
+This repo is a static promo-material template tool. Keep the codebase simple and browser-first.
 
-## Do Not Change UI/UX Unless Asked
+## Scope
 
-Preserve the existing interface and interaction model in:
+- Preserve the current interface and interaction model in `index.html`, `assets/app.css`, and `assets/app.js` unless the user explicitly asks for a UI change.
+- When implementing template work, prefer changes in template/style data and renderer logic over redesigning the product UI.
+- Keep the app as a static browser tool; do not introduce backend dependencies or package workflow changes unless requested.
 
-- `index.html`
-- `assets/app.css`
-- `assets/app.js`
-
-When implementing Figma template work, prefer changes in template/style data and renderer logic instead of redesigning the product UI.
-
-## Current Product Direction
+## Product Direction
 
 - Recreate 17 Figma size templates in code.
 - Separate template geometry from style presets.
-- Template layer handles sizes, layout, anchors, and text/image regions.
-- Style layer handles color, logo variant, and light visual tuning.
-- Keep the app a simple static browser tool.
+- Template logic owns sizes, layout, anchors, and text/image regions.
+- Style logic owns color, logo variant, and small visual tuning.
 
-## Important Files
+## Key Files
 
 - `assets/poster-core.js` - template/style definitions and shared constants.
 - `assets/poster-renderer.js` - DOM preview rendering.
@@ -31,6 +26,25 @@ When implementing Figma template work, prefer changes in template/style data and
 - `assets/rules-parser.js` - rule document parsing utilities.
 - `assets/spec-ui-foundation.css` - SPEC UI foundation styles.
 
+## Working Rules
+
+- Prefer changing the real shared component or renderer path over patching only one visible instance.
+- If an asset is referenced through `index.html` with a cache-busting query string, bump the version when you modify that asset.
+- Keep changes scoped to the minimal files required for the fix.
+
+## Testing And Verification
+
+- Any visible behavior change must be verified in a browser against the local page, not just by reading code.
+- If the same issue still is not correct after two code edits, stop making blind changes and run a full local test:
+  - reload the page from a fresh browser state
+  - reproduce the user path from the start
+  - inspect the full affected UI, not only the one element being edited
+  - check console, network, and DOM state if the result still looks wrong
+- Treat that as a hard rule: two failed attempts on the same issue means global verification before the third edit.
+
 ## Out Of Scope
 
-The old Python poster generator, local backend server, Playwright test suite, and Node package workflow are not part of the current implementation path.
+- The old Python poster generator
+- Local backend server work
+- Playwright test-suite expansion
+- Node package workflow changes
