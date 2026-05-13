@@ -150,15 +150,18 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    async function saveBlobWithPicker(blob, fileName) {
+    async function pickZipFileHandle(fileName) {
       if (!window.showSaveFilePicker) throw new Error('save file picker unsupported');
-      const handle = await window.showSaveFilePicker({
+      return window.showSaveFilePicker({
         suggestedName: fileName,
         types: [{
           description: 'ZIP archive',
           accept: { 'application/zip': ['.zip'] }
         }]
       });
+    }
+
+    async function saveBlobToHandle(blob, handle) {
       const writer = await handle.createWritable();
       await writer.write(blob);
       await writer.close();
@@ -188,11 +191,11 @@
       showToast(`${messagePrefix}已打包 ${entries.length} 张 PNG 素材`);
     }
 
-    async function saveAssetsAsZip(assets, safeFolderName) {
+    async function saveAssetsAsZip(assets, safeFolderName, fileHandle) {
       const entries = await renderZipEntries(assets, safeFolderName);
       const zipBlob = await createZipBlob(entries);
       const fileName = `${safeFolderName}.zip`;
-      await saveBlobWithPicker(zipBlob, fileName);
+      await saveBlobToHandle(zipBlob, fileHandle);
       showToast(`已保存 ZIP 文件：${fileName}（${entries.length} 张 PNG）`);
     }
 
@@ -207,9 +210,11 @@
       const saveZip = method === 'savezip' && Boolean(window.showSaveFilePicker);
       const downloadButton = getDownloadButton();
       downloadButton.disabled = true;
+      let zipFileHandle = null;
       try {
         if (saveZip) {
-          await saveAssetsAsZip(assets, safeFolderName);
+          zipFileHandle = await pickZipFileHandle(`${safeFolderName}.zip`);
+          await saveAssetsAsZip(assets, safeFolderName, zipFileHandle);
           return;
         }
         const folderHandle = saveToFolder ? await pickDownloadFolderHandle(safeFolderName) : null;
@@ -234,6 +239,13 @@
           }
         } else if (error?.name === 'AbortError') {
           showToast('已取消下载');
+        } else if (saveZip) {
+          try {
+            await downloadAssetsAsZip(assets, safeFolderName, '保存到指定位置失败，已改为浏览器 ZIP 下载。');
+          } catch (fallbackError) {
+            console.warn('ZIP fallback export failed', fallbackError);
+            showToast('素材导出失败，请改用“浏览器下载 ZIP”重试');
+          }
         } else {
           showToast('素材导出失败，请重试');
         }

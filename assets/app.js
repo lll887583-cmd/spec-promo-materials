@@ -5178,8 +5178,8 @@
           <div class="download-form">
             <label class="download-field">下载方式
               <select id="downloadMethod">
-                <option value="savezip" ${supportsZipSave ? 'selected' : 'disabled'}>保存 ZIP 文件（推荐）</option>
-                <option value="zip" ${supportsZipSave ? '' : 'selected'}>浏览器下载 ZIP</option>
+                <option value="zip" selected>浏览器下载 ZIP（推荐）</option>
+                <option value="savezip" ${supportsZipSave ? '' : 'disabled'}>保存到指定位置${supportsZipSave ? '（实验）' : '（当前浏览器不支持）'}</option>
                 <option value="folder" ${supportsFolderDownload ? '' : 'disabled'}>本地文件夹下载${supportsFolderDownload ? '' : '（当前浏览器不支持）'}</option>
               </select>
             </label>
@@ -5187,7 +5187,7 @@
               <input id="downloadFolderName" value="${escapeHtml(DEFAULT_DOWNLOAD_FOLDER_NAME)}" maxlength="80" spellcheck="false">
             </label>
           </div>
-          <p class="download-note">导出内容全部为 PNG。推荐使用“保存 ZIP 文件”，选择保存位置并写入完成后才会提示已保存；ZIP 内包含 ${escapeHtml(DEFAULT_DOWNLOAD_FOLDER_NAME)} 文件夹和语言子文件夹。</p>
+          <p class="download-note">导出内容全部为 PNG。推荐使用“浏览器下载 ZIP”，兼容性最好；“保存到指定位置”为实验功能，失败时会自动改用浏览器 ZIP 下载。</p>
           <div class="confirm-actions">
             <button class="modal-btn" type="button" data-download-modal-action="cancel">取消</button>
             <button class="modal-btn primary" type="button" data-download-modal-action="submit">开始下载</button>
