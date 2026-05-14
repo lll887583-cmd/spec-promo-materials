@@ -5,7 +5,7 @@ A static browser tool for creating promo material previews and exports.
 ## Preview Links
 
 - Main preview: https://lll887583-cmd.github.io/spec-promo-materials/
-- Test preview: https://lll887583-cmd.github.io/spec-promo-materials/test/
+
 
 ## Current Direction
 
