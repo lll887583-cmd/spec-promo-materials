@@ -22,6 +22,9 @@
 
     function styleAnchorPreview(node, anchor) {
       if (!node || !anchor) return;
+      node.hidden = Boolean(anchor.hidden);
+      node.style.display = anchor.hidden ? 'none' : '';
+      if (anchor.hidden) return;
       node.style.left = formatPct(anchor.x);
       node.style.top = formatPct(anchor.y);
       node.style.width = formatPct(anchor.w);

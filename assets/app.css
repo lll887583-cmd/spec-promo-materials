@@ -1555,7 +1555,7 @@
     .poster-product-layer.is-dragging { cursor: grabbing; }
 
     .poster-product-layer::after {
-      content: "拖动移动 · 滚轮缩放 · 原图保留";
+      content: "拖动调整裁切 · 滚轮缩放";
       position: absolute;
       left: 8px;
       bottom: 8px;
@@ -1805,6 +1805,11 @@
     .result-preview-panel .language-strip {
       padding-top: 20px;
       border-top: 0;
+    }
+
+    .result-preview-panel .preview-strip .section-head,
+    .result-preview-panel .language-strip .section-head {
+      margin-bottom: 12px;
     }
 
     .framework-size-preview {

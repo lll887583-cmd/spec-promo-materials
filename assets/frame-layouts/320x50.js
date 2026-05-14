@@ -10,6 +10,10 @@
   },
   "layout": {
     "exact": true,
+    "styles": {
+      "backgroundMode": "solid",
+      "backgroundColor": "#DFF9FF"
+    },
     "image": {
       "hidden": true,
       "x": 100,
@@ -18,38 +22,40 @@
       "h": 100
     },
     "logo": {
-      "x": 4.3134,
-      "y": 40.709,
-      "w": 21.9983,
-      "h": 18.5842
+      "x": 2.8125,
+      "y": 38,
+      "w": 26.7331,
+      "h": 22.5842
     },
     "title": {
-      "x": 32.8125,
-      "y": 16.0,
-      "w": 37.5,
-      "h": 26.0,
+      "x": 33.75,
+      "y": 32,
+      "w": 43.75,
+      "h": 36,
       "align": "left",
-      "font": 18.0,
-      "fontPx": 9
+      "font": 24,
+      "fontPx": 12
     },
     "subtitle": {
-      "x": 32.8125,
-      "y": 46.0,
-      "w": 37.5,
-      "h": 36.0,
+      "hidden": true,
+      "x": 33.75,
+      "y": 32,
+      "w": 43.75,
+      "h": 36,
       "align": "left",
-      "font": 12.0,
-      "fontPx": 6
+      "font": 0,
+      "fontPx": 0
     },
     "cta": {
-      "x": 78.4375,
+      "x": 80.625,
       "y": 31.9992,
       "w": 16.25,
-      "h": 36.0,
-      "font": 12.0,
+      "h": 36,
+      "font": 12,
       "fontPx": 6,
       "padX": 2.8125,
-      "padY": 10.0
+      "padY": 10,
+      "lineHeight": 1.4
     },
     "trust": {
       "hidden": true,
@@ -60,7 +66,7 @@
     },
     "type": "Mobile micro banner",
     "figmaNodeId": "2:244",
-    "note": "Figma 320 x 50 frame imported from node 2:244."
+    "note": "Figma 320 x 50 frame synced from node 2:244 on 2026-05-14."
   }
 }
   );

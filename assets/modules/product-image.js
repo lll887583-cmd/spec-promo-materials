@@ -121,6 +121,20 @@
       updateProductImageFrame();
     }
 
+    function panProductImageFromDrag(dragState, delta) {
+      const visualW = Number(dragState?.visualW);
+      const visualH = Number(dragState?.visualH);
+      if (!visualW || !visualH) return;
+      if (!dragState.historyCaptured) {
+        pushPosterEditHistory?.();
+        dragState.historyCaptured = true;
+      }
+      updateProductAdjustment({
+        x: dragState.x + delta.dx / visualW,
+        y: dragState.y + delta.dy / visualH
+      });
+    }
+
     function zoomProductImage(delta, origin = null) {
       if (!getHasImage?.() || getIsGenerating?.()) return;
       const productFrame = getProductFrame?.();
@@ -182,10 +196,7 @@
           event.shiftKey,
           2
         );
-        updateProductAdjustment({
-          x: productImageDragState.x + delta.dx / productImageDragState.visualW,
-          y: productImageDragState.y + delta.dy / productImageDragState.visualH
-        });
+        panProductImageFromDrag(productImageDragState, delta);
       });
 
       ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
@@ -249,6 +260,7 @@
       updateProductImageFrame,
       selectProductFrame,
       updateProductAdjustment,
+      panProductImageFromDrag,
       zoomProductImage,
       initProductImageInteractions
     };

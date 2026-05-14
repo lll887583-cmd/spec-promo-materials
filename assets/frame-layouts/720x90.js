@@ -10,6 +10,10 @@
   },
   "layout": {
     "exact": true,
+    "styles": {
+      "backgroundMode": "solid",
+      "backgroundColor": "#DFF9FF"
+    },
     "image": {
       "hidden": true,
       "x": 100,
@@ -18,28 +22,29 @@
       "h": 100
     },
     "logo": {
-      "x": 4.7092,
-      "y": 38.903,
-      "w": 18.4128,
-      "h": 19.4439
+      "x": 2.7778,
+      "y": 37.7778,
+      "w": 23.763,
+      "h": 25.0938
     },
     "title": {
-      "x": 30.8333,
-      "y": 20.0,
-      "w": 38.75,
-      "h": 30.0,
+      "x": 31.25,
+      "y": 26.6667,
+      "w": 41.6667,
+      "h": 45.5556,
       "align": "left",
-      "font": 20.0,
-      "fontPx": 18
+      "font": 31.1111,
+      "fontPx": 28
     },
     "subtitle": {
-      "x": 30.8333,
-      "y": 56.6667,
-      "w": 41.5278,
-      "h": 17.7778,
+      "hidden": true,
+      "x": 31.25,
+      "y": 26.6667,
+      "w": 41.6667,
+      "h": 45.5556,
       "align": "left",
-      "font": 12.2222,
-      "fontPx": 11
+      "font": 0,
+      "fontPx": 0
     },
     "cta": {
       "x": 77.6389,
@@ -49,7 +54,8 @@
       "font": 14.4444,
       "fontPx": 13,
       "padX": 3.0556,
-      "padY": 13.3333
+      "padY": 13.3333,
+      "lineHeight": 1.4
     },
     "trust": {
       "hidden": true,
@@ -60,7 +66,7 @@
     },
     "type": "Leaderboard",
     "figmaNodeId": "2:256",
-    "note": "Figma 720 x 90 frame imported from node 2:256."
+    "note": "Figma 720 x 90 frame synced from node 2:256 on 2026-05-14."
   }
 }
   );

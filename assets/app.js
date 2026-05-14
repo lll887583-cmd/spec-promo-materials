@@ -150,9 +150,6 @@
     const frameworkSizePreviewTitle = document.getElementById('frameworkSizePreviewTitle');
     const languagePreviewTitle = document.getElementById('languagePreviewTitle');
     const languagePreviewSection = document.getElementById('languagePreviewSection');
-    const resultSizeToggle = document.getElementById('resultSizeToggle');
-    const frameworkSizeToggle = document.getElementById('frameworkSizeToggle');
-    const resultLanguageToggle = document.getElementById('resultLanguageToggle');
     const posterEditOverlay = document.getElementById('posterEditOverlay');
     const anchorCanvas = document.getElementById('anchorCanvas');
     const anchorPreviewTitle = document.getElementById('anchorPreviewTitle');
@@ -225,9 +222,6 @@
     let generatedAssets = [];
     let sizeOptionsExpanded = true;
     let languageOptionsExpanded = true;
-    let resultSizeExpanded = true;
-    let resultLanguageExpanded = true;
-    let frameworkSizeExpanded = true;
     let activeAnchor = null;
     let selectedAnchorKeys = new Set();
     let activePosterAnchor = null;
@@ -270,21 +264,9 @@
     }
 
     function syncResultCollapseState() {
-      sizePreviewRow?.classList.toggle('is-collapsed', !resultSizeExpanded);
-      languagePreviewRow?.classList.toggle('is-collapsed', !resultLanguageExpanded);
-      frameworkSizePreviewRow?.classList.toggle('is-collapsed', !frameworkSizeExpanded);
-      if (resultSizeToggle) {
-        resultSizeToggle.textContent = resultSizeExpanded ? '收起' : '展开全部';
-        resultSizeToggle.setAttribute('aria-expanded', String(resultSizeExpanded));
-      }
-      if (frameworkSizeToggle) {
-        frameworkSizeToggle.textContent = frameworkSizeExpanded ? '收起' : '展开全部';
-        frameworkSizeToggle.setAttribute('aria-expanded', String(frameworkSizeExpanded));
-      }
-      if (resultLanguageToggle) {
-        resultLanguageToggle.textContent = resultLanguageExpanded ? '收起' : '展开全部';
-        resultLanguageToggle.setAttribute('aria-expanded', String(resultLanguageExpanded));
-      }
+      sizePreviewRow?.classList.remove('is-collapsed');
+      languagePreviewRow?.classList.remove('is-collapsed');
+      frameworkSizePreviewRow?.classList.remove('is-collapsed');
     }
 
     function renderSelectors() {
@@ -2940,6 +2922,7 @@
       updateProductImageFrame,
       selectProductFrame,
       updateProductAdjustment,
+      panProductImageFromDrag,
       zoomProductImage,
       initProductImageInteractions
     } = productImageController;
@@ -3028,6 +3011,21 @@
       if (!generated || currentLanguageIndex === 0) applyLanguagePreview(0);
       if (!document.getElementById('templateManagerView')?.classList.contains('hidden')) renderAnchorEditor();
       updateUploadState();
+    }
+
+    function bindCopyPlaceholderBehavior(input) {
+      if (!input) return;
+      const originalPlaceholder = input.getAttribute('placeholder') || '';
+      input.addEventListener('focus', () => {
+        if (!input.classList.contains('copy-placeholder')) return;
+        input.value = '';
+        input.setAttribute('placeholder', '');
+        updateCounters();
+      });
+      input.addEventListener('blur', () => {
+        input.setAttribute('placeholder', originalPlaceholder);
+        updateCounters();
+      });
     }
 
     function isGenerationReady() {
@@ -3306,7 +3304,7 @@
         const src = await fileToDataUrl(file);
         await validateUploadImage(src);
         setUploadImage(file, src);
-        showToast('图片已上传，可在预览区拖拽或滚轮缩放');
+        showToast('图片已上传，可在预览区拖动调整裁切或滚轮缩放');
       } catch (error) {
         const message = error.message === 'image too large'
             ? '图片像素过大，请压缩后上传'
@@ -4048,14 +4046,15 @@
         const rect = materialCard.getBoundingClientRect();
         const imageRect = productFrame?.getBoundingClientRect();
         if (activePosterAnchor === 'image') {
+          const geometry = productImageGeometry(undefined, imageRect);
           const adjustment = currentProductAdjustment();
           dragState = {
             anchorKey: activePosterAnchor,
             mode: 'image-pan',
             startX: event.clientX,
             startY: event.clientY,
-            frameW: imageRect?.width || rect.width,
-            frameH: imageRect?.height || rect.height,
+            visualW: geometry?.visualW || imageRect?.width || rect.width,
+            visualH: geometry?.visualH || imageRect?.height || rect.height,
             x: adjustment.x,
             y: adjustment.y,
             historyCaptured: false,
@@ -4230,7 +4229,10 @@
 
     initializePersistentApp();
 
-    [titleInput, subtitleInput, ctaInput].forEach(input => input.addEventListener('input', updateCounters));
+    [titleInput, subtitleInput, ctaInput].forEach(input => {
+      input.addEventListener('input', updateCounters);
+      bindCopyPlaceholderBehavior(input);
+    });
 
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && inlineCopyEditor) closeInlineCopyEditor();
@@ -4477,24 +4479,6 @@
     languageOptionsToggle?.addEventListener('click', event => {
       event.preventDefault();
       toggleOptionList('languages');
-    });
-
-    resultSizeToggle?.addEventListener('click', event => {
-      event.preventDefault();
-      resultSizeExpanded = !resultSizeExpanded;
-      syncResultCollapseState();
-    });
-
-    frameworkSizeToggle?.addEventListener('click', event => {
-      event.preventDefault();
-      frameworkSizeExpanded = !frameworkSizeExpanded;
-      syncResultCollapseState();
-    });
-
-    resultLanguageToggle?.addEventListener('click', event => {
-      event.preventDefault();
-      resultLanguageExpanded = !resultLanguageExpanded;
-      syncResultCollapseState();
     });
 
     document.addEventListener('click', event => {
