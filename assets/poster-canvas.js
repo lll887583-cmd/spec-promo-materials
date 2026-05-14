@@ -76,7 +76,12 @@
     function isShortWideLayout(size) {
       const width = Number(size?.width) || 0;
       const height = Number(size?.height) || 0;
-      return height > 0 && width / height >= 3 && height <= 300;
+      return height > 0 && width / height >= 3 && height > 180 && height <= 300;
+    }
+
+    function horizontalOverlapRatio(a, b) {
+      const overlap = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+      return overlap / Math.max(1, Math.min(a.w, b.w));
     }
 
     function drawAdjustedProductImage(ctx, image, rect, visualRect, size) {
@@ -98,8 +103,8 @@
       const ctx = canvas.getContext('2d');
       const posterAnchors = getPosterAnchors(size, asset);
       const posterStyles = getPosterStyles(asset);
-      const imageRect = posterRenderer.canvasRect(posterAnchors.image, width, height);
-      const imageVisualRect = posterRenderer.canvasRect(posterRenderer.imageVisualAnchor(posterAnchors), width, height);
+      let imageRect = posterRenderer.canvasRect(posterAnchors.image, width, height);
+      let imageVisualRect = posterRenderer.canvasRect(posterRenderer.imageVisualAnchor(posterAnchors), width, height);
       const titleRect = posterRenderer.canvasRect(posterAnchors.title, width, height);
       const subtitleRect = posterRenderer.canvasRect(posterAnchors.subtitle, width, height);
       const ctaRect = posterRenderer.canvasRect(posterAnchors.cta, width, height);
@@ -107,6 +112,64 @@
 
       ctx.fillStyle = posterRenderer.canvasBackgroundFill(ctx, posterStyles, width, height);
       ctx.fillRect(0, 0, width, height);
+
+      if (!isShortWideLayout(size) && !posterAnchors.subtitle.hidden && !posterAnchors.title.hidden) {
+        const textScale = posterCore.posterTextScale(size);
+        const titleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * textScale), height);
+        ctx.font = `700 ${titleStartSize}px ${CANVAS_FONT_FAMILY}`;
+        const titleLines = wrapCanvasText(ctx, copy.title, titleRect.w, Number.POSITIVE_INFINITY);
+        const titleLineHeight = titleStartSize * 1.06;
+        let titleSubtitleGap = Math.max(4, subtitleRect.y - (titleRect.y + titleRect.h));
+        const subtitleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height);
+        ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
+        const subtitleLines = wrapCanvasText(ctx, copy.subtitle, subtitleRect.w, Number.POSITIVE_INFINITY);
+        const subtitleLineHeight = subtitleStartSize * 1.48;
+        let subtitleCtaGap = Math.max(6, ctaRect.y - (subtitleRect.y + subtitleRect.h));
+        const ctaPaddingScale = Math.max(0.08, Math.min(width / 1200, height / 628));
+        const ctaPaddingX = Number.isFinite(Number(posterAnchors.cta.padX))
+          ? Math.max(1, (Number(posterAnchors.cta.padX) / 100) * width)
+          : Math.max(4, 40 * ctaPaddingScale);
+        const ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
+        const ctaText = String(copy.cta || '').replace(/\s+/g, ' ').trim();
+        ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+        const ctaDrawW = Math.min(width, Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2));
+        const ctaDrawX = Math.max(0, Math.min(ctaRect.x, width - ctaDrawW));
+        let subtitleDrawY = titleRect.y + titleLines.length * titleLineHeight + titleSubtitleGap;
+        let ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
+        const bottomPadding = Math.max(4, height * 0.04);
+        const overflow = ctaDrawY + ctaRect.h - (height - bottomPadding);
+        if (overflow > 0) {
+          const minTitleSubtitleGap = Math.max(4, height * 0.016);
+          const minSubtitleCtaGap = Math.max(6, height * 0.024);
+          const titleGapReduce = Math.min(Math.max(0, titleSubtitleGap - minTitleSubtitleGap), overflow);
+          const ctaGapReduce = Math.min(Math.max(0, subtitleCtaGap - minSubtitleCtaGap), overflow - titleGapReduce);
+          titleSubtitleGap -= titleGapReduce;
+          subtitleCtaGap -= ctaGapReduce;
+          subtitleDrawY = titleRect.y + titleLines.length * titleLineHeight + titleSubtitleGap;
+          ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
+        }
+        const contentLeft = Math.min(titleRect.x, subtitleRect.x, ctaDrawX);
+        const contentRight = Math.max(titleRect.x + titleRect.w, subtitleRect.x + subtitleRect.w, ctaDrawX + ctaDrawW);
+        const contentRect = { x: contentLeft, w: contentRight - contentLeft };
+        if (horizontalOverlapRatio(contentRect, imageRect) >= 0.18) {
+          const imageGap = Math.max(6, height * 0.035);
+          const nextTop = Math.max(imageRect.y, ctaDrawY + ctaRect.h + imageGap);
+          if (nextTop > imageRect.y + 1) {
+            const visibleBottom = Math.min(imageRect.y + imageRect.h, height - bottomPadding);
+            imageRect = {
+              ...imageRect,
+              y: nextTop,
+              h: Math.max(height * 0.12, visibleBottom - nextTop)
+            };
+            const visualTop = Math.max(imageVisualRect.y, nextTop);
+            imageVisualRect = {
+              ...imageVisualRect,
+              y: visualTop,
+              h: Math.max(height * 0.12, Math.min(imageVisualRect.y + imageVisualRect.h, height - bottomPadding) - visualTop)
+            };
+          }
+        }
+      }
 
       const uploadedImageSrc = getUploadedImageSrc();
       if (!posterAnchors.image.hidden && uploadedImageSrc) {

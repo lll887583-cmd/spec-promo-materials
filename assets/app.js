@@ -2954,6 +2954,10 @@
       initProductImageInteractions
     } = productImageController;
 
+    materialCard?.addEventListener('poster-layout-adjusted', () => {
+      requestAnimationFrame(updateProductImageFrame);
+    });
+
     function fitMaterialPreview(size = materialSizes[currentSizeIndex]) {
       if (!materialCard || !canvasArea || !size?.width || !size?.height) return;
       const areaRect = canvasArea.getBoundingClientRect();

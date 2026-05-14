@@ -8,7 +8,7 @@
     function isShortWideLayout(size = currentSize) {
       const width = Number(size?.width) || 0;
       const height = Number(size?.height) || 0;
-      return height > 0 && width / height >= 3 && height <= 300;
+      return height > 0 && width / height >= 3 && height > 180 && height <= 300;
     }
 
     function setAnchorVars(prefix, anchor) {
@@ -127,6 +127,37 @@
       });
       if (previewSubtitle) previewSubtitle.style.removeProperty('top');
       if (previewCta) previewCta.style.removeProperty('top');
+      materialCard.style.removeProperty('--image-y');
+      materialCard.style.removeProperty('--image-h');
+    }
+
+    function horizontalOverlapRatio(a, b) {
+      const overlap = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+      return overlap / Math.max(1, Math.min(a.width, b.width));
+    }
+
+    function applyImageLetWay(bottomLimit) {
+      if (isShortWideLayout() || !previewCta?.offsetParent) return;
+      const imageLayer = [...materialCard.querySelectorAll('.poster-product-layer, .poster-image-placeholder')]
+        .find(element => element.offsetParent);
+      if (!imageLayer?.offsetParent) return;
+      const cardRect = materialCard.getBoundingClientRect();
+      const titleRect = previewTitle?.offsetParent ? previewTitle.getBoundingClientRect() : null;
+      const subtitleRect = previewSubtitle?.offsetParent ? previewSubtitle.getBoundingClientRect() : null;
+      const ctaRect = previewCta.getBoundingClientRect();
+      const imageRect = imageLayer.getBoundingClientRect();
+      const contentLeft = Math.min(titleRect?.left ?? ctaRect.left, subtitleRect?.left ?? ctaRect.left, ctaRect.left);
+      const contentRight = Math.max(titleRect?.right ?? ctaRect.right, subtitleRect?.right ?? ctaRect.right, ctaRect.right);
+      const contentRect = { left: contentLeft, right: contentRight, width: contentRight - contentLeft };
+      if (horizontalOverlapRatio(contentRect, imageRect) < 0.18) return;
+      const imageGap = Math.max(6, cardRect.height * 0.035);
+      const nextTop = Math.max(imageRect.top, ctaRect.bottom + imageGap);
+      if (nextTop <= imageRect.top + 1) return;
+      const visibleBottom = Math.min(imageRect.bottom, bottomLimit);
+      const nextHeight = Math.max(cardRect.height * 0.12, visibleBottom - nextTop);
+      materialCard.style.setProperty('--image-y', `${((nextTop - cardRect.top) / cardRect.height) * 100}%`);
+      materialCard.style.setProperty('--image-h', `${(nextHeight / cardRect.height) * 100}%`);
+      materialCard.dispatchEvent(new CustomEvent('poster-layout-adjusted'));
     }
 
     function applyHorizontalTitleAvoidance() {
@@ -205,6 +236,7 @@
             fitCtaElement();
           }
         }
+        applyImageLetWay(cardRect.bottom - bottomPadding);
       }
     }
 
