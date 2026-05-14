@@ -117,14 +117,25 @@
       ctx.fillStyle = posterStyles.textColor;
       ctx.textAlign = isCenter ? 'center' : 'left';
       ctx.textBaseline = 'top';
+      const textScale = posterCore.posterTextScale(size);
+      const subtitleFit = posterAnchors.subtitle.hidden ? null : fitWrappedCanvasText(
+        ctx,
+        copy.subtitle,
+        subtitleRect.w,
+        subtitleRect.h,
+        posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height),
+        Math.max(7, Math.round(subtitleRect.h * 0.16)),
+        400,
+        1.48
+      );
       if (!posterAnchors.title.hidden) {
         const titleFit = fitWrappedCanvasText(
           ctx,
           copy.title,
           titleRect.w,
           titleRect.h,
-          posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * posterCore.posterTextScale(size)), height),
-          Math.max(8, Math.round(titleRect.h * 0.22)),
+          posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * textScale), height),
+          Math.max(8, Math.round(titleRect.h * 0.22), (subtitleFit?.size || 0) * 1.15),
           700,
           1.06
         );
@@ -137,18 +148,7 @@
         });
       }
 
-      const textScale = posterCore.posterTextScale(size);
-      if (!posterAnchors.subtitle.hidden) {
-        const subtitleFit = fitWrappedCanvasText(
-          ctx,
-          copy.subtitle,
-          subtitleRect.w,
-          subtitleRect.h,
-          posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height),
-          Math.max(7, Math.round(subtitleRect.h * 0.16)),
-          400,
-          1.48
-        );
+      if (subtitleFit) {
         subtitleFit.lines.forEach((line, index) => {
           ctx.fillText(line, subtitleX, subtitleRect.y + index * subtitleFit.size * 1.48);
         });

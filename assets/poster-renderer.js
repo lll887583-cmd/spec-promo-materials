@@ -74,8 +74,9 @@
     }
 
     function fitPosterTextBoxes() {
-      fitTextElement(previewTitle, 6, true);
       fitTextElement(previewSubtitle, 5, true);
+      const subtitleSize = previewSubtitle ? Number.parseFloat(window.getComputedStyle(previewSubtitle).fontSize) : 0;
+      fitTextElement(previewTitle, Math.max(6, subtitleSize * 1.15), true);
       if (previewCta) previewCta.style.removeProperty('font-size');
     }
 
