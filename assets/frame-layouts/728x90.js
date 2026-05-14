@@ -33,6 +33,7 @@
       "w": 41.2088,
       "h": 45.5556,
       "align": "left",
+      "vAlign": "center",
       "font": 31.1111,
       "fontPx": 28
     },

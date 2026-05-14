@@ -128,8 +128,12 @@
           700,
           1.06
         );
+        const titleLineHeight = titleFit.size * 1.06;
+        const titleStartY = posterAnchors.title.vAlign === 'center'
+          ? titleRect.y + Math.max(0, (titleRect.h - titleFit.lines.length * titleLineHeight) / 2)
+          : titleRect.y;
         titleFit.lines.forEach((line, index) => {
-          ctx.fillText(line, titleX, titleRect.y + index * titleFit.size * 1.06);
+          ctx.fillText(line, titleX, titleStartY + index * titleLineHeight);
         });
       }
 

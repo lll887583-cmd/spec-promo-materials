@@ -1471,7 +1471,9 @@
       overflow: hidden;
       overflow-wrap: anywhere;
       word-break: break-word;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      justify-content: var(--title-v-justify, flex-start);
       white-space: pre-wrap;
       cursor: default;
     }
