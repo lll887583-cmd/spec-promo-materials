@@ -17,17 +17,6 @@
       getLogoVariant
     } = options;
 
-    function fitCanvasFont(ctx, text, maxWidth, startSize, minSize, weight = 700) {
-      let size = startSize;
-      while (size > minSize) {
-        ctx.font = `${weight} ${size}px ${CANVAS_FONT_FAMILY}`;
-        if (ctx.measureText(text).width <= maxWidth) return size;
-        size -= 2;
-      }
-      ctx.font = `${weight} ${minSize}px ${CANVAS_FONT_FAMILY}`;
-      return minSize;
-    }
-
     function wrapCanvasText(ctx, text, maxWidth, maxLines = 3) {
       const sourceLines = String(text || '').split('\n');
       const lines = [];
@@ -168,22 +157,12 @@
       const ctaPaddingY = Number.isFinite(Number(posterAnchors.cta.padY))
         ? Math.max(1, (Number(posterAnchors.cta.padY) / 100) * height)
         : Math.max(2, 20 * ctaPaddingScale);
-      const ctaStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
-      const ctaDrawW = ctaRect.w;
+      const ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
       const ctaDrawH = ctaRect.h;
       const ctaDrawY = ctaRect.y;
-      const ctaLineHeight = Number.isFinite(Number(posterAnchors.cta.lineHeight)) ? Number(posterAnchors.cta.lineHeight) : 1.15;
-      const ctaMaxFontByHeight = Math.max(6, Math.floor((ctaDrawH - ctaPaddingY * 2) / Math.max(1, ctaLineHeight)));
-      const ctaFontSize = Math.min(ctaMaxFontByHeight, fitCanvasFont(
-        ctx,
-        copy.cta,
-        Math.max(8, ctaDrawW - ctaPaddingX * 2),
-        ctaStartSize,
-        Math.max(6, Math.round(ctaDrawH * 0.18)),
-        700
-      ));
+      const ctaText = String(copy.cta || '').replace(/\s+/g, ' ').trim();
       ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
-      const ctaText = String(copy.cta || '');
+      const ctaDrawW = Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2);
       if (!posterAnchors.cta.hidden) {
         ctx.fillStyle = posterStyles.buttonColor || '#72DBF1';
         ctx.beginPath();

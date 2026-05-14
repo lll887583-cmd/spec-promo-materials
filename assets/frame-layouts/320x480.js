@@ -48,7 +48,10 @@
       "font": 2.5,
       "fontPx": 12,
       "padX": 5.625,
-      "padY": 2.0833
+      "padY": 2.0833,
+      "lineHeight": 1.4,
+      "noWrap": true,
+      "autoWidth": true
     },
     "trust": {
       "hidden": true,

@@ -76,7 +76,7 @@
     function fitPosterTextBoxes() {
       fitTextElement(previewTitle, 6, true);
       fitTextElement(previewSubtitle, 5, true);
-      fitTextElement(previewCta, 5, true);
+      if (previewCta) previewCta.style.removeProperty('font-size');
     }
 
     function applyLayoutVariables(anchors, size) {
