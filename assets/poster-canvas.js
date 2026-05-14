@@ -172,24 +172,49 @@
           titleLineHeight = titleStartSize * 1.06;
           titleStartY = titleRect.y;
         }
+        let subtitleStartSize = 0;
+        let subtitleDrawY = 0;
+        let subtitleLines = [];
+        let subtitleLineHeight = 0;
+        if (!subtitleHidden) {
+          let titleSubtitleGap = Math.max(4, subtitleRect.y - (titleRect.y + titleRect.h));
+          subtitleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height);
+          subtitleDrawY = titleStartY + titleFit.lines.length * titleLineHeight + titleSubtitleGap;
+          ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
+          subtitleLines = wrapCanvasText(ctx, copy.subtitle, subtitleRect.w, Number.POSITIVE_INFINITY);
+          subtitleLineHeight = subtitleStartSize * 1.48;
+          let subtitleCtaGap = Math.max(6, ctaRect.y - (subtitleRect.y + subtitleRect.h));
+          ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
+          const bottomPadding = Math.max(4, height * 0.04);
+          const overflow = ctaDrawY + ctaDrawH - (height - bottomPadding);
+          if (overflow > 0) {
+            const safeTop = logoRect.y + logoRect.h + Math.max(4, height * 0.016);
+            const shift = Math.min(overflow, Math.max(0, titleStartY - safeTop));
+            titleStartY -= shift;
+            ctaDrawY -= shift;
+            subtitleDrawY -= shift;
+          }
+          const remainingOverflow = ctaDrawY + ctaDrawH - (height - bottomPadding);
+          if (remainingOverflow > 0) {
+            const minTitleSubtitleGap = Math.max(4, height * 0.016);
+            const minSubtitleCtaGap = Math.max(6, height * 0.024);
+            const titleGapReduce = Math.min(Math.max(0, titleSubtitleGap - minTitleSubtitleGap), remainingOverflow);
+            const ctaGapReduce = Math.min(Math.max(0, subtitleCtaGap - minSubtitleCtaGap), remainingOverflow - titleGapReduce);
+            titleSubtitleGap -= titleGapReduce;
+            subtitleCtaGap -= ctaGapReduce;
+            subtitleDrawY = titleStartY + titleFit.lines.length * titleLineHeight + titleSubtitleGap;
+            ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
+          }
+        }
         titleFit.lines.forEach((line, index) => {
           ctx.font = `700 ${titleFit.size}px ${CANVAS_FONT_FAMILY}`;
           ctx.fillText(line, isCenter ? titleLeft + titleWidth / 2 : titleLeft, titleStartY + index * titleLineHeight);
         });
-
         if (!subtitleHidden) {
-          const titleSubtitleGap = Math.max(4, subtitleRect.y - (titleRect.y + titleRect.h));
-          const subtitleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height);
-          const subtitleDrawY = titleStartY + titleFit.lines.length * titleLineHeight + titleSubtitleGap;
-          ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
-          const subtitleLines = wrapCanvasText(ctx, copy.subtitle, subtitleRect.w, Number.POSITIVE_INFINITY);
-          const subtitleLineHeight = subtitleStartSize * 1.48;
           subtitleLines.forEach((line, index) => {
             ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
             ctx.fillText(line, subtitleX, subtitleDrawY + index * subtitleLineHeight);
           });
-          const subtitleCtaGap = Math.max(6, ctaRect.y - (subtitleRect.y + subtitleRect.h));
-          ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
         }
       }
 

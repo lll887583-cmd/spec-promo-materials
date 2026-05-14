@@ -163,6 +163,41 @@
       const flowedSubtitleRect = previewSubtitle.getBoundingClientRect();
       if (previewCta) previewCta.style.top = `${flowedSubtitleRect.bottom - cardRect.top + subtitleCtaGap}px`;
       fitCtaElement();
+      const flowedCtaRect = previewCta?.offsetParent ? previewCta.getBoundingClientRect() : null;
+      if (flowedCtaRect) {
+        const bottomPadding = Math.max(4, cardRect.height * 0.04);
+        const logo = materialCard.querySelector('.creative-logo');
+        const logoRect = logo?.offsetParent ? logo.getBoundingClientRect() : null;
+        const safeTop = logoRect ? logoRect.bottom - cardRect.top + Math.max(4, cardRect.height * 0.016) : 0;
+        const overflow = flowedCtaRect.bottom - (cardRect.bottom - bottomPadding);
+        if (overflow > 0) {
+          const titleTop = previewTitle.getBoundingClientRect().top - cardRect.top;
+          const shift = Math.min(overflow, Math.max(0, titleTop - safeTop));
+          [previewTitle, previewSubtitle, previewCta].forEach(element => {
+            if (!element) return;
+            const nextTop = element.getBoundingClientRect().top - cardRect.top - shift;
+            element.style.top = `${nextTop}px`;
+          });
+          fitCtaElement();
+        }
+        const adjustedCtaRect = previewCta?.offsetParent ? previewCta.getBoundingClientRect() : null;
+        const remainingOverflow = adjustedCtaRect ? adjustedCtaRect.bottom - (cardRect.bottom - bottomPadding) : 0;
+        if (remainingOverflow > 0) {
+          const adjustedTitleRect = previewTitle.getBoundingClientRect();
+          const adjustedSubtitleRect = previewSubtitle.getBoundingClientRect();
+          const minTitleSubtitleGap = Math.max(4, cardRect.height * 0.016);
+          const minSubtitleCtaGap = Math.max(6, cardRect.height * 0.024);
+          const currentTitleSubtitleGap = Math.max(0, adjustedSubtitleRect.top - adjustedTitleRect.bottom);
+          const currentSubtitleCtaGap = adjustedCtaRect ? Math.max(0, adjustedCtaRect.top - adjustedSubtitleRect.bottom) : 0;
+          const titleGapReduce = Math.min(Math.max(0, currentTitleSubtitleGap - minTitleSubtitleGap), remainingOverflow);
+          const ctaGapReduce = Math.min(Math.max(0, currentSubtitleCtaGap - minSubtitleCtaGap), remainingOverflow - titleGapReduce);
+          if (titleGapReduce > 0 || ctaGapReduce > 0) {
+            previewSubtitle.style.top = `${adjustedSubtitleRect.top - cardRect.top - titleGapReduce}px`;
+            if (previewCta) previewCta.style.top = `${adjustedCtaRect.top - cardRect.top - titleGapReduce - ctaGapReduce}px`;
+            fitCtaElement();
+          }
+        }
+      }
     }
 
     function fitPosterTextBoxes() {
