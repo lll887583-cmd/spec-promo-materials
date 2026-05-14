@@ -2,8 +2,9 @@
   'use strict';
 
   function createPosterRenderer(options = {}) {
-    const { posterCore, formatPct, materialCard, previewTitle, previewSubtitle, previewCta } = options;
+    const { posterCore, formatPct, materialCard, previewTitle, previewSubtitle, previewCta, getPreviewFontPercents = null } = options;
     let currentSize = null;
+    let currentAnchors = null;
 
     function isShortWideLayout(size = currentSize) {
       const width = Number(size?.width) || 0;
@@ -18,6 +19,12 @@
       materialCard.style.setProperty(`--${prefix}-h`, formatPct(anchor.h));
     }
 
+    function cardPixelsFromPercent(percent, axis = 'x') {
+      const rect = materialCard.getBoundingClientRect();
+      const basis = axis === 'y' ? rect.height : rect.width;
+      return (Number(percent) / 100) * Math.max(1, basis);
+    }
+
     function setPosterFontVars(anchors, size) {
       const textScale = posterCore.posterTextScale(size);
       const sizeHeight = Math.max(1, Number(size?.height) || 1);
@@ -29,9 +36,10 @@
         }
         return Number(anchor?.font) || fallbackPercent;
       };
-      const titleFont = fontPercentForPreview(anchors.title, Math.max(1, anchors.title.h * 0.58 * textScale));
-      const subtitleFont = fontPercentForPreview(anchors.subtitle, Math.max(1, anchors.subtitle.h * 0.30 * textScale));
-      const ctaFont = fontPercentForPreview(anchors.cta, Math.max(1, anchors.cta.h * 0.38));
+      const stableFonts = typeof getPreviewFontPercents === 'function' ? getPreviewFontPercents(size, anchors) : null;
+      const titleFont = Number(stableFonts?.title) || fontPercentForPreview(anchors.title, Math.max(1, anchors.title.h * 0.58 * textScale));
+      const subtitleFont = Number(stableFonts?.subtitle) || fontPercentForPreview(anchors.subtitle, Math.max(1, anchors.subtitle.h * 0.30 * textScale));
+      const ctaFont = Number(stableFonts?.cta) || fontPercentForPreview(anchors.cta, Math.max(1, anchors.cta.h * 0.38));
       materialCard.style.setProperty('--title-font', `clamp(6px, ${titleFont}cqh, 84px)`);
       materialCard.style.setProperty('--subtitle-font', `clamp(5px, ${subtitleFont}cqh, 44px)`);
       materialCard.style.setProperty('--cta-font', `clamp(5px, ${ctaFont}cqh, 72px)`);
@@ -49,6 +57,11 @@
         materialCard.style.setProperty('--cta-line-height', String(Number(anchors.cta.lineHeight)));
       } else {
         materialCard.style.removeProperty('--cta-line-height');
+      }
+      if (Number.isFinite(Number(anchors.cta.maxW))) {
+        materialCard.style.setProperty('--cta-max-w', `${Number(anchors.cta.maxW)}cqw`);
+      } else {
+        materialCard.style.removeProperty('--cta-max-w');
       }
     }
 
@@ -80,6 +93,54 @@
       element.style.fontSize = `${best}px`;
     }
 
+    function fitTextElementInsideBox(element, anchor = {}, minSize = 6) {
+      if (!element || !element.offsetParent) return;
+      element.style.removeProperty('font-size');
+      element.style.removeProperty('-webkit-line-clamp');
+      element.style.removeProperty('-webkit-box-orient');
+      element.style.removeProperty('max-height');
+      element.style.display = 'block';
+      element.style.overflow = 'hidden';
+      element.style.whiteSpace = 'normal';
+      element.style.wordBreak = 'break-word';
+      element.style.overflowWrap = 'anywhere';
+
+      const computed = window.getComputedStyle(element);
+      const startSize = Number.parseFloat(computed.fontSize) || minSize;
+      const lineHeightRatio = Number(anchor.lineHeight) || (element === previewSubtitle ? 1.48 : 1.06);
+      let low = Math.max(1, Number(anchor.minFontPx) || minSize);
+      let high = Math.max(low, startSize);
+      let best = high;
+
+      element.style.fontSize = `${high}px`;
+      element.style.lineHeight = String(lineHeightRatio);
+      const initialFits = element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1;
+
+      if (!initialFits) {
+        best = low;
+        for (let index = 0; index < 10; index += 1) {
+          const mid = (low + high) / 2;
+          element.style.fontSize = `${mid}px`;
+          element.style.lineHeight = String(lineHeightRatio);
+          const fitsHeight = element.scrollHeight <= element.clientHeight + 1;
+          const fitsWidth = element.scrollWidth <= element.clientWidth + 1;
+          if (fitsHeight && fitsWidth) {
+            best = mid;
+            low = mid;
+          } else {
+            high = mid;
+          }
+        }
+      }
+
+      element.style.fontSize = `${best}px`;
+      element.style.lineHeight = String(lineHeightRatio);
+      const completeBoxLines = Math.max(1, Math.floor(element.clientHeight / Math.max(1, best * lineHeightRatio)));
+      // The Figma max-height is the available wrapping box, not a line-clamp target.
+      // If min font still overflows, clip to whole visible rows so no half-line appears.
+      element.style.maxHeight = `${completeBoxLines * best * lineHeightRatio}px`;
+    }
+
     function keepElementInsideCard(element) {
       if (!element || !element.offsetParent) return;
       element.style.removeProperty('transform');
@@ -106,6 +167,67 @@
       keepElementInsideCard(previewCta);
     }
 
+    function fitCtaElementInsideSafeArea(anchor = currentAnchors?.cta || {}) {
+      if (!previewCta || !previewCta.offsetParent) return;
+      previewCta.style.removeProperty('font-size');
+      previewCta.style.removeProperty('transform');
+      previewCta.style.removeProperty('padding-left');
+      previewCta.style.removeProperty('padding-right');
+      previewCta.style.overflow = 'hidden';
+      previewCta.style.textOverflow = 'ellipsis';
+      previewCta.style.whiteSpace = 'nowrap';
+
+      const cardRect = materialCard.getBoundingClientRect();
+      const defaultWidth = Math.max(1, cardPixelsFromPercent(Number(anchor.w) || 1, 'x'));
+      const safeRightPct = Number(currentAnchors?.safeArea?.x) + Number(currentAnchors?.safeArea?.w);
+      const maxWidthPct = Number.isFinite(Number(anchor.maxW))
+        ? Number(anchor.maxW)
+        : Number.isFinite(safeRightPct)
+          ? Math.max(Number(anchor.w) || 1, safeRightPct - (Number(anchor.x) || 0))
+          : Number(anchor.w) || 100;
+      const maxWidth = Math.max(1, (maxWidthPct / 100) * cardRect.width);
+      previewCta.style.width = `${defaultWidth}px`;
+      previewCta.style.maxWidth = `${maxWidth}px`;
+
+      const computed = window.getComputedStyle(previewCta);
+      const startSize = Number.parseFloat(computed.fontSize) || 6;
+      const minSize = Math.max(1, Number(anchor.minFontPx) || 5);
+      const startPadX = Number.parseFloat(computed.paddingLeft) || 0;
+      const minPadX = Math.max(1, cardPixelsFromPercent(Number(anchor.minPadX) || 1, 'x'));
+      let low = minSize;
+      let high = Math.max(low, startSize);
+      let best = low;
+
+      const setPaddingForSize = (size) => {
+        const progress = (size - minSize) / Math.max(1, startSize - minSize);
+        const pad = minPadX + Math.max(0, startPadX - minPadX) * Math.max(0, Math.min(1, progress));
+        previewCta.style.paddingLeft = `${pad}px`;
+        previewCta.style.paddingRight = `${pad}px`;
+      };
+
+      for (let index = 0; index < 10; index += 1) {
+        const mid = (low + high) / 2;
+        previewCta.style.fontSize = `${mid}px`;
+        setPaddingForSize(mid);
+        const desiredWidth = Math.min(maxWidth, Math.max(defaultWidth, previewCta.scrollWidth));
+        previewCta.style.width = `${desiredWidth}px`;
+        const fits = previewCta.scrollWidth <= desiredWidth + 1 && previewCta.getBoundingClientRect().width <= maxWidth + 1;
+        if (fits) {
+          best = mid;
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+
+      previewCta.style.fontSize = `${best}px`;
+      setPaddingForSize(best);
+      previewCta.style.width = `${Math.min(maxWidth, Math.max(defaultWidth, previewCta.scrollWidth))}px`;
+      const rect = previewCta.getBoundingClientRect();
+      const safeRight = Number.isFinite(safeRightPct) ? cardRect.left + (safeRightPct / 100) * cardRect.width : cardRect.right;
+      if (rect.right > safeRight + 1) previewCta.style.transform = `translateX(${safeRight - rect.right}px)`;
+    }
+
     function resetTitleAvoidance() {
       if (!previewTitle) return;
       previewTitle.style.removeProperty('left');
@@ -124,9 +246,19 @@
         element.style.removeProperty('overflow');
         element.style.removeProperty('white-space');
         element.style.removeProperty('font-size');
+        element.style.removeProperty('line-height');
+        element.style.removeProperty('-webkit-line-clamp');
+        element.style.removeProperty('-webkit-box-orient');
       });
       if (previewSubtitle) previewSubtitle.style.removeProperty('top');
       if (previewCta) previewCta.style.removeProperty('top');
+      if (previewCta) {
+        previewCta.style.removeProperty('max-width');
+        previewCta.style.removeProperty('padding-left');
+        previewCta.style.removeProperty('padding-right');
+        previewCta.style.removeProperty('text-overflow');
+        previewCta.style.removeProperty('overflow');
+      }
       materialCard.style.removeProperty('--image-y');
       materialCard.style.removeProperty('--image-h');
     }
@@ -243,6 +375,14 @@
     function fitPosterTextBoxes() {
       resetTitleAvoidance();
       resetVerticalTextFlow();
+      if (currentAnchors?.safeArea) {
+        fitTextElementInsideBox(previewTitle, currentAnchors.title, 6);
+        if (!materialCard.classList.contains('hide-poster-subtitle')) {
+          fitTextElementInsideBox(previewSubtitle, currentAnchors.subtitle, 5);
+        }
+        fitCtaElementInsideSafeArea(currentAnchors.cta);
+        return;
+      }
       const subtitleHidden = materialCard.classList.contains('hide-poster-subtitle');
       if (subtitleHidden) {
         fitCtaElement();
@@ -256,6 +396,7 @@
 
     function applyLayoutVariables(anchors, size) {
       currentSize = size;
+      currentAnchors = anchors;
       setAnchorVars('image', anchors.image);
       setAnchorVars('text', anchors.text);
       setAnchorVars('title', anchors.title);

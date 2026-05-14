@@ -8,7 +8,11 @@ This repo is a static promo-material template tool. Keep the codebase simple and
 - When implementing template work, prefer changes in template/style data and renderer logic over redesigning the product UI.
 - Keep the app as a static browser tool; do not introduce backend dependencies or package workflow changes unless requested.
 - Use `/Users/macbookpro/Documents/New project/spec-promo-materials` as the only local project path.
-- Keep `main` as the source branch; `gh-pages` should stay synchronized with `main` when publishing.
+- Preview local changes with Live Server at `http://127.0.0.1:5500/index.html`.
+- Do not push to GitHub unless the user explicitly asks to publish.
+- There is no `test` branch workflow.
+- When publishing is requested, push the updated static site to `gh-pages`.
+- Do not assume changes should go to `main` unless the user explicitly requests it.
 
 ## Product Direction
 
