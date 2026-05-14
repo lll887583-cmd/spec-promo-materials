@@ -139,7 +139,7 @@
         : Math.max(2, 20 * ctaPaddingScale);
       let ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
       const ctaDrawH = ctaRect.h;
-      const ctaDrawY = ctaRect.y;
+      let ctaDrawY = ctaRect.y;
       const ctaText = String(copy.cta || '').replace(/\s+/g, ' ').trim();
       ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
       let ctaDrawW = Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2);
@@ -152,38 +152,45 @@
       }
       const ctaDrawX = Math.max(0, Math.min(ctaRect.x, width - ctaDrawW));
       const subtitleHidden = Boolean(posterAnchors.subtitle.hidden);
-      const subtitleFit = posterAnchors.subtitle.hidden ? null : fitWrappedCanvasText(
-        ctx,
-        copy.subtitle,
-        subtitleRect.w,
-        subtitleRect.h,
-        posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height),
-        Math.max(7, Math.round(subtitleRect.h * 0.16)),
-        400,
-        1.48
-      );
       if (!posterAnchors.title.hidden) {
         const titleGap = Math.max(4, width * 0.015);
         const titleLeft = subtitleHidden ? Math.max(titleRect.x, logoRect.x + logoRect.w + titleGap) : titleRect.x;
         const titleWidth = subtitleHidden ? Math.max(1, Math.min(titleRect.x + titleRect.w, ctaDrawX - titleGap) - titleLeft) : titleRect.w;
         const titleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * textScale), height);
-        const titleMinSize = Math.max(8, Math.round(titleRect.h * 0.22), (subtitleFit?.size || 0) * 1.15);
-        const titleFit = subtitleHidden
-          ? fitSingleLineCanvasText(ctx, copy.title, titleWidth, titleStartSize, 6, 700)
-          : fitWrappedCanvasText(ctx, copy.title, titleWidth, titleRect.h, titleStartSize, titleMinSize, 700, 1.06);
-        const titleLineHeight = titleFit.size * 1.06;
-        const titleStartY = posterAnchors.title.vAlign === 'center'
-          ? titleRect.y + Math.max(0, (titleRect.h - titleFit.lines.length * titleLineHeight) / 2)
-          : titleRect.y;
+        let titleFit;
+        let titleLineHeight;
+        let titleStartY;
+        if (subtitleHidden) {
+          titleFit = fitSingleLineCanvasText(ctx, copy.title, titleWidth, titleStartSize, 6, 700);
+          titleLineHeight = titleFit.size * 1.06;
+          titleStartY = posterAnchors.title.vAlign === 'center'
+            ? titleRect.y + Math.max(0, (titleRect.h - titleLineHeight) / 2)
+            : titleRect.y;
+        } else {
+          ctx.font = `700 ${titleStartSize}px ${CANVAS_FONT_FAMILY}`;
+          titleFit = { size: titleStartSize, lines: wrapCanvasText(ctx, copy.title, titleWidth, Number.POSITIVE_INFINITY) };
+          titleLineHeight = titleStartSize * 1.06;
+          titleStartY = titleRect.y;
+        }
         titleFit.lines.forEach((line, index) => {
+          ctx.font = `700 ${titleFit.size}px ${CANVAS_FONT_FAMILY}`;
           ctx.fillText(line, isCenter ? titleLeft + titleWidth / 2 : titleLeft, titleStartY + index * titleLineHeight);
         });
-      }
 
-      if (subtitleFit) {
-        subtitleFit.lines.forEach((line, index) => {
-          ctx.fillText(line, subtitleX, subtitleRect.y + index * subtitleFit.size * 1.48);
-        });
+        if (!subtitleHidden) {
+          const titleSubtitleGap = Math.max(4, subtitleRect.y - (titleRect.y + titleRect.h));
+          const subtitleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(8, Math.round(subtitleRect.h * 0.30 * textScale)), height);
+          const subtitleDrawY = titleStartY + titleFit.lines.length * titleLineHeight + titleSubtitleGap;
+          ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
+          const subtitleLines = wrapCanvasText(ctx, copy.subtitle, subtitleRect.w, Number.POSITIVE_INFINITY);
+          const subtitleLineHeight = subtitleStartSize * 1.48;
+          subtitleLines.forEach((line, index) => {
+            ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
+            ctx.fillText(line, subtitleX, subtitleDrawY + index * subtitleLineHeight);
+          });
+          const subtitleCtaGap = Math.max(6, ctaRect.y - (subtitleRect.y + subtitleRect.h));
+          ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
+        }
       }
 
       if (!posterAnchors.cta.hidden) {

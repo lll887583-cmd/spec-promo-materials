@@ -103,7 +103,23 @@
       if (!previewTitle) return;
       previewTitle.style.removeProperty('left');
       previewTitle.style.removeProperty('width');
+      previewTitle.style.removeProperty('height');
+      previewTitle.style.removeProperty('display');
+      previewTitle.style.removeProperty('overflow');
       previewTitle.style.removeProperty('white-space');
+    }
+
+    function resetVerticalTextFlow() {
+      [previewTitle, previewSubtitle].forEach(element => {
+        if (!element) return;
+        element.style.removeProperty('height');
+        element.style.removeProperty('display');
+        element.style.removeProperty('overflow');
+        element.style.removeProperty('white-space');
+        element.style.removeProperty('font-size');
+      });
+      if (previewSubtitle) previewSubtitle.style.removeProperty('top');
+      if (previewCta) previewCta.style.removeProperty('top');
     }
 
     function applyHorizontalTitleAvoidance() {
@@ -124,15 +140,43 @@
       return true;
     }
 
+    function applyVerticalTextFlow() {
+      if (!previewTitle?.offsetParent || !previewSubtitle?.offsetParent) return;
+      const cardRect = materialCard.getBoundingClientRect();
+      const originalTitleRect = previewTitle.getBoundingClientRect();
+      const originalSubtitleRect = previewSubtitle.getBoundingClientRect();
+      const originalCtaRect = previewCta?.offsetParent ? previewCta.getBoundingClientRect() : null;
+      const titleSubtitleGap = Math.max(4, originalSubtitleRect.top - originalTitleRect.bottom);
+      const subtitleCtaGap = originalCtaRect ? Math.max(6, originalCtaRect.top - originalSubtitleRect.bottom) : Math.max(6, cardRect.height * 0.035);
+
+      previewTitle.style.height = 'auto';
+      previewTitle.style.display = 'block';
+      previewTitle.style.overflow = 'visible';
+      previewTitle.style.whiteSpace = 'pre-wrap';
+      previewSubtitle.style.height = 'auto';
+      previewSubtitle.style.display = 'block';
+      previewSubtitle.style.overflow = 'visible';
+      previewSubtitle.style.whiteSpace = 'pre-wrap';
+
+      const flowedTitleRect = previewTitle.getBoundingClientRect();
+      previewSubtitle.style.top = `${flowedTitleRect.bottom - cardRect.top + titleSubtitleGap}px`;
+      const flowedSubtitleRect = previewSubtitle.getBoundingClientRect();
+      if (previewCta) previewCta.style.top = `${flowedSubtitleRect.bottom - cardRect.top + subtitleCtaGap}px`;
+      fitCtaElement();
+    }
+
     function fitPosterTextBoxes() {
       resetTitleAvoidance();
-      fitTextElement(previewSubtitle, 5, true);
+      resetVerticalTextFlow();
       const subtitleHidden = materialCard.classList.contains('hide-poster-subtitle');
-      const subtitleSize = !subtitleHidden && previewSubtitle ? Number.parseFloat(window.getComputedStyle(previewSubtitle).fontSize) : 0;
-      fitCtaElement();
-      const horizontalAvoided = subtitleHidden && applyHorizontalTitleAvoidance();
-      fitTextElement(previewTitle, Math.max(6, subtitleSize * 1.15), true);
-      if (horizontalAvoided) fitCtaElement();
+      if (subtitleHidden) {
+        fitCtaElement();
+        const horizontalAvoided = applyHorizontalTitleAvoidance();
+        fitTextElement(previewTitle, 6, true);
+        if (horizontalAvoided) fitCtaElement();
+        return;
+      }
+      applyVerticalTextFlow();
     }
 
     function applyLayoutVariables(anchors, size) {
