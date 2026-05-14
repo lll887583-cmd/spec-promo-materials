@@ -3,6 +3,13 @@
 
   function createPosterRenderer(options = {}) {
     const { posterCore, formatPct, materialCard, previewTitle, previewSubtitle, previewCta } = options;
+    let currentSize = null;
+
+    function isShortWideLayout(size = currentSize) {
+      const width = Number(size?.width) || 0;
+      const height = Number(size?.height) || 0;
+      return height > 0 && width / height >= 3 && height <= 300;
+    }
 
     function setAnchorVars(prefix, anchor) {
       materialCard.style.setProperty(`--${prefix}-x`, formatPct(anchor.x));
@@ -169,8 +176,9 @@
         const logo = materialCard.querySelector('.creative-logo');
         const logoRect = logo?.offsetParent ? logo.getBoundingClientRect() : null;
         const safeTop = logoRect ? logoRect.bottom - cardRect.top + Math.max(4, cardRect.height * 0.016) : 0;
+        const allowGroupShift = isShortWideLayout();
         const overflow = flowedCtaRect.bottom - (cardRect.bottom - bottomPadding);
-        if (overflow > 0) {
+        if (allowGroupShift && overflow > 0) {
           const titleTop = previewTitle.getBoundingClientRect().top - cardRect.top;
           const shift = Math.min(overflow, Math.max(0, titleTop - safeTop));
           [previewTitle, previewSubtitle, previewCta].forEach(element => {
@@ -215,6 +223,7 @@
     }
 
     function applyLayoutVariables(anchors, size) {
+      currentSize = size;
       setAnchorVars('image', anchors.image);
       setAnchorVars('text', anchors.text);
       setAnchorVars('title', anchors.title);

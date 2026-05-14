@@ -73,6 +73,12 @@
       return { size: safeMinSize, lines: [line] };
     }
 
+    function isShortWideLayout(size) {
+      const width = Number(size?.width) || 0;
+      const height = Number(size?.height) || 0;
+      return height > 0 && width / height >= 3 && height <= 300;
+    }
+
     function drawAdjustedProductImage(ctx, image, rect, visualRect, size) {
       const draw = posterRenderer.productDrawGeometry(image, rect, getProductAdjustment(size), visualRect);
 
@@ -187,7 +193,7 @@
           ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
           const bottomPadding = Math.max(4, height * 0.04);
           const overflow = ctaDrawY + ctaDrawH - (height - bottomPadding);
-          if (overflow > 0) {
+          if (isShortWideLayout(size) && overflow > 0) {
             const safeTop = logoRect.y + logoRect.h + Math.max(4, height * 0.016);
             const shift = Math.min(overflow, Math.max(0, titleStartY - safeTop));
             titleStartY -= shift;
