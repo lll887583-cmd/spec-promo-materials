@@ -27,7 +27,23 @@
       node.style.width = formatPct(anchor.w);
       node.style.height = formatPct(anchor.h);
       node.style.setProperty('--anchor-cta-x', formatPct(anchor.x));
+      node.style.setProperty('--anchor-cta-w', formatPct(anchor.w));
       node.style.setProperty('--anchor-cta-h', formatPct(anchor.h));
+      if (Number.isFinite(Number(anchor.padX))) {
+        node.style.setProperty('--anchor-cta-pad-x', `${Number(anchor.padX)}cqw`);
+      } else {
+        node.style.removeProperty('--anchor-cta-pad-x');
+      }
+      if (Number.isFinite(Number(anchor.padY))) {
+        node.style.setProperty('--anchor-cta-pad-y', `${Number(anchor.padY)}cqh`);
+      } else {
+        node.style.removeProperty('--anchor-cta-pad-y');
+      }
+      if (Number.isFinite(Number(anchor.lineHeight))) {
+        node.style.setProperty('--anchor-cta-line-height', String(Number(anchor.lineHeight)));
+      } else {
+        node.style.removeProperty('--anchor-cta-line-height');
+      }
     }
 
     function fitTextElement(element, minSize = 6) {

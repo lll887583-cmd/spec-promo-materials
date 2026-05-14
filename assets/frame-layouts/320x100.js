@@ -10,6 +10,10 @@
   },
   "layout": {
     "exact": true,
+    "styles": {
+      "backgroundMode": "solid",
+      "backgroundColor": "#DFF9FF"
+    },
     "image": {
       "x": 68.4375,
       "y": -9.8782,
@@ -17,38 +21,39 @@
       "h": 119.7571
     },
     "logo": {
-      "x": 39.6875,
-      "y": 72.0,
+      "x": 5.9375,
+      "y": 9,
       "w": 24.1934,
       "h": 10.2193
     },
     "title": {
       "x": 5.9375,
-      "y": 15.0,
-      "w": 51.5625,
-      "h": 18.0,
+      "y": 26,
+      "w": 59.0625,
+      "h": 14,
       "align": "left",
-      "font": 12.0,
+      "font": 12,
       "fontPx": 12
     },
     "subtitle": {
       "x": 5.9375,
-      "y": 34.0,
-      "w": 55.0,
-      "h": 24.0,
+      "y": 46,
+      "w": 59.0625,
+      "h": 20,
       "align": "left",
-      "font": 8.0,
+      "font": 8,
       "fontPx": 8
     },
     "cta": {
       "x": 5.9375,
-      "y": 66.0,
-      "w": 20.0,
-      "h": 22.0,
-      "font": 7.0,
+      "y": 70,
+      "w": 20,
+      "h": 22,
+      "font": 7,
       "fontPx": 7,
       "padX": 3.75,
-      "padY": 6.0
+      "padY": 6,
+      "lineHeight": 1.4
     },
     "trust": {
       "hidden": true,

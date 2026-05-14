@@ -7,17 +7,24 @@ This repo is a static promo-material template tool. Keep the codebase simple and
 - Preserve the current interface and interaction model in `index.html`, `assets/app.css`, and `assets/app.js` unless the user explicitly asks for a UI change.
 - When implementing template work, prefer changes in template/style data and renderer logic over redesigning the product UI.
 - Keep the app as a static browser tool; do not introduce backend dependencies or package workflow changes unless requested.
+- Use `/Users/macbookpro/Documents/New project/spec-promo-materials` as the only local project path.
+- Keep `main` as the source branch; `gh-pages` should stay synchronized with `main` when publishing.
 
 ## Product Direction
 
-- Recreate 17 Figma size templates in code.
+- Recreate 18 Figma size templates in code.
 - Separate template geometry from style presets.
 - Template logic owns sizes, layout, anchors, and text/image regions.
 - Style logic owns color, logo variant, and small visual tuning.
+- Product images fill each size's visual area (`imageVisibleArea` / `imageVisualArea`) first, falling back to the visible intersection of the `image` frame and canvas.
 
 ## Key Files
 
-- `assets/poster-core.js` - template/style definitions and shared constants.
+- `assets/config/defaults.js` - default sizes, languages, copy, template anchors, and style constants.
+- `assets/config/layout-rules.js` - fallback generated layout rules before Figma frame layout overrides.
+- `assets/config/translations.js` - default copy translation map.
+- `assets/modules/product-image.js` - product image cover geometry, visual area fitting, drag, and zoom interactions.
+- `assets/poster-core.js` - template/layout core helpers.
 - `assets/poster-renderer.js` - DOM preview rendering.
 - `assets/poster-canvas.js` - canvas/export rendering helpers.
 - `assets/frame-store.js` - local browser persistence for frame/template state.

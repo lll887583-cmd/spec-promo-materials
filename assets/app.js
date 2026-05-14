@@ -1,69 +1,27 @@
-    let materialSizes = [
-      { id: 'ad_120x600', label: '120 x 600', width: 120, height: 600 },
-      { id: 'ad_160x600', label: '160 x 600', width: 160, height: 600 },
-      { id: 'ad_300x250', label: '300 x 250', width: 300, height: 250 },
-      { id: 'ad_300x600', label: '300 x 600', width: 300, height: 600 },
-      { id: 'ad_320x50', label: '320 x 50', width: 320, height: 50 },
-      { id: 'ad_320x100', label: '320 x 100', width: 320, height: 100 },
-      { id: 'ad_320x480', label: '320 x 480', width: 320, height: 480 },
-      { id: 'ad_720x90', label: '720 x 90', width: 720, height: 90 },
-      { id: 'ad_728x90', label: '728 x 90', width: 728, height: 90 },
-      { id: 'square_800x800', label: '800 x 800', width: 800, height: 800 },
-      { id: 'ad_628x1200', label: '628 x 1200', width: 628, height: 1200 },
-      { id: 'ad_828x1200', label: '828 x 1200', width: 828, height: 1200 },
-      { id: 'ad_970x250', label: '970 x 250', width: 970, height: 250 },
-      { id: 'ad_980x250', label: '980 x 250', width: 980, height: 250 },
-      { id: 'ad_990x250', label: '990 x 250', width: 990, height: 250 },
-      { id: 'landscape_1200x628', label: '1200 x 628', width: 1200, height: 628 },
-      { id: 'ad_1200x1200', label: '1200 x 1200', width: 1200, height: 1200 },
-      { id: 'ad_1200x1500', label: '1200 x 1500', width: 1200, height: 1500 }
-    ];
+    const APP_DEFAULTS = window.SpecPromoDefaults || {};
+    let materialSizes = JSON.parse(JSON.stringify(APP_DEFAULTS.materialSizes || []));
 
     if (window.SpecPromoFrameLayouts?.getSizes) {
       const figmaFrameSizes = window.SpecPromoFrameLayouts.getSizes();
       if (Array.isArray(figmaFrameSizes) && figmaFrameSizes.length) materialSizes = figmaFrameSizes;
     }
 
-    let languages = [
-      ['英语', 'English'], ['日语', '日本語'], ['简体中文', '简体中文'], ['繁体中文', '繁體中文'],
-      ['越南语', 'Tiếng Việt'], ['泰语', 'ภาษาไทย'], ['韩语', '한국어'], ['印尼语', 'Indonesia'],
-      ['马来语', 'Melayu']
-    ];
-
-
-    const LEGACY_TRADING_LOCALIZED_COPY = [
-      { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
-      { title: '主導権を握る', subtitle: 'Spec Marketsで取引コストを抑えましょう。', cta: '優位性を見つける' },
-      { title: '掌控交易', subtitle: '使用 Spec Markets 降低您的交易成本。', cta: '找到你的优势' },
-      { title: '掌控交易', subtitle: '使用 Spec Markets 降低您的交易成本。', cta: '找到你的優勢' },
-      { title: 'Làm chủ giao dịch', subtitle: 'Giảm chi phí giao dịch cùng Spec Markets.', cta: 'Tìm lợi thế của bạn' },
-      { title: 'ควบคุมการเทรด', subtitle: 'ลดต้นทุนการเทรดของคุณกับ Spec Markets', cta: 'ค้นหาจุดได้เปรียบ' },
-      { title: '거래를 주도하세요', subtitle: 'Spec Markets와 함께 거래 비용을 낮추세요.', cta: '나만의 우위 찾기' },
-      { title: 'Kendalikan trading', subtitle: 'Turunkan biaya trading Anda bersama Spec Markets.', cta: 'Temukan keunggulan Anda' },
-      { title: 'Kuasai dagangan', subtitle: 'Kurangkan kos dagangan anda bersama Spec Markets.', cta: 'Cari kelebihan anda' }
-    ];
-
-    let localizedCopy = [
-      { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
-      { title: '見出しテキスト', subtitle: '詳細情報や主な機能をここに記載できます。', cta: 'ボタンテキスト' },
-      { title: '标题文本', subtitle: '可在此处详细说明更多信息和主要功能。', cta: '按钮文本' },
-      { title: '標題文字', subtitle: '可在此處詳細說明更多資訊和主要功能。', cta: '按鈕文字' },
-      { title: 'Văn bản tiêu đề', subtitle: 'Có thể trình bày thêm thông tin và các tính năng chính tại đây.', cta: 'Văn bản nút' },
-      { title: 'ข้อความหัวข้อ', subtitle: 'สามารถใส่ข้อมูลเพิ่มเติมและฟีเจอร์หลักได้ที่นี่', cta: 'ข้อความปุ่ม' },
-      { title: '제목 텍스트', subtitle: '자세한 정보와 주요 기능을 여기에 설명할 수 있습니다.', cta: '버튼 텍스트' },
-      { title: 'Teks Judul', subtitle: 'Informasi tambahan dan fitur utama dapat dijelaskan di sini.', cta: 'Teks Tombol' },
-      { title: 'Teks Tajuk', subtitle: 'Maklumat lanjut dan ciri utama boleh diterangkan di sini.', cta: 'Teks Butang' }
-    ];
+    let languages = JSON.parse(JSON.stringify(APP_DEFAULTS.languages || []));
+    const LEGACY_TRADING_LOCALIZED_COPY = JSON.parse(JSON.stringify(APP_DEFAULTS.legacyTradingLocalizedCopy || []));
+    let localizedCopy = JSON.parse(JSON.stringify(APP_DEFAULTS.localizedCopy || []));
 
     const DEFAULT_MATERIAL_SIZES = JSON.parse(JSON.stringify(materialSizes));
     const DEFAULT_LANGUAGES = JSON.parse(JSON.stringify(languages));
     const DEFAULT_LOCALIZED_COPY = JSON.parse(JSON.stringify(localizedCopy));
-    const TEMPLATE_PREVIEW_SIZE_ID = 'landscape_1200x628';
-    const FIGMA_BUTTON_TEXT_COLOR = '#27376F';
-    const FIGMA_BUTTON_FILL_COLOR = '#72DBF1';
-    const LEGACY_BUTTON_TEXT_COLOR = '#ffffff';
-    const LEGACY_BUTTON_FILL_COLORS = new Set(['#03b2cb', '#4ecbe3']);
-    const INLINE_COPY_EDITOR_ENABLED = false;
+    const TEMPLATE_PREVIEW_SIZE_ID = APP_DEFAULTS.templatePreviewSizeId || 'landscape_1200x628';
+    const FIGMA_BUTTON_TEXT_COLOR = APP_DEFAULTS.figmaButtonTextColor || '#27376F';
+    const FIGMA_BUTTON_FILL_COLOR = APP_DEFAULTS.figmaButtonFillColor || '#72DBF1';
+    const LEGACY_BUTTON_TEXT_COLOR = APP_DEFAULTS.legacyButtonTextColor || '#ffffff';
+    const LEGACY_BUTTON_FILL_COLORS = new Set(APP_DEFAULTS.legacyButtonFillColors || ['#03b2cb', '#4ecbe3']);
+    const INLINE_COPY_EDITOR_ENABLED = Boolean(APP_DEFAULTS.inlineCopyEditorEnabled);
+    const defaultTemplateAnchors = JSON.parse(JSON.stringify(APP_DEFAULTS.defaultTemplateAnchors || {}));
+    const defaultTemplateStyles = JSON.parse(JSON.stringify(APP_DEFAULTS.defaultTemplateStyles || {}));
+    const darkTemplateStyles = JSON.parse(JSON.stringify(APP_DEFAULTS.darkTemplateStyles || {}));
 
     function templatePreviewSizeIndex() {
       const index = materialSizes.findIndex(size =>
@@ -78,306 +36,7 @@
       generatedSizeIndices = [currentSizeIndex];
     }
 
-    const defaultTemplateAnchors = {
-      image: { x: 0, y: 0, w: 44.2, h: 100 },
-      text: { x: 48.3, y: 30, w: 44, h: 28, align: 'left' },
-      title: { x: 48.3, y: 30, w: 44, h: 12, align: 'left' },
-      subtitle: { x: 48.3, y: 45, w: 44, h: 13, align: 'left' },
-      cta: { x: 48.3, y: 66.8, w: 27, h: 11.5 },
-      logo: { x: 48.3, y: 8, w: 24, h: 10 },
-      trust: { x: 81, y: 87, w: 15, h: 8 }
-    };
-
-    const defaultTemplateStyles = {
-      backgroundMode: 'solid',
-      backgroundColor: '#dcf9ff',
-      gradientStart: '#dcf9ff',
-      gradientEnd: '#ffffff',
-      gradientAngle: 135,
-      textColor: '#081840',
-      buttonColor: FIGMA_BUTTON_FILL_COLOR,
-      buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
-      logoVariant: 'black'
-    };
-
-    const darkTemplateStyles = {
-      backgroundMode: 'gradient',
-      backgroundColor: '#0E1D4C',
-      gradientStart: '#0E1D4C',
-      gradientEnd: '#2144B2',
-      gradientAngle: 135,
-      textColor: '#ffffff',
-      buttonColor: FIGMA_BUTTON_FILL_COLOR,
-      buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
-      logoVariant: 'white'
-    };
-
-    const generationLayoutRules = {
-      landscape_1200x628: {
-        type: '横向主图',
-        logo: { x: 6.5, y: 8, w: 24, h: 10 },
-        text: { x: 6.5, y: 30, w: 44, h: 42, align: 'left' },
-        image: { x: 55.8, y: 0, w: 44.2, h: 100 },
-        trust: { x: 6.5, y: 87, w: 15, h: 8 },
-        note: '基准横向海报，左右分区完整展示商品图与文案。'
-      },
-      square_1080x1080: {
-        type: '方形',
-        logo: { x: 8, y: 7, w: 34, h: 8 },
-        text: { x: 8, y: 20, w: 84, h: 30, align: 'left' },
-        image: { x: 0, y: 52, w: 100, h: 48 },
-        trust: { x: 64, y: 43, w: 24, h: 7 },
-        note: '方形布局改为上文案、下商品图，保证社媒信息流可读。'
-      },
-      portrait_1080x1350: {
-        type: '竖向信息流',
-        logo: { x: 8, y: 5, w: 38, h: 7 },
-        text: { x: 8, y: 16, w: 84, h: 29, align: 'left' },
-        image: { x: 0, y: 48, w: 100, h: 52 },
-        trust: { x: 62, y: 40, w: 27, h: 6 },
-        note: '竖向信息流上方优先放置品牌与 CTA，下方承载商品图。'
-      },
-      wide_1920x1080: {
-        type: '宽屏横向',
-        logo: { x: 6.5, y: 7, w: 24, h: 9 },
-        text: { x: 6.5, y: 30, w: 43, h: 46, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: '16:9 宽屏强调左文案、右视觉，适配视频封面。'
-      },
-      story_1080x1920: {
-        type: '竖屏 Story',
-        logo: { x: 8, y: 5, w: 44, h: 6 },
-        text: { x: 8, y: 14, w: 84, h: 27, align: 'left' },
-        image: { x: 0, y: 45, w: 100, h: 55 },
-        trust: { x: 58, y: 38, w: 30, h: 5 },
-        note: 'Story 规格保留上方安全区，下半屏展示主体图层。'
-      },
-      reels_1080x1920: {
-        type: '竖屏 Reels',
-        logo: { x: 8, y: 6, w: 42, h: 6 },
-        text: { x: 8, y: 18, w: 84, h: 25, align: 'left' },
-        image: { x: 0, y: 48, w: 100, h: 52 },
-        trust: { x: 58, y: 40, w: 30, h: 5 },
-        note: 'Reels 规格避开顶部 UI 区，文案更靠中上。'
-      },
-      story_720x1280: {
-        type: '竖屏',
-        logo: { x: 8, y: 5, w: 44, h: 6 },
-        text: { x: 8, y: 15, w: 84, h: 28, align: 'left' },
-        image: { x: 0, y: 47, w: 100, h: 53 },
-        trust: { x: 58, y: 39, w: 30, h: 5 },
-        note: '小竖屏压缩文字区高度，保留核心识别元素。'
-      },
-      square_800x800: {
-        type: '方形',
-        logo: { x: 8, y: 7, w: 36, h: 8 },
-        text: { x: 8, y: 21, w: 84, h: 29, align: 'left' },
-        image: { x: 0, y: 54, w: 100, h: 46 },
-        trust: { x: 64, y: 44, w: 24, h: 7 },
-        note: '小方图减少文字占比，避免元素拥挤。'
-      },
-      landscape_1080x566: {
-        type: '低高横图',
-        logo: { x: 6, y: 7, w: 23, h: 10 },
-        text: { x: 6, y: 28, w: 43, h: 48, align: 'left' },
-        image: { x: 54, y: 0, w: 46, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: '低高度横图减少上下留白，优先保证 CTA 出现。'
-      },
-      landscape_1024x768: {
-        type: '4:3 横向',
-        logo: { x: 7, y: 8, w: 28, h: 9 },
-        text: { x: 7, y: 29, w: 44, h: 45, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 7, y: 84, w: 18, h: 7 },
-        note: '4:3 比例增强文字区宽度，商品图靠右填充。'
-      },
-      banner_1366x768: {
-        type: '桌面横幅',
-        logo: { x: 6.5, y: 7, w: 24, h: 9 },
-        text: { x: 6.5, y: 30, w: 42, h: 46, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: '桌面横幅保持左右分区，适合站内展示位。'
-      },
-      desktop_1440x900: {
-        type: '桌面横幅',
-        logo: { x: 7, y: 7, w: 25, h: 8 },
-        text: { x: 7, y: 29, w: 42, h: 45, align: 'left' },
-        image: { x: 54, y: 0, w: 46, h: 100 },
-        trust: { x: 7, y: 84, w: 17, h: 7 },
-        note: '桌面比例保留更多呼吸感，文案和商品图分离。'
-      },
-      desktop_1600x900: {
-        type: '桌面 16:9',
-        logo: { x: 6.5, y: 7, w: 24, h: 9 },
-        text: { x: 6.5, y: 30, w: 42, h: 46, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: '16:9 展示屏布局，商品图占右侧主视觉。'
-      },
-      desktop_1680x1050: {
-        type: '桌面宽屏',
-        logo: { x: 7, y: 7, w: 25, h: 8 },
-        text: { x: 7, y: 29, w: 42, h: 45, align: 'left' },
-        image: { x: 54, y: 0, w: 46, h: 100 },
-        trust: { x: 7, y: 84, w: 17, h: 7 },
-        note: '宽屏办公比例，延续左右视觉骨架。'
-      },
-      qhd_2560x1440: {
-        type: 'QHD 横向',
-        logo: { x: 6.5, y: 7, w: 24, h: 9 },
-        text: { x: 6.5, y: 30, w: 42, h: 46, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: '高分辨率按规则等比重排，保持视觉密度一致。'
-      },
-      hd_1280x720: {
-        type: 'HD 横向',
-        logo: { x: 6.5, y: 7, w: 24, h: 9 },
-        text: { x: 6.5, y: 30, w: 42, h: 46, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: 'HD 输出适合视频封面和网页横幅。'
-      },
-      desktop_1536x864: {
-        type: '桌面默认比例',
-        logo: { x: 6.5, y: 7, w: 24, h: 9 },
-        text: { x: 6.5, y: 30, w: 42, h: 46, align: 'left' },
-        image: { x: 55, y: 0, w: 45, h: 100 },
-        trust: { x: 6.5, y: 84, w: 16, h: 7 },
-        note: '桌面默认比例，匹配预览区视觉密度。'
-      }
-    };
-
-    Object.assign(generationLayoutRules, {
-      ad_160x600: {
-        type: '竖向摩天楼',
-        logo: { x: 8, y: 4, w: 68, h: 6 },
-        text: { x: 6, y: 14, w: 88, h: 25, align: 'left' },
-        cta: { x: 8, y: 40, w: 72, h: 4.8 },
-        image: { x: 0, y: 54, w: 100, h: 46 },
-        trust: { x: 8, y: 47, w: 84, h: 5 },
-        note: '160 x 600 按窄竖幅重排，上方保留 Logo 与文案，下方填充商品图。'
-      },
-      ad_320x100: {
-        type: '移动横幅',
-        logo: { x: 5, y: 9, w: 24, h: 16 },
-        text: { x: 34, y: 16, w: 38, h: 54, align: 'left' },
-        image: { x: 76, y: 0, w: 24, h: 100 },
-        trust: { x: 34, y: 72, w: 28, h: 10 },
-        note: '320 x 100 压缩为品牌、短文案、右侧商品图的横幅结构。'
-      },
-      ad_980x250: {
-        type: '宽横幅',
-        logo: { x: 5.5, y: 9, w: 18, h: 12 },
-        text: { x: 5.5, y: 31, w: 45, h: 43, align: 'left' },
-        image: { x: 56, y: 0, w: 44, h: 100 },
-        trust: { x: 5.5, y: 84, w: 16, h: 8 },
-        note: '980 x 250 使用宽横幅规则，左侧信息区、右侧商品图。'
-      },
-      ad_300x600: {
-        type: '半页竖幅',
-        logo: { x: 8, y: 5, w: 48, h: 7 },
-        text: { x: 8, y: 16, w: 84, h: 25, align: 'left' },
-        cta: { x: 8, y: 42, w: 48, h: 6 },
-        image: { x: 0, y: 56, w: 100, h: 44 },
-        trust: { x: 58, y: 49, w: 30, h: 5 },
-        note: '300 x 600 按半页广告重排，保证 CTA 与主体图上下分区。'
-      },
-      ad_990x250: {
-        type: '宽横幅',
-        logo: { x: 5.5, y: 9, w: 18, h: 12 },
-        text: { x: 5.5, y: 31, w: 45, h: 43, align: 'left' },
-        image: { x: 56, y: 0, w: 44, h: 100 },
-        trust: { x: 5.5, y: 84, w: 16, h: 8 },
-        note: '990 x 250 延续宽横幅骨架，尺寸排序和下载按素材生成同步。'
-      },
-      ad_320x50: {
-        type: '超窄移动横幅',
-        logo: { x: 4, y: 12, w: 22, h: 24 },
-        text: { x: 30, y: 12, w: 42, h: 60, align: 'left' },
-        image: { x: 76, y: 0, w: 24, h: 100 },
-        trust: { x: 52, y: 76, w: 20, h: 12 },
-        note: '320 x 50 采用极简横幅规则，仅保留最关键品牌、标题和主体图。'
-      },
-      ad_320x480: {
-        type: '移动竖幅',
-        logo: { x: 8, y: 5, w: 48, h: 7 },
-        text: { x: 8, y: 16, w: 84, h: 25, align: 'left' },
-        cta: { x: 8, y: 42, w: 48, h: 6 },
-        image: { x: 0, y: 56, w: 100, h: 44 },
-        trust: { x: 58, y: 49, w: 30, h: 5 },
-        note: '320 x 480 按移动竖幅规则，上方信息、下方商品图。'
-      },
-      ad_300x250: {
-        type: '中矩形',
-        logo: { x: 7, y: 7, w: 34, h: 8 },
-        text: { x: 7, y: 21, w: 86, h: 32, align: 'left' },
-        image: { x: 0, y: 58, w: 100, h: 42 },
-        trust: { x: 62, y: 48, w: 26, h: 7 },
-        note: '300 x 250 使用中矩形广告布局，文案与商品图上下分区。'
-      },
-      ad_970x250: {
-        type: '宽横幅',
-        logo: { x: 5.5, y: 9, w: 18, h: 12 },
-        text: { x: 5.5, y: 31, w: 45, h: 43, align: 'left' },
-        image: { x: 56, y: 0, w: 44, h: 100 },
-        trust: { x: 5.5, y: 84, w: 16, h: 8 },
-        note: '970 x 250 对齐常用 Billboard 横幅，保留左右分区。'
-      },
-      ad_1200x1500: {
-        type: '竖向信息流',
-        logo: { x: 8, y: 5, w: 38, h: 7 },
-        text: { x: 8, y: 16, w: 84, h: 29, align: 'left' },
-        image: { x: 0, y: 48, w: 100, h: 52 },
-        trust: { x: 62, y: 40, w: 27, h: 6 },
-        note: '1200 x 1500 按竖向信息流重排，适合高画幅输出。'
-      },
-      ad_1200x1200: {
-        type: '方形',
-        logo: { x: 8, y: 7, w: 34, h: 8 },
-        text: { x: 8, y: 20, w: 84, h: 30, align: 'left' },
-        image: { x: 0, y: 52, w: 100, h: 48 },
-        trust: { x: 64, y: 43, w: 24, h: 7 },
-        note: '1200 x 1200 使用方形广告布局，适配信息流与展示位。'
-      },
-      ad_120x600: {
-        type: '窄竖向摩天楼',
-        logo: { x: 8, y: 4, w: 70, h: 6 },
-        text: { x: 8, y: 14, w: 84, h: 25, align: 'left' },
-        cta: { x: 8, y: 40, w: 78, h: 4.8 },
-        image: { x: 0, y: 55, w: 100, h: 45 },
-        trust: { x: 10, y: 47, w: 80, h: 5 },
-        note: '120 x 600 针对窄竖幅压缩 Logo 与文案宽度，商品图下方铺满。'
-      },
-      ad_720x90: {
-        type: '标准横幅',
-        logo: { x: 4.5, y: 11, w: 20, h: 18 },
-        text: { x: 29, y: 16, w: 43, h: 56, align: 'left' },
-        image: { x: 76, y: 0, w: 24, h: 100 },
-        trust: { x: 29, y: 74, w: 18, h: 12 },
-        note: '720 x 90 按标准横幅输出，适合网页广告位。'
-      },
-      ad_728x90: {
-        type: 'Leaderboard 横幅',
-        logo: { x: 4.5, y: 11, w: 20, h: 18 },
-        text: { x: 29, y: 16, w: 43, h: 56, align: 'left' },
-        image: { x: 76, y: 0, w: 24, h: 100 },
-        trust: { x: 29, y: 74, w: 18, h: 12 },
-        note: '728 x 90 对齐 Leaderboard 广告，保持横向紧凑信息结构。'
-      },
-      ad_828x1200: {
-        type: '竖向信息流',
-        logo: { x: 8, y: 5, w: 38, h: 7 },
-        text: { x: 8, y: 16, w: 84, h: 29, align: 'left' },
-        image: { x: 0, y: 48, w: 100, h: 52 },
-        trust: { x: 62, y: 40, w: 27, h: 6 },
-        note: '828 x 1200 使用竖向信息流规则，映射到素材生成与下载。'
-      }
-    });
-
+    const generationLayoutRules = JSON.parse(JSON.stringify(window.SpecPromoLayoutRules || {}));
     Object.assign(generationLayoutRules, window.SpecPromoFrameLayouts?.getLayouts?.() || {});
 
     const TEMPLATE_STORAGE_KEY = 'spec-promo-template-state-v1';
@@ -592,7 +251,6 @@
     let templateClickTimer = null;
     let templateStateSaveTimer = null;
     let templateRenameTarget = null;
-    let productImageDragState = null;
     let productImageAdjustments = {};
     const posterCopyOverrides = {};
 
@@ -714,7 +372,6 @@
 
     const CTA_MIN_WIDTH_PERCENT = 10;
     const CTA_TEMPLATE_RATIO_SIZE = { width: 1200, height: 628 };
-    const PRODUCT_MIN_SCALE = 0.05;
     const posterCore = window.createPosterCore({
       defaultAnchors: defaultTemplateAnchors,
       layoutRules: generationLayoutRules,
@@ -1172,14 +829,7 @@
     }
 
 
-    const COPY_TRANSLATION_MAP = {
-      'Headline Text': ['Headline Text', '見出しテキスト', '标题文本', '標題文字', 'Văn bản tiêu đề', 'ข้อความหัวข้อ', '제목 텍스트', 'Teks Judul', 'Teks Tajuk'],
-      'More information and key features can be detailed here.': ['More information and key features can be detailed here.', '詳細情報や主な機能をここに記載できます。', '可在此处详细说明更多信息和主要功能。', '可在此處詳細說明更多資訊和主要功能。', 'Có thể trình bày thêm thông tin và các tính năng chính tại đây.', 'สามารถใส่ข้อมูลเพิ่มเติมและฟีเจอร์หลักได้ที่นี่', '자세한 정보와 주요 기능을 여기에 설명할 수 있습니다.', 'Informasi tambahan dan fitur utama dapat dijelaskan di sini.', 'Maklumat lanjut dan ciri utama boleh diterangkan di sini.'],
-      'Button Text': ['Button Text', 'ボタンテキスト', '按钮文本', '按鈕文字', 'Văn bản nút', 'ข้อความปุ่ม', '버튼 텍스트', 'Teks Tombol', 'Teks Butang'],
-      'Trade Gold with Confidence': ['Trade Gold with Confidence', '自信を持ってゴールドを取引', '自信交易黄金', '自信交易黃金', 'Giao dịch vàng với sự tự tin', 'เทรดทองอย่างมั่นใจ', '자신 있게 금 거래', 'Trading Emas dengan Percaya Diri', 'Dagang Emas dengan Yakin'],
-      'Low Spreads, High Liquidity, 24/5 Access.': ['Low Spreads, High Liquidity, 24/5 Access.', '低スプレッド、高い流動性、週5日24時間アクセス。', '低点差、高流动性，24/5 访问。', '低點差、高流動性，24/5 存取。', 'Spread thấp, thanh khoản cao, truy cập 24/5.', 'สเปรดต่ำ สภาพคล่องสูง เข้าถึงได้ 24/5', '낮은 스프레드, 높은 유동성, 주 5일 24시간 접속.', 'Spread rendah, likuiditas tinggi, akses 24/5.', 'Spread rendah, kecairan tinggi, akses 24/5.'],
-      'Start Trading': ['Start Trading', '取引を始める', '开始交易', '開始交易', 'Bắt đầu giao dịch', 'เริ่มเทรด', '거래 시작', 'Mulai Trading', 'Mula Berdagang']
-    };
+    const COPY_TRANSLATION_MAP = window.SpecPromoTranslations?.copyTranslationMap || {};
 
     function translatedCopyValue(value, languageIndex, fallbackValue = '') {
       const key = String(value || '').trim();
@@ -3264,115 +2914,35 @@
       });
     }
 
-    function productAdjustmentKey(size = materialSizes[currentSizeIndex]) {
-      return size?.id || 'default';
-    }
+    const productImageController = window.createProductImageController({
+      clamp,
+      getCurrentSize: () => materialSizes[currentSizeIndex],
+      getMaterialCard: () => materialCard,
+      getProductFrame: () => productFrame,
+      getProductImage: () => phoneHand,
+      getHasImage: () => hasImage,
+      getIsGenerating: () => isGenerating,
+      getAdjustments: () => productImageAdjustments,
+      getPosterRenderer: () => posterRenderer,
+      getEffectivePosterAnchorsForSize: size => effectivePosterAnchorsForSize(size),
+      axisLockedDelta,
+      pushPosterEditHistory,
+      beginProductWheelUndo: () => beginProductWheelUndo(),
+      finishProductWheelUndoSoon: () => finishProductWheelUndoSoon()
+    });
 
-    function defaultProductAdjustment() {
-      return { scale: 1, x: 0, y: 0 };
-    }
-
-    function productFitScale(frameRect = productFrame?.getBoundingClientRect(), image = phoneHand) {
-      const frameW = Number(frameRect?.width || frameRect?.w);
-      const frameH = Number(frameRect?.height || frameRect?.h);
-      const imageW = Number(image?.naturalWidth || image?.width);
-      const imageH = Number(image?.naturalHeight || image?.height);
-      if (!frameW || !frameH || !imageW || !imageH) return 1;
-      return Math.min(frameW / imageW, frameH / imageH);
-    }
-
-    function resolvedProductAdjustment(size = materialSizes[currentSizeIndex], frameRect = productFrame?.getBoundingClientRect(), image = phoneHand, adjustment = null) {
-      const baseAdjustment = adjustment || productImageAdjustments[productAdjustmentKey(size)] || defaultProductAdjustment();
-      const fitScale = productFitScale(frameRect, image);
-      return {
-        ...baseAdjustment,
-        scale: clamp(fitScale * (Number(baseAdjustment.scale) || 1), 0.01, 4),
-        x: Number(baseAdjustment.x) || 0,
-        y: Number(baseAdjustment.y) || 0
-      };
-    }
-
-    function currentProductAdjustment(size = materialSizes[currentSizeIndex]) {
-      const key = productAdjustmentKey(size);
-      productImageAdjustments[key] = productImageAdjustments[key] || defaultProductAdjustment();
-      return productImageAdjustments[key];
-    }
-
-    function anchorRectInCard(anchor, cardRect) {
-      return {
-        left: cardRect.left + ((Number(anchor.x) || 0) / 100) * cardRect.width,
-        top: cardRect.top + ((Number(anchor.y) || 0) / 100) * cardRect.height,
-        width: ((Number(anchor.w) || 0) / 100) * cardRect.width,
-        height: ((Number(anchor.h) || 0) / 100) * cardRect.height
-      };
-    }
-
-    function productImageGeometry(size = materialSizes[currentSizeIndex], frameRect = productFrame?.getBoundingClientRect()) {
-      if (!phoneHand?.naturalWidth || !phoneHand?.naturalHeight || !frameRect?.width || !frameRect?.height) return null;
-      const cardRect = materialCard?.getBoundingClientRect();
-      const anchors = effectivePosterAnchorsForSize(size);
-      const visualAnchor = posterRenderer.imageVisualAnchor(anchors);
-      const visualRect = cardRect && visualAnchor ? anchorRectInCard(visualAnchor, cardRect) : frameRect;
-      if (!visualRect?.width || !visualRect?.height) return null;
-      const visualW = visualRect.width;
-      const visualH = visualRect.height;
-      const frameToVisualX = visualRect.left - frameRect.left;
-      const frameToVisualY = visualRect.top - frameRect.top;
-      const frameRatio = visualW / visualH;
-      const imageRatio = phoneHand.naturalWidth / phoneHand.naturalHeight;
-      let baseW = visualW;
-      let baseH = visualH;
-      if (imageRatio > frameRatio) baseW = visualH * imageRatio;
-      else baseH = visualW / imageRatio;
-      const adjustment = currentProductAdjustment(size);
-      const scale = Number(adjustment.scale) || 1;
-      const drawW = baseW * scale;
-      const drawH = baseH * scale;
-      return {
-        frameW: frameRect.width,
-        frameH: frameRect.height,
-        visualW,
-        visualH,
-        frameToVisualX,
-        frameToVisualY,
-        baseW,
-        baseH,
-        drawW,
-        drawH,
-        adjustment
-      };
-    }
-
-    function clampProductAdjustment(adjustment = currentProductAdjustment()) {
-      const geometry = productImageGeometry();
-      if (!geometry) return adjustment;
-      adjustment.scale = clamp(Number(adjustment.scale) || 1, 1, 4);
-      const drawW = geometry.baseW * adjustment.scale;
-      const drawH = geometry.baseH * adjustment.scale;
-      const maxX = Math.max(0, (drawW - geometry.visualW) / (2 * geometry.visualW));
-      const maxY = Math.max(0, (drawH - geometry.visualH) / (2 * geometry.visualH));
-      adjustment.x = clamp(Number(adjustment.x) || 0, -maxX, maxX);
-      adjustment.y = clamp(Number(adjustment.y) || 0, -maxY, maxY);
-      return adjustment;
-    }
-
-    function updateProductImageFrame() {
-      if (!productFrame || !phoneHand || !hasImage || !phoneHand.naturalWidth) return;
-      const geometry = productImageGeometry();
-      if (!geometry) return;
-      const adjustment = clampProductAdjustment(geometry.adjustment);
-      const drawW = geometry.baseW * adjustment.scale;
-      const drawH = geometry.baseH * adjustment.scale;
-      phoneHand.style.width = `${drawW}px`;
-      phoneHand.style.height = `${drawH}px`;
-      phoneHand.style.left = `${geometry.frameToVisualX + (geometry.visualW - drawW) / 2 + adjustment.x * geometry.visualW}px`;
-      phoneHand.style.top = `${geometry.frameToVisualY + (geometry.visualH - drawH) / 2 + adjustment.y * geometry.visualH}px`;
-    }
-
-    function selectProductFrame(selected = true) {
-      if (!productFrame || (selected && !hasImage)) return;
-      productFrame.classList.toggle('is-selected', selected);
-    }
+    const {
+      productAdjustmentKey,
+      defaultProductAdjustment,
+      currentProductAdjustment,
+      productImageGeometry,
+      clampProductAdjustment,
+      updateProductImageFrame,
+      selectProductFrame,
+      updateProductAdjustment,
+      zoomProductImage,
+      initProductImageInteractions
+    } = productImageController;
 
     function fitMaterialPreview(size = materialSizes[currentSizeIndex]) {
       if (!materialCard || !canvasArea || !size?.width || !size?.height) return;
@@ -3830,47 +3400,6 @@
       uploadZone.addEventListener('drop', event => handleUploadFile(event.dataTransfer?.files?.[0]));
     }
 
-    function updateProductAdjustment(next) {
-      const adjustment = currentProductAdjustment();
-      Object.assign(adjustment, next);
-      clampProductAdjustment(adjustment);
-      updateProductImageFrame();
-    }
-
-    function panProductImageFromDrag(dragState, delta) {
-      if (!dragState?.frameW || !dragState?.frameH) return;
-      if (!dragState.historyCaptured) {
-        pushPosterEditHistory();
-        dragState.historyCaptured = true;
-      }
-      updateProductAdjustment({
-        x: dragState.x + delta.dx / dragState.frameW,
-        y: dragState.y + delta.dy / dragState.frameH
-      });
-    }
-
-    function zoomProductImage(delta, origin = null) {
-      if (!hasImage || isGenerating) return;
-      const adjustment = currentProductAdjustment();
-      const beforeScale = adjustment.scale || 1;
-      const nextScale = clamp(beforeScale * delta, 1, 4);
-      if (origin && productFrame) {
-        const geometry = productImageGeometry();
-        const rect = productFrame.getBoundingClientRect();
-        const visualLeft = rect.left + (geometry?.frameToVisualX || 0);
-        const visualTop = rect.top + (geometry?.frameToVisualY || 0);
-        const visualW = geometry?.visualW || rect.width;
-        const visualH = geometry?.visualH || rect.height;
-        const offsetX = clamp(((origin.clientX - visualLeft) / visualW) - 0.5, -0.5, 0.5);
-        const offsetY = clamp(((origin.clientY - visualTop) / visualH) - 0.5, -0.5, 0.5);
-        adjustment.x -= offsetX * (nextScale - beforeScale) / nextScale;
-        adjustment.y -= offsetY * (nextScale - beforeScale) / nextScale;
-      }
-      adjustment.scale = nextScale;
-      clampProductAdjustment(adjustment);
-      updateProductImageFrame();
-    }
-
     function beginProductWheelUndo() {
       if (!generated || productWheelUndoActive) return;
       pushPosterEditHistory();
@@ -3884,99 +3413,6 @@
         productWheelUndoTimer = null;
       }, 360);
     }
-
-    function initProductImageInteractions() {
-      if (!productFrame) return;
-      productFrame.addEventListener('pointerdown', event => {
-        if (!hasImage || isGenerating) return;
-        selectProductFrame(true);
-        const rect = productFrame.getBoundingClientRect();
-        const geometry = productImageGeometry(undefined, rect);
-        const adjustment = currentProductAdjustment();
-        productImageDragState = {
-          pointerId: event.pointerId,
-          startX: event.clientX,
-          startY: event.clientY,
-          visualW: geometry?.visualW || rect.width,
-          visualH: geometry?.visualH || rect.height,
-          x: adjustment.x,
-          y: adjustment.y,
-          historyCaptured: false
-        };
-        productFrame.classList.add('is-dragging');
-        productFrame.setPointerCapture?.(event.pointerId);
-        event.preventDefault();
-      });
-
-      productFrame.addEventListener('pointermove', event => {
-        if (!productImageDragState || productImageDragState.pointerId !== event.pointerId) return;
-        if (!productImageDragState.historyCaptured) {
-          pushPosterEditHistory();
-          productImageDragState.historyCaptured = true;
-        }
-        const delta = axisLockedDelta(
-          event.clientX - productImageDragState.startX,
-          event.clientY - productImageDragState.startY,
-          productImageDragState,
-          event.shiftKey,
-          2
-        );
-        updateProductAdjustment({
-          x: productImageDragState.x + delta.dx / productImageDragState.visualW,
-          y: productImageDragState.y + delta.dy / productImageDragState.visualH
-        });
-      });
-
-      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
-        productFrame.addEventListener(type, () => {
-          productImageDragState = null;
-          productFrame.classList.remove('is-dragging');
-        });
-      });
-
-      productFrame.addEventListener('wheel', event => {
-        if (!hasImage || isGenerating) return;
-        selectProductFrame(true);
-        event.preventDefault();
-        beginProductWheelUndo();
-        zoomProductImage(event.deltaY < 0 ? 1.08 : 0.925, event);
-        finishProductWheelUndoSoon();
-      }, { passive: false });
-
-      productFrame.addEventListener('keydown', event => {
-        if (!hasImage || isGenerating) return;
-        const step = event.shiftKey ? 0.04 : 0.015;
-        const adjustment = currentProductAdjustment();
-        if (event.key === '+' || event.key === '=') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          zoomProductImage(1.08);
-        } else if (event.key === '-' || event.key === '_') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          zoomProductImage(0.925);
-        } else if (event.key === 'ArrowLeft') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          updateProductAdjustment({ x: adjustment.x - step });
-        } else if (event.key === 'ArrowRight') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          updateProductAdjustment({ x: adjustment.x + step });
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          updateProductAdjustment({ y: adjustment.y - step });
-        } else if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          updateProductAdjustment({ y: adjustment.y + step });
-        } else if (event.key === '0') {
-          event.preventDefault();
-          pushPosterEditHistory();
-          updateProductAdjustment(defaultProductAdjustment());
-        }
-      });
 
     document.addEventListener('click', event => {
       if (event.target.closest('#productFrame, .poster-anchor-box[data-poster-anchor="image"]')) return;
@@ -3992,7 +3428,6 @@
       event.preventDefault();
       undoPosterEdit();
     });
-    }
 
     function closeEditPosterModal() {
       document.getElementById('editPosterModal')?.classList.remove('open');

@@ -172,14 +172,16 @@
       const ctaDrawW = ctaRect.w;
       const ctaDrawH = ctaRect.h;
       const ctaDrawY = ctaRect.y;
-      const ctaFontSize = fitCanvasFont(
+      const ctaLineHeight = Number.isFinite(Number(posterAnchors.cta.lineHeight)) ? Number(posterAnchors.cta.lineHeight) : 1.15;
+      const ctaMaxFontByHeight = Math.max(6, Math.floor((ctaDrawH - ctaPaddingY * 2) / Math.max(1, ctaLineHeight)));
+      const ctaFontSize = Math.min(ctaMaxFontByHeight, fitCanvasFont(
         ctx,
         copy.cta,
         Math.max(8, ctaDrawW - ctaPaddingX * 2),
         ctaStartSize,
         Math.max(6, Math.round(ctaDrawH * 0.18)),
         700
-      );
+      ));
       ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
       const ctaText = String(copy.cta || '');
       if (!posterAnchors.cta.hidden) {

@@ -38,6 +38,11 @@
       } else {
         materialCard.style.removeProperty('--cta-pad-y');
       }
+      if (Number.isFinite(Number(anchors.cta.lineHeight))) {
+        materialCard.style.setProperty('--cta-line-height', String(Number(anchors.cta.lineHeight)));
+      } else {
+        materialCard.style.removeProperty('--cta-line-height');
+      }
     }
 
     function setAnchorVisibility(anchors) {

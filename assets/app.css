@@ -1515,7 +1515,7 @@
       color: var(--cta-fg, #FFFFFF);
       font-weight: 700;
       font-size: var(--cta-font, clamp(6px, 2cqw, 17px));
-      line-height: 1.15;
+      line-height: var(--cta-line-height, 1.15);
       text-align: center;
       white-space: pre-wrap;
       overflow: hidden;
@@ -2141,7 +2141,7 @@
       max-width: calc(100% - var(--anchor-cta-x, 0%) - 2%);
       min-height: var(--anchor-cta-h, 0%);
       height: var(--anchor-cta-h, auto) !important;
-      padding: clamp(2px, 1.67cqw, 20px) clamp(4px, 3.33cqw, 40px);
+      padding: var(--anchor-cta-pad-y, clamp(2px, 1.67cqw, 20px)) var(--anchor-cta-pad-x, clamp(4px, 3.33cqw, 40px));
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -2150,7 +2150,7 @@
       color: var(--cta-fg, #FFFFFF);
       font-size: clamp(12px, 1.35vw, 17px);
       font-weight: 700;
-      line-height: 1.15;
+      line-height: var(--anchor-cta-line-height, 1.15);
       text-align: center;
       white-space: pre-wrap;
       overflow: hidden;
