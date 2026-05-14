@@ -137,6 +137,7 @@
     const subtitleCounter = document.getElementById('subtitleCounter');
     const ctaCounter = document.getElementById('ctaCounter');
     const previewTitle = document.getElementById('previewTitle');
+    const previewScaleMeta = document.getElementById('previewScaleMeta');
     const previewSubtitle = document.getElementById('previewSubtitle');
     const previewCta = document.getElementById('previewCta');
     const creativeLogo = document.getElementById('creativeLogo');
@@ -297,9 +298,9 @@
       renderTemplateOptions();
       if (sizeChoiceLabel) sizeChoiceLabel.textContent = `尺寸选择（${materialSizes.length} 个）`;
       if (languageChoiceLabel) languageChoiceLabel.textContent = `语言选择（${languages.length} 种）`;
-      if (sizePreviewTitle) sizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
+      if (sizePreviewTitle) sizePreviewTitle.textContent = `尺寸预览（4类 / ${materialSizes.length}个）`;
       if (bottomSizePreviewTitle) bottomSizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
-      if (frameworkSizePreviewTitle) frameworkSizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
+      if (frameworkSizePreviewTitle) frameworkSizePreviewTitle.textContent = `尺寸预览（4类 / ${materialSizes.length}个）`;
       if (languagePreviewTitle) languagePreviewTitle.textContent = `语言预览（${languages.length}种）`;
       if (bottomLanguagePreviewTitle) bottomLanguagePreviewTitle.textContent = `语言预览（${languages.length}种）`;
       sizeChecks.innerHTML = materialSizes.map((size, index) => `
@@ -406,7 +407,8 @@
       materialCard,
       previewTitle,
       previewSubtitle,
-      previewCta
+      previewCta,
+      getPreviewFontPercents: size => categoryPreviewFontPercents(size)
     });
 
     const frameEditorHelpers = window.createFrameEditorHelpers({
@@ -940,7 +942,7 @@
         .filter(Boolean);
       migrateMaterialSizes();
       if (!materialSizes.length) materialSizes = JSON.parse(JSON.stringify(DEFAULT_MATERIAL_SIZES));
-      sortMaterialSizesByWidth(materialSizes);
+      sortMaterialSizesByDesignOrder(materialSizes);
       if (activeSizeId) {
         currentSizeIndex = Math.max(0, materialSizes.findIndex(size => size.id === activeSizeId));
       }
@@ -1146,8 +1148,14 @@
     function applyRuleVisualStyles(asset = currentPreviewAsset()) {
       const styles = effectivePosterStyles(asset);
       const posterBg = templateBackgroundCss(styles);
+      const backgroundArea = styles.backgroundArea || {};
+      const hasBackgroundArea = ['x', 'y', 'w', 'h'].every(key => Number.isFinite(Number(backgroundArea[key])));
       materialCard.style.setProperty('--poster-bg', posterBg);
       uploadPreview.style.setProperty('--poster-bg', posterBg);
+      materialCard.style.setProperty('--poster-bg-area-x', `${hasBackgroundArea ? Number(backgroundArea.x) : 0}%`);
+      materialCard.style.setProperty('--poster-bg-area-y', `${hasBackgroundArea ? Number(backgroundArea.y) : 0}%`);
+      materialCard.style.setProperty('--poster-bg-area-w', `${hasBackgroundArea ? Number(backgroundArea.w) : 100}%`);
+      materialCard.style.setProperty('--poster-bg-area-h', `${hasBackgroundArea ? Number(backgroundArea.h) : 100}%`);
       materialCard.style.setProperty('--copy-color', styles.textColor);
       materialCard.style.setProperty('--cta-bg', styles.buttonColor || FIGMA_BUTTON_FILL_COLOR);
       materialCard.style.setProperty('--cta-fg', styles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR);
@@ -2041,16 +2049,130 @@
       return Number.isInteger(number) && number > 0 ? number : 0;
     }
 
-    function compareMaterialSizeByWidth(a, b) {
-      return (parsePositiveInt(a?.width) - parsePositiveInt(b?.width))
+    const MATERIAL_SIZE_DISPLAY_ORDER = [
+      'ad_120x600',
+      'ad_160x600',
+      'ad_300x600',
+      'ad_320x480',
+      'ad_628x1200',
+      'ad_828x1200',
+      'ad_1200x1500',
+      'ad_300x250',
+      'square_800x800',
+      'ad_1200x1200',
+      'ad_320x50',
+      'ad_720x90',
+      'ad_728x90',
+      'ad_320x100',
+      'ad_970x250',
+      'ad_980x250',
+      'ad_990x250',
+      'landscape_1200x628'
+    ];
+    const MATERIAL_SIZE_DISPLAY_RANK = new Map(MATERIAL_SIZE_DISPLAY_ORDER.map((id, index) => [id, index]));
+    const MATERIAL_SIZE_CATEGORY_DEFS = [
+      {
+        id: 'vertical',
+        label: '竖版',
+        sizeIds: ['ad_120x600', 'ad_160x600', 'ad_300x600', 'ad_320x480', 'ad_628x1200', 'ad_828x1200', 'ad_1200x1500']
+      },
+      {
+        id: 'square',
+        label: '方版',
+        sizeIds: ['square_800x800', 'ad_1200x1200']
+      },
+      {
+        id: 'smallBanner',
+        label: '小横幅',
+        sizeIds: ['ad_320x50', 'ad_720x90', 'ad_728x90']
+      },
+      {
+        id: 'landscape',
+        label: '横版',
+        sizeIds: ['ad_300x250', 'ad_320x100', 'ad_970x250', 'ad_980x250', 'ad_990x250', 'landscape_1200x628']
+      }
+    ];
+    const MATERIAL_SIZE_CATEGORY_BY_ID = new Map(
+      MATERIAL_SIZE_CATEGORY_DEFS.flatMap(category => category.sizeIds.map(id => [id, category.id]))
+    );
+
+    function compareMaterialSizeByDesignOrder(a, b) {
+      const aRank = MATERIAL_SIZE_DISPLAY_RANK.has(a?.id) ? MATERIAL_SIZE_DISPLAY_RANK.get(a.id) : Number.POSITIVE_INFINITY;
+      const bRank = MATERIAL_SIZE_DISPLAY_RANK.has(b?.id) ? MATERIAL_SIZE_DISPLAY_RANK.get(b.id) : Number.POSITIVE_INFINITY;
+      return (aRank - bRank)
+        || (parsePositiveInt(a?.width) - parsePositiveInt(b?.width))
         || (parsePositiveInt(a?.height) - parsePositiveInt(b?.height))
         || String(a?.label || '').localeCompare(String(b?.label || ''), 'zh-Hans-CN');
     }
 
-    function sortMaterialSizesByWidth(sizes = materialSizes) {
+    function sortMaterialSizesByDesignOrder(sizes = materialSizes) {
       if (!Array.isArray(sizes)) return sizes;
-      sizes.sort(compareMaterialSizeByWidth);
+      sizes.sort(compareMaterialSizeByDesignOrder);
       return sizes;
+    }
+
+    function materialSizeCategoryId(size) {
+      if (MATERIAL_SIZE_CATEGORY_BY_ID.has(size?.id)) return MATERIAL_SIZE_CATEGORY_BY_ID.get(size.id);
+      const width = parsePositiveInt(size?.width);
+      const height = parsePositiveInt(size?.height);
+      if (!width || !height) return 'landscape';
+      const ratio = width / height;
+      if (ratio < 0.85) return 'vertical';
+      if (ratio <= 1.25) return 'square';
+      if (height <= 120) return 'smallBanner';
+      return 'landscape';
+    }
+
+    function groupedSizePreviewEntries(indices = []) {
+      const groups = MATERIAL_SIZE_CATEGORY_DEFS.map(category => ({ ...category, entries: [] }));
+      const groupById = new Map(groups.map(group => [group.id, group]));
+      indices.forEach(index => {
+        const size = materialSizes[index];
+        if (!size) return;
+        const categoryId = materialSizeCategoryId(size);
+        const group = groupById.get(categoryId) || groupById.get('landscape');
+        group.entries.push({ index, size });
+      });
+      return groups.filter(group => group.entries.length);
+    }
+
+    function sizePreviewButtonHtml(index, size, activeIndex) {
+      return `<button class="size-thumb ${index === activeIndex ? 'active' : ''}" type="button" data-size-preview-index="${index}" aria-label="预览 ${escapeHtml(size.label)} 尺寸">${escapeHtml(size.label)}</button>`;
+    }
+
+    function categorizedSizePreviewHtml(indices, activeIndex) {
+      return groupedSizePreviewEntries(indices).map(group => `
+        <section class="size-category" aria-label="${escapeHtml(group.label)}尺寸">
+          <div class="size-category-title">${escapeHtml(group.label)} ${group.entries.length}</div>
+          <div class="size-category-grid">
+            ${group.entries.map(({ index, size }) => sizePreviewButtonHtml(index, size, activeIndex)).join('')}
+          </div>
+        </section>
+      `).join('');
+    }
+
+    function flatSizePreviewHtml(indices, activeIndex) {
+      return indices.map(index => {
+        const size = materialSizes[index];
+        return size ? sizePreviewButtonHtml(index, size, activeIndex) : '';
+      }).join('');
+    }
+
+    function categoryPreviewFontPercents(size) {
+      const width = Number(size?.width) || 0;
+      const height = Number(size?.height) || 0;
+      const isLargePortrait = size?.id === 'ad_1200x1500' || (width >= 1000 && height >= 1400 && width < height);
+      if (isLargePortrait) {
+        return { title: 3.2, subtitle: 2.1, cta: 1.9 };
+      }
+      const category = materialSizeCategoryId(size);
+      const fonts = {
+        vertical: { title: 4.3333, subtitle: 2.6667, cta: 2.3333 },
+        square: { title: 5.25, subtitle: 4.125, cta: 3.25 },
+        smallBanner: { title: 31.1111, subtitle: 0, cta: 14.4444 },
+        landscape: { title: 12, subtitle: 8.8, cta: 6.8 }
+      };
+      return fonts[category] || fonts.landscape;
     }
 
     function defaultLocalizedCopy() {
@@ -2894,21 +3016,19 @@
     }
 
     function renderSizePreview(indices = generatedSizeIndices) {
-      const html = indices.map(index => {
-        const size = materialSizes[index];
-        if (!size) return '';
-        return `<button class="size-thumb ${index === currentSizeIndex ? 'active' : ''}" type="button" data-size-preview-index="${index}" aria-label="预览 ${size.label} 尺寸">${size.label}</button>`;
-      }).join('');
-      sizePreviewRow.innerHTML = html;
-      if (bottomSizePreviewRow) bottomSizePreviewRow.innerHTML = html;
+      sizePreviewRow.classList.add('size-category-list');
+      sizePreviewRow.innerHTML = categorizedSizePreviewHtml(indices, currentSizeIndex);
+      if (bottomSizePreviewRow) {
+        bottomSizePreviewRow.classList.remove('size-category-list');
+        bottomSizePreviewRow.innerHTML = flatSizePreviewHtml(indices, currentSizeIndex);
+      }
       syncResultCollapseState();
     }
 
     function renderFrameworkSizePreview() {
       if (!frameworkSizePreviewRow) return;
-      frameworkSizePreviewRow.innerHTML = materialSizes.map((size, index) => (
-        `<button class="size-thumb ${index === frameworkSizeIndex ? 'active' : ''}" type="button" data-size-preview-index="${index}" aria-label="预览 ${size.label} 尺寸">${size.label}</button>`
-      )).join('');
+      frameworkSizePreviewRow.classList.add('size-category-list');
+      frameworkSizePreviewRow.innerHTML = categorizedSizePreviewHtml(materialSizes.map((_, index) => index), frameworkSizeIndex);
       syncResultCollapseState();
     }
 
@@ -2958,18 +3078,30 @@
       requestAnimationFrame(updateProductImageFrame);
     });
 
+    const DESIGN_PREVIEW_SCALE = 0.7;
+
+    function realSizePreviewCanvas(size = materialSizes[currentSizeIndex]) {
+      const width = Math.max(1, Number(size?.width) || 1);
+      const height = Math.max(1, Number(size?.height) || 1);
+      return {
+        width: Math.max(1, Math.round(width * DESIGN_PREVIEW_SCALE)),
+        height: Math.max(1, Math.round(height * DESIGN_PREVIEW_SCALE))
+      };
+    }
+
+    function updatePreviewZoomControls(size = materialSizes[currentSizeIndex]) {
+      if (previewScaleMeta && size?.width && size?.height) {
+        previewScaleMeta.textContent = `${size.width} × ${size.height} · 设计预览 · ${Math.round(DESIGN_PREVIEW_SCALE * 100)}%`;
+      }
+      canvasArea?.classList.toggle('is-fixed-zoom', true);
+    }
+
     function fitMaterialPreview(size = materialSizes[currentSizeIndex]) {
       if (!materialCard || !canvasArea || !size?.width || !size?.height) return;
-      const areaRect = canvasArea.getBoundingClientRect();
-      if (!areaRect.width || !areaRect.height) return;
-      const areaStyle = getComputedStyle(canvasArea);
-      const paddingX = parseFloat(areaStyle.paddingLeft) + parseFloat(areaStyle.paddingRight);
-      const paddingY = parseFloat(areaStyle.paddingTop) + parseFloat(areaStyle.paddingBottom);
-      const maxWidth = Math.max(120, Math.min(980, areaRect.width - paddingX));
-      const maxHeight = Math.max(180, areaRect.height - paddingY);
-      const scale = Math.min(maxWidth / size.width, maxHeight / size.height);
-      materialCard.style.setProperty('--preview-w', `${Math.max(1, Math.round(size.width * scale))}px`);
-      materialCard.style.setProperty('--preview-h', `${Math.max(1, Math.round(size.height * scale))}px`);
+      updatePreviewZoomControls(size);
+      const dimensions = realSizePreviewCanvas(size);
+      materialCard.style.setProperty('--preview-w', `${Math.max(1, Math.round(dimensions.width))}px`);
+      materialCard.style.setProperty('--preview-h', `${Math.max(1, Math.round(dimensions.height))}px`);
       requestAnimationFrame(updateProductImageFrame);
     }
 

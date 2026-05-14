@@ -4,22 +4,22 @@
     const materialSizes = [
       { id: 'ad_120x600', label: '120 x 600', width: 120, height: 600 },
       { id: 'ad_160x600', label: '160 x 600', width: 160, height: 600 },
-      { id: 'ad_300x250', label: '300 x 250', width: 300, height: 250 },
       { id: 'ad_300x600', label: '300 x 600', width: 300, height: 600 },
-      { id: 'ad_320x50', label: '320 x 50', width: 320, height: 50 },
-      { id: 'ad_320x100', label: '320 x 100', width: 320, height: 100 },
       { id: 'ad_320x480', label: '320 x 480', width: 320, height: 480 },
-      { id: 'ad_720x90', label: '720 x 90', width: 720, height: 90 },
-      { id: 'ad_728x90', label: '728 x 90', width: 728, height: 90 },
-      { id: 'square_800x800', label: '800 x 800', width: 800, height: 800 },
       { id: 'ad_628x1200', label: '628 x 1200', width: 628, height: 1200 },
       { id: 'ad_828x1200', label: '828 x 1200', width: 828, height: 1200 },
+      { id: 'ad_1200x1500', label: '1200 x 1500', width: 1200, height: 1500 },
+      { id: 'ad_300x250', label: '300 x 250', width: 300, height: 250 },
+      { id: 'square_800x800', label: '800 x 800', width: 800, height: 800 },
+      { id: 'ad_1200x1200', label: '1200 x 1200', width: 1200, height: 1200 },
+      { id: 'ad_320x50', label: '320 x 50', width: 320, height: 50 },
+      { id: 'ad_720x90', label: '720 x 90', width: 720, height: 90 },
+      { id: 'ad_728x90', label: '728 x 90', width: 728, height: 90 },
+      { id: 'ad_320x100', label: '320 x 100', width: 320, height: 100 },
       { id: 'ad_970x250', label: '970 x 250', width: 970, height: 250 },
       { id: 'ad_980x250', label: '980 x 250', width: 980, height: 250 },
       { id: 'ad_990x250', label: '990 x 250', width: 990, height: 250 },
-      { id: 'landscape_1200x628', label: '1200 x 628', width: 1200, height: 628 },
-      { id: 'ad_1200x1200', label: '1200 x 1200', width: 1200, height: 1200 },
-      { id: 'ad_1200x1500', label: '1200 x 1500', width: 1200, height: 1500 }
+      { id: 'landscape_1200x628', label: '1200 x 628', width: 1200, height: 628 }
     ];
 
     const languages = [

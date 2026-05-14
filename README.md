@@ -4,8 +4,8 @@ A static browser tool for creating promo material previews and exports.
 
 ## Preview Links
 
+- Local preview: http://127.0.0.1:5500/index.html
 - Main preview: https://lll887583-cmd.github.io/spec-promo-materials/
-
 
 ## Current Direction
 
@@ -32,6 +32,11 @@ The project is being narrowed to a simple Figma-template mapping tool:
 
 ## Local Use
 
-Open `index.html` directly in a browser, or serve the folder with any static file server.
+Use VS Code Live Server for the local workflow:
 
-No Python script, local backend, Playwright test suite, or Node dependency install is required for the current workflow.
+1. Open this folder in VS Code.
+2. Start Live Server from `index.html`.
+3. Keep Chrome open at `http://127.0.0.1:5500/index.html`.
+4. Save local file changes and refresh if Live Server does not auto-refresh.
+
+Do not use the deleted `test` branch workflow. Publish to GitHub Pages only when explicitly requested.

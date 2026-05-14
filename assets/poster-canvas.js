@@ -73,10 +73,47 @@
       return { size: safeMinSize, lines: [line] };
     }
 
+    function ellipsizeCanvasText(ctx, text, maxWidth) {
+      const clean = String(text || '').replace(/\s+/g, ' ').trim();
+      if (ctx.measureText(clean).width <= maxWidth) return clean;
+      const ellipsis = '…';
+      let low = 0;
+      let high = clean.length;
+      let best = '';
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const candidate = clean.slice(0, mid).trimEnd() + ellipsis;
+        if (ctx.measureText(candidate).width <= maxWidth) {
+          best = candidate;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      return best || ellipsis;
+    }
+
     function isShortWideLayout(size) {
       const width = Number(size?.width) || 0;
       const height = Number(size?.height) || 0;
       return height > 0 && width / height >= 3 && height > 180 && height <= 300;
+    }
+
+    function fillCanvasBackground(ctx, styles, width, height) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = posterRenderer.canvasBackgroundFill(ctx, styles, width, height);
+      const area = styles?.backgroundArea || {};
+      const hasArea = ['x', 'y', 'w', 'h'].every(key => Number.isFinite(Number(area[key])));
+      if (!hasArea) {
+        ctx.fillRect(0, 0, width, height);
+        return;
+      }
+      ctx.fillRect(
+        (Number(area.x) / 100) * width,
+        (Number(area.y) / 100) * height,
+        (Number(area.w) / 100) * width,
+        (Number(area.h) / 100) * height
+      );
     }
 
     function horizontalOverlapRatio(a, b) {
@@ -110,8 +147,7 @@
       const ctaRect = posterRenderer.canvasRect(posterAnchors.cta, width, height);
       const logoRect = posterRenderer.canvasRect(posterAnchors.logo, width, height);
 
-      ctx.fillStyle = posterRenderer.canvasBackgroundFill(ctx, posterStyles, width, height);
-      ctx.fillRect(0, 0, width, height);
+      fillCanvasBackground(ctx, posterStyles, width, height);
 
       if (!isShortWideLayout(size) && !posterAnchors.subtitle.hidden && !posterAnchors.title.hidden) {
         const textScale = posterCore.posterTextScale(size);
@@ -221,6 +257,66 @@
       }
       const ctaDrawX = Math.max(0, Math.min(ctaRect.x, width - ctaDrawW));
       const subtitleHidden = Boolean(posterAnchors.subtitle.hidden);
+      if (posterAnchors.safeArea) {
+        const titleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * textScale), height);
+        const titleMinSize = Math.max(1, Number(posterAnchors.title.minFontPx) || 6);
+        const titleLineHeight = Number(posterAnchors.title.lineHeight) || 1.06;
+        const titleFit = fitWrappedCanvasText(ctx, copy.title, titleRect.w, titleRect.h, titleStartSize, titleMinSize, 700, titleLineHeight);
+        titleFit.lines.forEach((line, index) => {
+          ctx.font = `700 ${titleFit.size}px ${CANVAS_FONT_FAMILY}`;
+          ctx.fillText(line, titleX, titleRect.y + index * titleFit.size * titleLineHeight);
+        });
+
+        if (!subtitleHidden) {
+          const subtitleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.subtitle, Math.max(7, Math.round(subtitleRect.h * 0.30 * textScale)), height);
+          const subtitleMinSize = Math.max(1, Number(posterAnchors.subtitle.minFontPx) || 5);
+          const subtitleLineHeight = Number(posterAnchors.subtitle.lineHeight) || 1.48;
+          const subtitleFit = fitWrappedCanvasText(ctx, copy.subtitle, subtitleRect.w, subtitleRect.h, subtitleStartSize, subtitleMinSize, 400, subtitleLineHeight);
+          subtitleFit.lines.forEach((line, index) => {
+            ctx.font = `400 ${subtitleFit.size}px ${CANVAS_FONT_FAMILY}`;
+            ctx.fillText(line, subtitleX, subtitleRect.y + index * subtitleFit.size * subtitleLineHeight);
+          });
+        }
+
+        if (!posterAnchors.cta.hidden) {
+          const safeRight = ((Number(posterAnchors.safeArea.x) + Number(posterAnchors.safeArea.w)) / 100) * width;
+          const maxCtaW = Number.isFinite(Number(posterAnchors.cta.maxW))
+            ? (Number(posterAnchors.cta.maxW) / 100) * width
+            : Math.max(1, safeRight - ctaRect.x);
+          const minCtaFont = Math.max(1, Number(posterAnchors.cta.minFontPx) || 5);
+          let drawPadX = ctaPaddingX;
+          const minPadX = Number.isFinite(Number(posterAnchors.cta.minPadX))
+            ? Math.max(1, (Number(posterAnchors.cta.minPadX) / 100) * width)
+            : Math.max(1, ctaPaddingX * 0.45);
+          let fittedCtaText = ctaText;
+          for (let sizePx = ctaFontSize; sizePx >= minCtaFont; sizePx -= 1) {
+            const progress = (sizePx - minCtaFont) / Math.max(1, ctaFontSize - minCtaFont);
+            drawPadX = minPadX + (ctaPaddingX - minPadX) * Math.max(0, Math.min(1, progress));
+            ctx.font = `700 ${sizePx}px ${CANVAS_FONT_FAMILY}`;
+            if (ctx.measureText(ctaText).width + drawPadX * 2 <= maxCtaW + 1) {
+              ctaFontSize = sizePx;
+              break;
+            }
+            ctaFontSize = minCtaFont;
+          }
+          ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+          const textMaxW = Math.max(1, maxCtaW - drawPadX * 2);
+          fittedCtaText = ellipsizeCanvasText(ctx, ctaText, textMaxW);
+          const strictCtaW = Math.min(maxCtaW, Math.max(ctaRect.w, ctx.measureText(fittedCtaText).width + drawPadX * 2));
+          const strictCtaX = Math.max(0, Math.min(ctaRect.x, safeRight - strictCtaW, width - strictCtaW));
+          ctx.fillStyle = posterStyles.buttonColor || '#72DBF1';
+          ctx.beginPath();
+          posterRenderer.drawRoundedRectPath(ctx, strictCtaX, ctaRect.y, strictCtaW, ctaDrawH, ctaDrawH / 2);
+          ctx.fill();
+          ctx.fillStyle = posterStyles.buttonTextColor || '#27376F';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+          ctx.fillText(fittedCtaText, strictCtaX + strictCtaW / 2, ctaRect.y + ctaDrawH / 2);
+        }
+        ctx.textBaseline = 'alphabetic';
+        return;
+      }
       if (!posterAnchors.title.hidden) {
         const titleGap = Math.max(4, width * 0.015);
         const titleLeft = subtitleHidden ? Math.max(titleRect.x, logoRect.x + logoRect.w + titleGap) : titleRect.x;

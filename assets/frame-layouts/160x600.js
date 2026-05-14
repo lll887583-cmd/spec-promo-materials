@@ -17,41 +17,58 @@
       "h": 39.3333
     },
     "logo": {
-      "x": 8.125,
+      "x": 8.13,
       "y": 5.6667,
       "w": 82.8577,
       "h": 2.9166
     },
     "title": {
-      "x": 8.125,
-      "y": 18.0,
+      "x": 8.13,
+      "y": 17.83,
       "w": 83.75,
-      "h": 11.0,
+      "h": 10.33,
       "align": "left",
       "font": 3.6667,
-      "fontPx": 22
+      "fontPx": 22,
+      "maxH": 10.33,
+      "minFontPx": 13,
+      "lineHeight": 1.06,
+      "maxLines": 3,
+      "fit": "shrink-then-clamp"
     },
     "subtitle": {
-      "x": 8.125,
-      "y": 31.5,
+      "x": 8.13,
+      "y": 30.83,
       "w": 83.75,
-      "h": 9.0,
+      "h": 8.5,
       "align": "left",
-      "font": 2.0,
-      "fontPx": 12
+      "font": 2,
+      "fontPx": 12,
+      "hidden": false,
+      "maxH": 8.5,
+      "minFontPx": 7,
+      "lineHeight": 1.25,
+      "maxLines": 4,
+      "fit": "shrink-then-clamp",
+      "canHide": false
     },
     "cta": {
-      "x": 8.125,
-      "y": 46.8446,
-      "w": 65.0,
-      "h": 6.1667,
-      "font": 2.0,
+      "x": 8.13,
+      "y": 45.67,
+      "w": 65,
+      "h": 6.17,
+      "font": 2,
       "fontPx": 12,
       "padX": 11.25,
       "padY": 1.6667,
       "lineHeight": 1.4,
       "noWrap": true,
-      "autoWidth": true
+      "autoWidth": true,
+      "maxW": 83.75,
+      "maxH": 6.17,
+      "minFontPx": 7,
+      "minPadX": 5.06,
+      "fit": "shrink-pad-then-ellipsis"
     },
     "trust": {
       "hidden": true,
@@ -62,7 +79,29 @@
     },
     "type": "Skyscraper",
     "figmaNodeId": "2:266",
-    "note": "Figma 160 x 600 frame imported from node 2:266."
+    "note": "Figma 160 x 600 frame imported from node 2:266. Safe Area/text constraints synced from Figma node 3:464 on 2026-05-14.",
+    "safeArea": {
+      "x": 8.13,
+      "y": 17.83,
+      "w": 83.75,
+      "h": 34,
+      "source": "figma-safe-area"
+    },
+    "contentStack": {
+      "x": 8.13,
+      "y": 17.83,
+      "w": 83.75,
+      "h": 34,
+      "direction": "vertical",
+      "fit": "safe-area"
+    },
+    "textGroup": {
+      "x": 8.13,
+      "y": 17.83,
+      "w": 83.75,
+      "h": 21.5,
+      "gapPx": 16
+    }
   }
 }
   );
