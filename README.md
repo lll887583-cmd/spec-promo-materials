@@ -2,6 +2,12 @@
 
 A static browser tool for creating promo material previews and exports.
 
+## Preview Links
+
+- Main branch preview: https://raw.githack.com/lll887583-cmd/spec-promo-materials/main/index.html
+- Test branch preview: https://raw.githack.com/lll887583-cmd/spec-promo-materials/test/index.html
+- GitHub Pages published site: https://lll887583-cmd.github.io/spec-promo-materials/
+
 ## Current Direction
 
 The project is being narrowed to a simple Figma-template mapping tool:
