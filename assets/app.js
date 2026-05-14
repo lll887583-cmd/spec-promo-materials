@@ -3781,9 +3781,9 @@
       generationToken += 1;
       isGenerating = false;
       normalizeTemplateState();
-      titleInput.value = 'Headline Text';
-      subtitleInput.value = 'More information and key features can be detailed here.';
-      ctaInput.value = 'Button Text';
+      titleInput.value = '';
+      subtitleInput.value = '';
+      ctaInput.value = '';
       hasImage = false;
       generated = false;
       uploadedImageSrc = '';
