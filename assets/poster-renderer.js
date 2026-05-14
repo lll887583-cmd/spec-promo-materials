@@ -99,12 +99,40 @@
       keepElementInsideCard(previewCta);
     }
 
+    function resetTitleAvoidance() {
+      if (!previewTitle) return;
+      previewTitle.style.removeProperty('left');
+      previewTitle.style.removeProperty('width');
+      previewTitle.style.removeProperty('white-space');
+    }
+
+    function applyHorizontalTitleAvoidance() {
+      if (!previewTitle || !previewTitle.offsetParent || !previewCta?.offsetParent) return false;
+      const logo = materialCard.querySelector('.creative-logo');
+      const cardRect = materialCard.getBoundingClientRect();
+      const titleRect = previewTitle.getBoundingClientRect();
+      const ctaRect = previewCta.getBoundingClientRect();
+      const logoRect = logo?.offsetParent ? logo.getBoundingClientRect() : null;
+      const gap = Math.max(4, cardRect.width * 0.015);
+      const leftLimit = logoRect ? Math.max(titleRect.left, logoRect.right + gap) : titleRect.left;
+      const rightLimit = Math.min(titleRect.right, ctaRect.left - gap);
+      const nextWidth = rightLimit - leftLimit;
+      if (nextWidth <= 1) return false;
+      previewTitle.style.left = `${leftLimit - cardRect.left}px`;
+      previewTitle.style.width = `${nextWidth}px`;
+      previewTitle.style.whiteSpace = 'nowrap';
+      return true;
+    }
+
     function fitPosterTextBoxes() {
+      resetTitleAvoidance();
       fitTextElement(previewSubtitle, 5, true);
       const subtitleHidden = materialCard.classList.contains('hide-poster-subtitle');
       const subtitleSize = !subtitleHidden && previewSubtitle ? Number.parseFloat(window.getComputedStyle(previewSubtitle).fontSize) : 0;
-      fitTextElement(previewTitle, Math.max(6, subtitleSize * 1.15), true);
       fitCtaElement();
+      const horizontalAvoided = subtitleHidden && applyHorizontalTitleAvoidance();
+      fitTextElement(previewTitle, Math.max(6, subtitleSize * 1.15), true);
+      if (horizontalAvoided) fitCtaElement();
     }
 
     function applyLayoutVariables(anchors, size) {
