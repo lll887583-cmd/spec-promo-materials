@@ -73,11 +73,38 @@
       element.style.fontSize = `${best}px`;
     }
 
+    function keepElementInsideCard(element) {
+      if (!element || !element.offsetParent) return;
+      element.style.removeProperty('transform');
+      const cardRect = materialCard.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      let offsetX = 0;
+      if (rect.right > cardRect.right) offsetX -= rect.right - cardRect.right;
+      if (rect.left + offsetX < cardRect.left) offsetX += cardRect.left - (rect.left + offsetX);
+      if (offsetX) element.style.transform = `translateX(${offsetX}px)`;
+    }
+
+    function fitCtaElement() {
+      if (!previewCta || !previewCta.offsetParent) return;
+      previewCta.style.removeProperty('font-size');
+      previewCta.style.removeProperty('transform');
+      const cardRect = materialCard.getBoundingClientRect();
+      const computed = window.getComputedStyle(previewCta);
+      const startSize = Number.parseFloat(computed.fontSize) || 6;
+      const maxWidth = Math.max(1, cardRect.width);
+      if (previewCta.getBoundingClientRect().width > maxWidth) {
+        const ratio = maxWidth / Math.max(1, previewCta.getBoundingClientRect().width);
+        previewCta.style.fontSize = `${Math.max(6, startSize * Math.max(0.7, ratio))}px`;
+      }
+      keepElementInsideCard(previewCta);
+    }
+
     function fitPosterTextBoxes() {
       fitTextElement(previewSubtitle, 5, true);
-      const subtitleSize = previewSubtitle ? Number.parseFloat(window.getComputedStyle(previewSubtitle).fontSize) : 0;
+      const subtitleHidden = materialCard.classList.contains('hide-poster-subtitle');
+      const subtitleSize = !subtitleHidden && previewSubtitle ? Number.parseFloat(window.getComputedStyle(previewSubtitle).fontSize) : 0;
       fitTextElement(previewTitle, Math.max(6, subtitleSize * 1.15), true);
-      if (previewCta) previewCta.style.removeProperty('font-size');
+      fitCtaElement();
     }
 
     function applyLayoutVariables(anchors, size) {

@@ -161,22 +161,30 @@
       const ctaPaddingY = Number.isFinite(Number(posterAnchors.cta.padY))
         ? Math.max(1, (Number(posterAnchors.cta.padY) / 100) * height)
         : Math.max(2, 20 * ctaPaddingScale);
-      const ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
+      let ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
       const ctaDrawH = ctaRect.h;
       const ctaDrawY = ctaRect.y;
       const ctaText = String(copy.cta || '').replace(/\s+/g, ' ').trim();
       ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
-      const ctaDrawW = Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2);
+      let ctaDrawW = Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2);
+      if (ctaDrawW > width) {
+        const targetTextWidth = Math.max(1, width - ctaPaddingX * 2);
+        const ratio = targetTextWidth / Math.max(1, ctx.measureText(ctaText).width);
+        ctaFontSize = Math.max(6, Math.floor(ctaFontSize * Math.max(0.7, ratio)));
+        ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+        ctaDrawW = Math.min(width, Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2));
+      }
+      const ctaDrawX = Math.max(0, Math.min(ctaRect.x, width - ctaDrawW));
       if (!posterAnchors.cta.hidden) {
         ctx.fillStyle = posterStyles.buttonColor || '#72DBF1';
         ctx.beginPath();
-        posterRenderer.drawRoundedRectPath(ctx, ctaRect.x, ctaDrawY, ctaDrawW, ctaDrawH, ctaDrawH / 2);
+        posterRenderer.drawRoundedRectPath(ctx, ctaDrawX, ctaDrawY, ctaDrawW, ctaDrawH, ctaDrawH / 2);
         ctx.fill();
         ctx.fillStyle = posterStyles.buttonTextColor || '#27376F';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
-        ctx.fillText(ctaText, ctaRect.x + ctaDrawW / 2, ctaDrawY + ctaDrawH / 2);
+        ctx.fillText(ctaText, ctaDrawX + ctaDrawW / 2, ctaDrawY + ctaDrawH / 2);
       }
       ctx.textBaseline = 'alphabetic';
     }
