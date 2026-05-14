@@ -66,14 +66,37 @@
     function defaultStylePresets() {
       return [
         { id: 'style-1', name: '样式 1' },
-        { id: 'style-2', name: '样式 2' }
+        { id: 'style-2', name: '样式 2' },
+        { id: 'style-3', name: '样式 3' }
       ];
+    }
+
+    function thirdTemplateStyles() {
+      return {
+        ...defaultTemplateStyles,
+        backgroundMode: 'solid',
+        backgroundColor: '#EEF6FE',
+        gradientStart: '#EEF6FE',
+        gradientEnd: '#FFFFFF',
+        gradientAngle: 135,
+        textColor: '#0B1944',
+        buttonColor: FIGMA_BUTTON_FILL_COLOR,
+        buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
+        logoVariant: 'black'
+      };
+    }
+
+    function defaultStylesForId(styleId) {
+      if (styleId === 'style-2') return { ...darkTemplateStyles, gradientAngle: 165 };
+      if (styleId === 'style-3') return thirdTemplateStyles();
+      return defaultTemplateStyles;
     }
 
     function defaultStyleMaps() {
       return {
-        'style-1': cloneStyles(defaultTemplateStyles),
-        'style-2': cloneStyles(darkTemplateStyles)
+        'style-1': cloneStyles(defaultStylesForId('style-1')),
+        'style-2': cloneStyles(defaultStylesForId('style-2')),
+        'style-3': cloneStyles(defaultStylesForId('style-3'))
       };
     }
 
@@ -741,14 +764,18 @@
           name: String(style.name || '').trim() || `样式 ${styleIndex(style.id)}`
         }));
       if (!stylePresets.length) stylePresets = defaultStylePresets();
+      defaultStylePresets().forEach(defaultStyle => {
+        if (!stylePresets.some(style => style.id === defaultStyle.id)) stylePresets.push(defaultStyle);
+      });
       const styleIds = new Set(stylePresets.map(style => style.id));
       Object.keys(styleMaps).forEach(styleKey => {
         if (!styleIds.has(styleKey)) delete styleMaps[styleKey];
       });
       stylePresets.forEach(style => {
         if (!styleMaps[style.id] || isLegacyDarkDefaultStyles(styleMaps[style.id])) {
-          styleMaps[style.id] = cloneStyles(style.id === 'style-2' ? darkTemplateStyles : defaultTemplateStyles);
+          styleMaps[style.id] = cloneStyles(defaultStylesForId(style.id));
         }
+        if (style.id === 'style-2') styleMaps[style.id].gradientAngle = 165;
         normalizeButtonColors(styleMaps[style.id]);
       });
       if (!styleIds.has(selectedStyle)) selectedStyle = stylePresets[0].id;

@@ -88,7 +88,7 @@
       backgroundColor: '#0E1D4C',
       gradientStart: '#0E1D4C',
       gradientEnd: '#2144B2',
-      gradientAngle: 135,
+      gradientAngle: 165,
       textColor: '#ffffff',
       buttonColor: FIGMA_BUTTON_FILL_COLOR,
       buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
