@@ -96,6 +96,20 @@
       };
     }
 
+    function visibleAnchorWithinCanvas(anchor) {
+      if (!anchor || anchor.hidden) return anchor;
+      const left = posterCore.clamp(Number(anchor.x) || 0, 0, 100);
+      const top = posterCore.clamp(Number(anchor.y) || 0, 0, 100);
+      const right = posterCore.clamp((Number(anchor.x) || 0) + (Number(anchor.w) || 0), 0, 100);
+      const bottom = posterCore.clamp((Number(anchor.y) || 0) + (Number(anchor.h) || 0), 0, 100);
+      if (right <= left || bottom <= top) return anchor;
+      return { ...anchor, x: left, y: top, w: right - left, h: bottom - top };
+    }
+
+    function imageVisualAnchor(anchors = {}) {
+      return anchors.imageVisibleArea || anchors.imageVisualArea || visibleAnchorWithinCanvas(anchors.image);
+    }
+
     function canvasAnchorFontSize(anchor, fallbackSize, canvasHeight) {
       const fontPx = Number(anchor?.fontPx);
       const fontScale = Number(anchor?.fontScale);
@@ -140,19 +154,24 @@
       ctx.quadraticCurveTo(x, y, x + r, y);
     }
 
-    function productDrawGeometry(image, rect, adjustment = { scale: 1, x: 0, y: 0 }) {
-      const baseW = image.naturalWidth;
-      const baseH = image.naturalHeight;
-      const scale = posterCore.clamp(Number(adjustment.scale) || 1, 0.01, 4);
+    function productDrawGeometry(image, clipRect, adjustment = { scale: 1, x: 0, y: 0 }, visualRect = clipRect) {
+      const targetRect = visualRect?.w > 0 && visualRect?.h > 0 ? visualRect : clipRect;
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const targetRatio = targetRect.w / targetRect.h;
+      let baseW = targetRect.w;
+      let baseH = targetRect.h;
+      if (imageRatio > targetRatio) baseW = targetRect.h * imageRatio;
+      else baseH = targetRect.w / imageRatio;
+      const scale = posterCore.clamp(Number(adjustment?.scale) || 1, 1, 4);
       const drawW = baseW * scale;
       const drawH = baseH * scale;
-      const maxX = Math.abs(drawW - rect.w) / (2 * rect.w);
-      const maxY = Math.abs(drawH - rect.h) / (2 * rect.h);
-      const x = posterCore.clamp(Number(adjustment.x) || 0, -maxX, maxX);
-      const y = posterCore.clamp(Number(adjustment.y) || 0, -maxY, maxY);
+      const maxX = Math.max(0, (drawW - targetRect.w) / (2 * targetRect.w));
+      const maxY = Math.max(0, (drawH - targetRect.h) / (2 * targetRect.h));
+      const x = posterCore.clamp(Number(adjustment?.x) || 0, -maxX, maxX);
+      const y = posterCore.clamp(Number(adjustment?.y) || 0, -maxY, maxY);
       return {
-        x: rect.x + (rect.w - drawW) / 2 + x * rect.w,
-        y: rect.y + (rect.h - drawH) / 2 + y * rect.h,
+        x: targetRect.x + (targetRect.w - drawW) / 2 + x * targetRect.w,
+        y: targetRect.y + (targetRect.h - drawH) / 2 + y * targetRect.h,
         w: drawW,
         h: drawH
       };
@@ -165,6 +184,8 @@
       fitPosterTextBoxes,
       applyLayoutVariables,
       canvasRect,
+      visibleAnchorWithinCanvas,
+      imageVisualAnchor,
       canvasAnchorFontSize,
       canvasBackgroundFill,
       drawRoundedRectPath,

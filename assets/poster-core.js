@@ -156,6 +156,8 @@
       if (rule.exact) {
         const anchors = {
           image: { ...rule.image },
+          ...(rule.imageVisibleArea ? { imageVisibleArea: { ...rule.imageVisibleArea } } : {}),
+          ...(rule.imageVisualArea ? { imageVisualArea: { ...rule.imageVisualArea } } : {}),
           logo: { ...rule.logo },
           title: { ...rule.title },
           subtitle: { ...rule.subtitle },
@@ -174,6 +176,8 @@
       }
       const anchors = {
         image: { ...rule.image },
+        ...(rule.imageVisibleArea ? { imageVisibleArea: { ...rule.imageVisibleArea } } : {}),
+        ...(rule.imageVisualArea ? { imageVisualArea: { ...rule.imageVisualArea } } : {}),
         text: { ...rule.text },
         cta: normalizeCtaAnchorRatio({ ...(rule.cta || defaultCtaAnchorForText(rule.text, size)) }, size),
         logo: { ...rule.logo },
@@ -182,6 +186,8 @@
       if (Number.isFinite(Number(base.cta?.font))) anchors.cta.font = Number(base.cta.font);
       if (shouldFlipHorizontalRule(size, base)) {
         anchors.image = mirroredAnchor(anchors.image);
+        if (anchors.imageVisibleArea) anchors.imageVisibleArea = mirroredAnchor(anchors.imageVisibleArea);
+        if (anchors.imageVisualArea) anchors.imageVisualArea = mirroredAnchor(anchors.imageVisualArea);
         anchors.text = mirroredAnchor(anchors.text);
         anchors.cta = mirroredAnchor(anchors.cta);
         anchors.logo = { ...anchors.logo, x: anchors.text.x };

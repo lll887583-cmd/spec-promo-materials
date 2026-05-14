@@ -758,7 +758,7 @@
       posterRenderer,
       loadCanvasImage,
       getUploadedImageSrc: () => uploadedImageSrc,
-      getProductAdjustment: (size, image, rect) => resolvedProductAdjustment(size, rect, image),
+      getProductAdjustment: size => productImageAdjustments[productAdjustmentKey(size)],
       getPosterAnchors: (size, asset) => effectivePosterAnchorsForSize(size, asset),
       getPosterStyles: asset => effectivePosterStyles(asset),
       getLogoBrand: languageIndex => logoBrandForLanguage(languageIndex),
@@ -1036,6 +1036,7 @@
       }
       Object.entries(asset?.rule?.anchors || {}).forEach(([key, anchor]) => {
         if (anchors[key]) anchors[key] = { ...anchors[key], ...anchor };
+        else if (key === 'imageVisibleArea' || key === 'imageVisualArea') anchors[key] = { ...anchor };
       });
       const overrides = posterAnchorOverrides[posterOverrideKey(size)] || {};
       posterEditableAnchorKeys.forEach(key => {
@@ -3297,26 +3298,59 @@
       return productImageAdjustments[key];
     }
 
+    function anchorRectInCard(anchor, cardRect) {
+      return {
+        left: cardRect.left + ((Number(anchor.x) || 0) / 100) * cardRect.width,
+        top: cardRect.top + ((Number(anchor.y) || 0) / 100) * cardRect.height,
+        width: ((Number(anchor.w) || 0) / 100) * cardRect.width,
+        height: ((Number(anchor.h) || 0) / 100) * cardRect.height
+      };
+    }
+
     function productImageGeometry(size = materialSizes[currentSizeIndex], frameRect = productFrame?.getBoundingClientRect()) {
       if (!phoneHand?.naturalWidth || !phoneHand?.naturalHeight || !frameRect?.width || !frameRect?.height) return null;
+      const cardRect = materialCard?.getBoundingClientRect();
+      const anchors = effectivePosterAnchorsForSize(size);
+      const visualAnchor = posterRenderer.imageVisualAnchor(anchors);
+      const visualRect = cardRect && visualAnchor ? anchorRectInCard(visualAnchor, cardRect) : frameRect;
+      if (!visualRect?.width || !visualRect?.height) return null;
+      const visualW = visualRect.width;
+      const visualH = visualRect.height;
+      const frameToVisualX = visualRect.left - frameRect.left;
+      const frameToVisualY = visualRect.top - frameRect.top;
+      const frameRatio = visualW / visualH;
+      const imageRatio = phoneHand.naturalWidth / phoneHand.naturalHeight;
+      let baseW = visualW;
+      let baseH = visualH;
+      if (imageRatio > frameRatio) baseW = visualH * imageRatio;
+      else baseH = visualW / imageRatio;
       const adjustment = currentProductAdjustment(size);
-      const resolvedAdjustment = resolvedProductAdjustment(size, frameRect, phoneHand, adjustment);
-      const baseW = phoneHand.naturalWidth;
-      const baseH = phoneHand.naturalHeight;
-      const drawW = baseW * resolvedAdjustment.scale;
-      const drawH = baseH * resolvedAdjustment.scale;
-      return { frameW: frameRect.width, frameH: frameRect.height, baseW, baseH, drawW, drawH, adjustment, resolvedAdjustment };
+      const scale = Number(adjustment.scale) || 1;
+      const drawW = baseW * scale;
+      const drawH = baseH * scale;
+      return {
+        frameW: frameRect.width,
+        frameH: frameRect.height,
+        visualW,
+        visualH,
+        frameToVisualX,
+        frameToVisualY,
+        baseW,
+        baseH,
+        drawW,
+        drawH,
+        adjustment
+      };
     }
 
     function clampProductAdjustment(adjustment = currentProductAdjustment()) {
       const geometry = productImageGeometry();
       if (!geometry) return adjustment;
-      adjustment.scale = clamp(Number(adjustment.scale) || 1, PRODUCT_MIN_SCALE, 8);
-      const resolvedAdjustment = resolvedProductAdjustment(materialSizes[currentSizeIndex], productFrame?.getBoundingClientRect(), phoneHand, adjustment);
-      const drawW = geometry.baseW * resolvedAdjustment.scale;
-      const drawH = geometry.baseH * resolvedAdjustment.scale;
-      const maxX = Math.abs(drawW - geometry.frameW) / (2 * geometry.frameW);
-      const maxY = Math.abs(drawH - geometry.frameH) / (2 * geometry.frameH);
+      adjustment.scale = clamp(Number(adjustment.scale) || 1, 1, 4);
+      const drawW = geometry.baseW * adjustment.scale;
+      const drawH = geometry.baseH * adjustment.scale;
+      const maxX = Math.max(0, (drawW - geometry.visualW) / (2 * geometry.visualW));
+      const maxY = Math.max(0, (drawH - geometry.visualH) / (2 * geometry.visualH));
       adjustment.x = clamp(Number(adjustment.x) || 0, -maxX, maxX);
       adjustment.y = clamp(Number(adjustment.y) || 0, -maxY, maxY);
       return adjustment;
@@ -3327,13 +3361,12 @@
       const geometry = productImageGeometry();
       if (!geometry) return;
       const adjustment = clampProductAdjustment(geometry.adjustment);
-      const resolvedAdjustment = resolvedProductAdjustment(materialSizes[currentSizeIndex], productFrame?.getBoundingClientRect(), phoneHand, adjustment);
-      const drawW = geometry.baseW * resolvedAdjustment.scale;
-      const drawH = geometry.baseH * resolvedAdjustment.scale;
+      const drawW = geometry.baseW * adjustment.scale;
+      const drawH = geometry.baseH * adjustment.scale;
       phoneHand.style.width = `${drawW}px`;
       phoneHand.style.height = `${drawH}px`;
-      phoneHand.style.left = `${(geometry.frameW - drawW) / 2 + adjustment.x * geometry.frameW}px`;
-      phoneHand.style.top = `${(geometry.frameH - drawH) / 2 + adjustment.y * geometry.frameH}px`;
+      phoneHand.style.left = `${geometry.frameToVisualX + (geometry.visualW - drawW) / 2 + adjustment.x * geometry.visualW}px`;
+      phoneHand.style.top = `${geometry.frameToVisualY + (geometry.visualH - drawH) / 2 + adjustment.y * geometry.visualH}px`;
     }
 
     function selectProductFrame(selected = true) {
@@ -3820,11 +3853,16 @@
       if (!hasImage || isGenerating) return;
       const adjustment = currentProductAdjustment();
       const beforeScale = adjustment.scale || 1;
-      const nextScale = clamp(beforeScale * delta, PRODUCT_MIN_SCALE, 4);
+      const nextScale = clamp(beforeScale * delta, 1, 4);
       if (origin && productFrame) {
+        const geometry = productImageGeometry();
         const rect = productFrame.getBoundingClientRect();
-        const offsetX = ((origin.clientX - rect.left) / rect.width) - 0.5;
-        const offsetY = ((origin.clientY - rect.top) / rect.height) - 0.5;
+        const visualLeft = rect.left + (geometry?.frameToVisualX || 0);
+        const visualTop = rect.top + (geometry?.frameToVisualY || 0);
+        const visualW = geometry?.visualW || rect.width;
+        const visualH = geometry?.visualH || rect.height;
+        const offsetX = clamp(((origin.clientX - visualLeft) / visualW) - 0.5, -0.5, 0.5);
+        const offsetY = clamp(((origin.clientY - visualTop) / visualH) - 0.5, -0.5, 0.5);
         adjustment.x -= offsetX * (nextScale - beforeScale) / nextScale;
         adjustment.y -= offsetY * (nextScale - beforeScale) / nextScale;
       }
@@ -3853,13 +3891,14 @@
         if (!hasImage || isGenerating) return;
         selectProductFrame(true);
         const rect = productFrame.getBoundingClientRect();
+        const geometry = productImageGeometry(undefined, rect);
         const adjustment = currentProductAdjustment();
         productImageDragState = {
           pointerId: event.pointerId,
           startX: event.clientX,
           startY: event.clientY,
-          frameW: rect.width,
-          frameH: rect.height,
+          visualW: geometry?.visualW || rect.width,
+          visualH: geometry?.visualH || rect.height,
           x: adjustment.x,
           y: adjustment.y,
           historyCaptured: false
@@ -3883,8 +3922,8 @@
           2
         );
         updateProductAdjustment({
-          x: productImageDragState.x + delta.dx / productImageDragState.frameW,
-          y: productImageDragState.y + delta.dy / productImageDragState.frameH
+          x: productImageDragState.x + delta.dx / productImageDragState.visualW,
+          y: productImageDragState.y + delta.dy / productImageDragState.visualH
         });
       });
 

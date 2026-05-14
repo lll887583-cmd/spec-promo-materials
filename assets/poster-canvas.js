@@ -72,8 +72,9 @@
       return best;
     }
 
-    function drawAdjustedProductImage(ctx, image, rect, size) {
-      const draw = posterRenderer.productDrawGeometry(image, rect, getProductAdjustment(size, image, rect));
+    function drawAdjustedProductImage(ctx, image, rect, visualRect, size) {
+      const draw = posterRenderer.productDrawGeometry(image, rect, getProductAdjustment(size), visualRect);
+
       ctx.save();
       ctx.beginPath();
       ctx.rect(rect.x, rect.y, rect.w, rect.h);
@@ -91,6 +92,7 @@
       const posterAnchors = getPosterAnchors(size, asset);
       const posterStyles = getPosterStyles(asset);
       const imageRect = posterRenderer.canvasRect(posterAnchors.image, width, height);
+      const imageVisualRect = posterRenderer.canvasRect(posterRenderer.imageVisualAnchor(posterAnchors), width, height);
       const titleRect = posterRenderer.canvasRect(posterAnchors.title, width, height);
       const subtitleRect = posterRenderer.canvasRect(posterAnchors.subtitle, width, height);
       const ctaRect = posterRenderer.canvasRect(posterAnchors.cta, width, height);
@@ -103,7 +105,7 @@
       if (!posterAnchors.image.hidden && uploadedImageSrc) {
         try {
           const productImage = await loadCanvasImage(uploadedImageSrc);
-          drawAdjustedProductImage(ctx, productImage, imageRect, size);
+          drawAdjustedProductImage(ctx, productImage, imageRect, imageVisualRect, size);
         } catch (error) {
           console.warn('Uploaded image failed to load for download', error);
         }
