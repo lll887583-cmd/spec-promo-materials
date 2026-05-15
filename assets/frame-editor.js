@@ -20,14 +20,14 @@
       anchorCanvas.style.setProperty('--anchor-preview-h', `${dimensions.height}px`);
     }
 
-    function styleAnchorPreview(node, anchor) {
+    function styleAnchorPreview(node, anchor, isCta = false) {
       if (!node || !anchor) return;
       node.hidden = Boolean(anchor.hidden);
       node.style.display = anchor.hidden ? 'none' : '';
       if (anchor.hidden) return;
       node.style.left = formatPct(anchor.x);
       node.style.top = formatPct(anchor.y);
-      node.style.width = formatPct(anchor.w);
+      node.style.width = isCta && anchor.autoWidth === true ? 'max-content' : formatPct(anchor.w);
       node.style.height = formatPct(anchor.h);
       node.style.setProperty('--anchor-cta-x', formatPct(anchor.x));
       node.style.setProperty('--anchor-cta-w', formatPct(anchor.w));
@@ -51,23 +51,9 @@
 
     function fitTextElement(element, minSize = 6) {
       if (!element || !element.offsetParent) return;
-      const computed = window.getComputedStyle(element);
-      const startSize = Number.parseFloat(computed.fontSize) || minSize;
-      let low = minSize;
-      let high = startSize;
-      let best = minSize;
-      for (let index = 0; index < 8; index += 1) {
-        const mid = (low + high) / 2;
-        element.style.fontSize = `${mid}px`;
-        const fits = element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1;
-        if (fits) {
-          best = mid;
-          low = mid;
-        } else {
-          high = mid;
-        }
-      }
-      element.style.fontSize = `${best}px`;
+      element.style.overflow = 'visible';
+      element.style.whiteSpace = 'pre-wrap';
+      element.style.lineHeight = '1.4';
     }
 
     function axisLockedDelta(dx, dy, dragState, lockAxis, threshold = 0) {

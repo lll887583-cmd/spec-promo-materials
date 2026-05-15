@@ -6,7 +6,7 @@
   <title>Promo Materials UIDemo</title>
   <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260513-9" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="assets/app.css?v=20260515-safearea2" />
+  <link rel="stylesheet" href="assets/app.css?v=20260515-elastictext1" />
 
 
 </head>
@@ -136,24 +136,24 @@
           <div class="field">
             <label class="field-label" for="titleInput">标题</label>
             <div class="input-wrap">
-              <input class="copy-placeholder" id="titleInput" maxlength="40" placeholder="请输入标题" value="Headline Text" />
-              <span class="counter" id="titleCounter">13/40</span>
+              <input id="titleInput" maxlength="60" placeholder="请输入标题" value="Headline Text" />
+              <span class="counter" id="titleCounter">13/60</span>
             </div>
           </div>
 
           <div class="field">
             <label class="field-label" for="subtitleInput">副标题</label>
             <div class="input-wrap">
-              <textarea class="copy-placeholder" id="subtitleInput" maxlength="80" placeholder="请输入副标题">More information and key features can be detailed here.</textarea>
-              <span class="counter" id="subtitleCounter">55/80</span>
+              <textarea id="subtitleInput" maxlength="80" placeholder="请输入副标题">More information and key features here.</textarea>
+              <span class="counter" id="subtitleCounter">39/80</span>
             </div>
           </div>
 
           <div class="field">
             <label class="field-label" for="ctaInput">按钮文案</label>
             <div class="input-wrap">
-              <input class="copy-placeholder" id="ctaInput" maxlength="20" placeholder="请输入按钮文案" value="Button Text" />
-              <span class="counter" id="ctaCounter">11/20</span>
+              <input id="ctaInput" maxlength="30" placeholder="请输入按钮文案" value="Button" />
+              <span class="counter" id="ctaCounter">6/30</span>
             </div>
           </div>
 
@@ -269,9 +269,9 @@
               <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png" alt="SPEC MARKETS 浅色海报字标"></div>
               <div class="creative-copy">
                 <h1 id="previewTitle">Headline Text</h1>
-                <p id="previewSubtitle">More information and key features can be detailed here.</p>
+                <p id="previewSubtitle">More information and key features here.</p>
               </div>
-              <div class="creative-cta" id="previewCta">Button Text</div>
+              <div class="creative-cta" id="previewCta">Button</div>
               <div class="poster-product-layer hidden" id="productFrame" role="button" tabindex="0" aria-label="调整主图位置和缩放">
                 <img class="poster-product-image" id="phoneHand" alt="上传图片图层">
               </div>
@@ -333,8 +333,8 @@
               <div class="anchor-preview-image placeholder-surface placeholder-surface--solid" id="anchorPreviewImage"></div>
               <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png" alt="SPEC MARKETS"></div>
               <div class="anchor-preview-title" id="anchorPreviewTitle">Headline Text</div>
-              <div class="anchor-preview-subtitle" id="anchorPreviewSubtitle">More information and key features can be detailed here.</div>
-              <div class="anchor-preview-cta" id="anchorPreviewCta">Button Text</div>
+              <div class="anchor-preview-subtitle" id="anchorPreviewSubtitle">More information and key features here.</div>
+              <div class="anchor-preview-cta" id="anchorPreviewCta">Button</div>
               <div class="gradient-control" id="gradientControl" aria-label="渐变角度拨杆">
                 <div class="gradient-line" id="gradientLine" data-gradient-handle="line"></div>
                 <button class="gradient-handle" type="button" data-gradient-handle="start" aria-label="拖动渐变起点"></button>
@@ -425,11 +425,11 @@
 
   <script async src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/poster-core.js?v=20260513-10"></script>
+  <script src="assets/poster-core.js?v=20260515-elastictext1"></script>
   <script src="assets/frame-store.js?v=20260513-9"></script>
-  <script src="assets/poster-renderer.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-editor.js?v=20260514-4"></script>
-  <script src="assets/poster-canvas.js?v=20260515-imagebottom1"></script>
+  <script src="assets/poster-renderer.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-editor.js?v=20260515-elastictext1"></script>
+  <script src="assets/poster-canvas.js?v=20260515-elastictext1"></script>
   <script src="assets/export-assets.js?v=20260513-14"></script>
   <script src="assets/rules-parser.js?v=20260513-9"></script>
   <!-- frame-layouts rule: every alignment parameter must be read from the Figma node below, not guessed from the local baseline align buttons. -->
@@ -441,30 +441,30 @@
       rule: 'When creating or updating assets/frame-layouts/*.js, fetch and apply alignment coordinates from this Figma node for each size.'
     };
   </script>
-  <script src="assets/frame-layouts/registry.js?v=20260513-21"></script>
-  <script src="assets/frame-layouts/120x600.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/320x50.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/320x100.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/720x90.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/728x90.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/160x600.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/300x250.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/300x600.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/320x480.js?v=20260515-ctatextmax1"></script>
-  <script src="assets/frame-layouts/800x800.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/628x1200.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/828x1200.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/970x250.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/980x250.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/990x250.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/1200x628.js?v=20260515-safearea2"></script>
-  <script src="assets/frame-layouts/1200x1500.js?v=20260515-ctatextmax1"></script>
-  <script src="assets/frame-layouts/1200x1200.js?v=20260515-safearea2"></script>
-  <script src="assets/config/defaults.js?v=20260514-align1"></script>
-  <script src="assets/config/layout-rules.js?v=20260514-3"></script>
-  <script src="assets/config/translations.js?v=20260514-1"></script>
+  <script src="assets/frame-layouts/registry.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/120x600.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/320x50.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/320x100.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/720x90.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/728x90.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/160x600.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/300x250.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/300x600.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/320x480.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/800x800.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/628x1200.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/828x1200.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/970x250.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/980x250.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/990x250.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/1200x628.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/1200x1500.js?v=20260515-elastictext1"></script>
+  <script src="assets/frame-layouts/1200x1200.js?v=20260515-elastictext1"></script>
+  <script src="assets/config/defaults.js?v=20260515-elastictext1"></script>
+  <script src="assets/config/layout-rules.js?v=20260515-elastictext1"></script>
+  <script src="assets/config/translations.js?v=20260515-button1"></script>
   <script src="assets/modules/product-image.js?v=20260514-1"></script>
-  <script src="assets/app.js?v=20260515-copylookup1"></script>
+  <script src="assets/app.js?v=20260515-langoverride1"></script>
 
 
 </body>

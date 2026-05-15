@@ -2868,7 +2868,7 @@
       editor.style.height = formatPct(anchor.h);
       const canEditFontSize = scope === 'template' && key === 'cta';
       const editorHint = canEditFontSize ? '拖动边框调整折行，+ / - 调整字号' : '拖动边框调整折行';
-      editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${key === 'cta' ? 20 : (key === 'title' ? 40 : 80)}"></textarea><label>${editorHint}</label>`;
+      editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${key === 'cta' ? 30 : (key === 'title' ? 60 : 80)}"></textarea><label>${editorHint}</label>`;
       const textarea = editor.querySelector('textarea');
       const source = scope === 'template' ? getSourceCopy() : copyForAsset(currentPreviewAsset());
       textarea.value = source[key] || '';
@@ -3057,9 +3057,9 @@
     }
 
     function updateCounters() {
-      titleCounter.textContent = `${titleInput.value.length}/40`;
+      titleCounter.textContent = `${titleInput.value.length}/60`;
       subtitleCounter.textContent = `${subtitleInput.value.length}/80`;
-      ctaCounter.textContent = `${ctaInput.value.length}/20`;
+      ctaCounter.textContent = `${ctaInput.value.length}/30`;
       syncCopyPlaceholderState();
       if (!generated || currentLanguageIndex === 0) applyLanguagePreview(0);
       if (!document.getElementById('templateManagerView')?.classList.contains('hidden')) renderAnchorEditor();
@@ -3517,7 +3517,7 @@
           <div class="poster-edit-form">
             <div class="poster-edit-field">
               <label for="posterEditTitle">标题</label>
-              <input id="posterEditTitle" maxlength="40" />
+              <input id="posterEditTitle" maxlength="60" />
             </div>
             <div class="poster-edit-field">
               <label for="posterEditSubtitle">副标题</label>
@@ -3525,7 +3525,7 @@
             </div>
             <div class="poster-edit-field">
               <label for="posterEditCta">按钮文案</label>
-              <input id="posterEditCta" maxlength="20" />
+              <input id="posterEditCta" maxlength="30" />
             </div>
           </div>
           <div class="confirm-actions">

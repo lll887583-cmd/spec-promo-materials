@@ -19,6 +19,7 @@
     const LEGACY_BUTTON_TEXT_COLOR = APP_DEFAULTS.legacyButtonTextColor || '#ffffff';
     const LEGACY_BUTTON_FILL_COLORS = new Set(APP_DEFAULTS.legacyButtonFillColors || ['#03b2cb', '#4ecbe3']);
     const INLINE_COPY_EDITOR_ENABLED = Boolean(APP_DEFAULTS.inlineCopyEditorEnabled);
+    const COPY_LIMITS = { title: 60, subtitle: 80, cta: 30 };
     const defaultTemplateAnchors = JSON.parse(JSON.stringify(APP_DEFAULTS.defaultTemplateAnchors || {}));
     const defaultTemplateStyles = JSON.parse(JSON.stringify(APP_DEFAULTS.defaultTemplateStyles || {}));
     const darkTemplateStyles = JSON.parse(JSON.stringify(APP_DEFAULTS.darkTemplateStyles || {}));
@@ -376,7 +377,7 @@
       return `${Number(value).toFixed(1)}%`;
     }
 
-    const CTA_MIN_WIDTH_PERCENT = 10;
+    const CTA_MIN_WIDTH_PERCENT = 1;
     const CTA_TEMPLATE_RATIO_SIZE = { width: 1200, height: 628 };
     const posterCore = window.createPosterCore({
       defaultAnchors: defaultTemplateAnchors,
@@ -691,6 +692,20 @@
       return size?.id || `${size?.width || 0}x${size?.height || 0}`;
     }
 
+    function posterLanguageOverrideKey(size = materialSizes[currentSizeIndex], languageIndex = currentLanguageIndex) {
+      return `${posterOverrideKey(size)}::language::${Number.isInteger(languageIndex) ? languageIndex : 0}`;
+    }
+
+    function isLanguageScopedPosterAnchor(anchorKey) {
+      return ['title', 'subtitle', 'cta'].includes(anchorKey);
+    }
+
+    function posterOverrideBucketKey(anchorKey, size = materialSizes[currentSizeIndex], languageIndex = currentLanguageIndex) {
+      return isLanguageScopedPosterAnchor(anchorKey)
+        ? posterLanguageOverrideKey(size, languageIndex)
+        : posterOverrideKey(size);
+    }
+
     function effectivePosterAnchorsForSize(size = materialSizes[currentSizeIndex], asset = currentPreviewAsset()) {
       const anchors = basePosterAnchorsForSize(size, templateAnchors);
       if (!isTemplateBaseSize(size)) {
@@ -704,7 +719,12 @@
       });
       const overrides = posterAnchorOverrides[posterOverrideKey(size)] || {};
       posterEditableAnchorKeys.forEach(key => {
-        if (overrides[key]) anchors[key] = { ...anchors[key], ...overrides[key] };
+        if (!isLanguageScopedPosterAnchor(key) && overrides[key]) anchors[key] = { ...anchors[key], ...overrides[key] };
+      });
+      const languageIndex = Number.isInteger(asset?.languageIndex) ? asset.languageIndex : currentLanguageIndex;
+      const languageOverrides = posterAnchorOverrides[posterLanguageOverrideKey(size, languageIndex)] || {};
+      posterEditableAnchorKeys.forEach(key => {
+        if (isLanguageScopedPosterAnchor(key) && languageOverrides[key]) anchors[key] = { ...anchors[key], ...languageOverrides[key] };
       });
       anchors.text = textAnchorFromChildren(anchors);
       anchors.cta = normalizeCtaAnchorRatio(anchors.cta, size);
@@ -841,6 +861,7 @@
 
 
     const COPY_TRANSLATION_MAP = window.SpecPromoTranslations?.copyTranslationMap || {};
+    const TRANSLATION_LANGUAGE_CODES = ['en', 'ja', 'zh-CN', 'zh-TW', 'vi', 'th', 'ko', 'id', 'ms'];
 
     function canonicalCopyKey(value) {
       return normalizeCopyText(value)
@@ -870,12 +891,52 @@
       return normalizeCopyText(key || fallbackValue);
     }
 
+    async function translateCopyValueOnline(value, languageIndex, fallbackValue = '') {
+      const key = normalizeCopyText(value);
+      if (!key || languageIndex === 0) return key || normalizeCopyText(fallbackValue);
+      const targetLanguage = TRANSLATION_LANGUAGE_CODES[languageIndex];
+      if (!targetLanguage) return key || normalizeCopyText(fallbackValue);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4500);
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(targetLanguage)}&dt=t&q=${encodeURIComponent(key)}`;
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`translation ${response.status}`);
+        const payload = await response.json();
+        const translated = Array.isArray(payload?.[0])
+          ? payload[0].map(part => part?.[0] || '').join('')
+          : '';
+        return normalizeCopyText(translated || key || fallbackValue);
+      } catch (error) {
+        console.warn('Auto translation unavailable, using source copy', error);
+        return normalizeCopyText(key || fallbackValue);
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    async function translatedCopyValueAsync(value, languageIndex, fallbackValue = '') {
+      const staticValue = translatedCopyValue(value, languageIndex, fallbackValue);
+      const key = normalizeCopyText(value);
+      const hasStaticTranslation = Boolean(copyTranslationsForKey(key)?.[languageIndex]);
+      if (languageIndex === 0 || hasStaticTranslation || !key) return staticValue;
+      return translateCopyValueOnline(key, languageIndex, staticValue);
+    }
+
     function buildLocalizedCopyFromSource(sourceCopy) {
       return languages.map((_, index) => ({
         title: translatedCopyValue(sourceCopy.title, index, cloneDefaultCopy(index).title),
         subtitle: translatedCopyValue(sourceCopy.subtitle, index, cloneDefaultCopy(index).subtitle),
         cta: translatedCopyValue(sourceCopy.cta, index, cloneDefaultCopy(index).cta)
       }));
+    }
+
+    async function buildLocalizedCopyFromSourceAsync(sourceCopy) {
+      return Promise.all(languages.map(async (_, index) => ({
+        title: await translatedCopyValueAsync(sourceCopy.title, index, cloneDefaultCopy(index).title),
+        subtitle: await translatedCopyValueAsync(sourceCopy.subtitle, index, cloneDefaultCopy(index).subtitle),
+        cta: await translatedCopyValueAsync(sourceCopy.cta, index, cloneDefaultCopy(index).cta)
+      })));
     }
 
     function syncLocalizedCopyFromInputs() {
@@ -1242,7 +1303,10 @@
     }
 
     function fitAnchorPreviewTextElement(element, minSize = 6) {
-      frameEditorHelpers.fitTextElement(element, minSize);
+      if (!element) return;
+      element.style.overflow = 'visible';
+      element.style.whiteSpace = 'pre-wrap';
+      element.style.lineHeight = '1.4';
     }
 
     function fitAnchorPreviewTextBoxes() {
@@ -1261,8 +1325,8 @@
       anchorCanvas.style.background = templateBackgroundCss(previewStyles);
       const sourceCopy = getSourceCopy();
       if (anchorPreviewTitle) anchorPreviewTitle.textContent = sourceCopy.title || 'Headline Text';
-      if (anchorPreviewSubtitle) renderMultilineText(anchorPreviewSubtitle, sourceCopy.subtitle || 'More information and key features can be detailed here.');
-      if (anchorPreviewCta) anchorPreviewCta.textContent = sourceCopy.cta || 'Button Text';
+      if (anchorPreviewSubtitle) renderMultilineText(anchorPreviewSubtitle, sourceCopy.subtitle || 'More information and key features here.');
+      if (anchorPreviewCta) anchorPreviewCta.textContent = sourceCopy.cta || 'Button';
       renderGradientControl(previewStyles);
       const logoPreview = document.querySelector('#anchorPreviewLogo img');
       if (logoPreview) {
@@ -1288,7 +1352,7 @@
           textPreview.style.textAlign = previewAnchors.title.align || previewAnchors.subtitle.align || previewAnchors.text?.align || 'left';
           textPreview.style.color = previewStyles.textColor;
         }
-        textPreview.style.fontSize = `clamp(5px, ${fontPct}cqh, 84px)`;
+        textPreview.style.fontSize = `max(1px, ${fontPct}cqh)`;
       });
       const ctaPreview = document.getElementById('anchorPreviewCta');
       if (ctaPreview) {
@@ -1390,8 +1454,15 @@
     }
 
     function ensureEdgeResizeHandles(box, handleClass) {
-      if (!box || box.dataset.edgeHandlesReady === 'true') return;
-      ['n', 'e', 's', 'w'].forEach(side => {
+      if (!box) return;
+      const existingDefault = box.querySelector(`.${handleClass}:not([data-resize-side])`);
+      if (existingDefault) {
+        existingDefault.dataset.resizeSide = 'se';
+        existingDefault.classList.add('edit-resize-handle');
+      }
+      if (box.dataset.edgeHandlesReady === 'true') return;
+      ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach(side => {
+        if (box.querySelector(`.${handleClass}[data-resize-side="${side}"]`)) return;
         const handle = document.createElement('span');
         handle.className = `edit-resize-handle ${handleClass}`;
         handle.dataset.resizeSide = side;
@@ -1405,26 +1476,50 @@
       const next = { ...base };
       const right = Number(base.x) + Number(base.w);
       const bottom = Number(base.y) + Number(base.h);
+      const hasWest = side.includes('w');
+      const hasEast = side.includes('e');
+      const hasNorth = side.includes('n');
+      const hasSouth = side.includes('s');
       if (!proportional) {
-        if (side === 'e') next.w = base.w + delta.dx;
-        else if (side === 'w') { next.x = base.x + delta.dx; next.w = base.w - delta.dx; }
-        else if (side === 's') next.h = base.h + delta.dy;
-        else if (side === 'n') { next.y = base.y + delta.dy; next.h = base.h - delta.dy; }
+        if (hasEast) next.w = base.w + delta.dx;
+        if (hasWest) { next.x = base.x + delta.dx; next.w = base.w - delta.dx; }
+        if (hasSouth) next.h = base.h + delta.dy;
+        if (hasNorth) { next.y = base.y + delta.dy; next.h = base.h - delta.dy; }
         return next;
       }
       let scale = 1;
-      if (side === 'e') scale = 1 + delta.dx / Math.max(base.w, 1);
-      else if (side === 'w') scale = 1 - delta.dx / Math.max(base.w, 1);
-      else if (side === 's') scale = 1 + delta.dy / Math.max(base.h, 1);
-      else if (side === 'n') scale = 1 - delta.dy / Math.max(base.h, 1);
+      const xScale = hasEast ? 1 + delta.dx / Math.max(base.w, 1) : (hasWest ? 1 - delta.dx / Math.max(base.w, 1) : 1);
+      const yScale = hasSouth ? 1 + delta.dy / Math.max(base.h, 1) : (hasNorth ? 1 - delta.dy / Math.max(base.h, 1) : 1);
+      scale = side.length > 1 ? Math.min(xScale, yScale) : (xScale !== 1 ? xScale : yScale);
       scale = Math.max(0.15, scale);
       next.w = base.w * scale;
       next.h = base.h * scale;
-      if (side === 'w') next.x = right - next.w;
-      else if (side === 'n' || side === 's') next.x = base.x + (base.w - next.w) / 2;
-      if (side === 'n') next.y = bottom - next.h;
-      else if (side === 'e' || side === 'w') next.y = base.y + (base.h - next.h) / 2;
+      if (hasWest) next.x = right - next.w;
+      else if (!hasEast) next.x = base.x + (base.w - next.w) / 2;
+      if (hasNorth) next.y = bottom - next.h;
+      else if (!hasSouth) next.y = base.y + (base.h - next.h) / 2;
       return next;
+    }
+
+    function resizeAnchorForInteraction(base, delta, side, key) {
+      const isCorner = String(side || '').length > 1;
+      const proportional = key === 'image' || key === 'logo' || isCorner;
+      const resized = resizeAnchorFromSide(base, delta, side, proportional);
+      if (['title', 'subtitle', 'cta'].includes(key)) {
+        if (isCorner) {
+          const scale = Math.max(
+            0.15,
+            Math.min(
+              resized.w / Math.max(1, Number(base.w) || 1),
+              resized.h / Math.max(1, Number(base.h) || 1)
+            )
+          );
+          resized.fontScale = posterCore.clamp((Number(base.fontScale) || 1) * scale, 0.05, 8);
+        } else if (key === 'cta' && (side === 'e' || side === 'w')) {
+          resized.autoWidth = false;
+        }
+      }
+      return resized;
     }
 
     function renderAnchorEditor() {
@@ -1805,7 +1900,7 @@
 
     function setPosterOverride(anchorKey, nextAnchor) {
       const size = materialSizes[currentSizeIndex] || materialSizes[0];
-      const key = posterOverrideKey(size);
+      const key = posterOverrideBucketKey(anchorKey, size, currentLanguageIndex);
       const base = basePosterAnchorsForSize(size, templateAnchors)[anchorKey];
       posterAnchorOverrides[key] = posterAnchorOverrides[key] || {};
       posterAnchorOverrides[key][anchorKey] = normalizedPosterAnchor(anchorKey, nextAnchor, base, size);
@@ -1815,24 +1910,84 @@
 
     function setPosterOverrides(anchorKeys, nextAnchorForKey) {
       const size = materialSizes[currentSizeIndex] || materialSizes[0];
-      const key = posterOverrideKey(size);
       const baseAnchors = basePosterAnchorsForSize(size, templateAnchors);
-      posterAnchorOverrides[key] = posterAnchorOverrides[key] || {};
       anchorKeys.forEach(anchorKey => {
+        const key = posterOverrideBucketKey(anchorKey, size, currentLanguageIndex);
+        posterAnchorOverrides[key] = posterAnchorOverrides[key] || {};
         posterAnchorOverrides[key][anchorKey] = normalizedPosterAnchor(anchorKey, nextAnchorForKey(anchorKey), baseAnchors[anchorKey], size);
       });
       applyPosterLayoutForSize(currentSizeIndex);
       requestAnimationFrame(updateProductImageFrame);
     }
 
+    function isKeyboardMoveBlocked(event) {
+      const target = event.target;
+      const isEditableTarget = target?.matches?.('input, textarea, select, button') || target?.isContentEditable;
+      return isEditableTarget || Boolean(document.querySelector('.confirm-modal.open'));
+    }
+
+    function keyboardMoveDelta(event, host) {
+      const rect = host?.getBoundingClientRect?.();
+      if (!rect?.width || !rect?.height) return null;
+      const stepPx = event.shiftKey ? 10 : 1;
+      const delta = {
+        ArrowLeft: { dx: -stepPx, dy: 0 },
+        ArrowRight: { dx: stepPx, dy: 0 },
+        ArrowUp: { dx: 0, dy: -stepPx },
+        ArrowDown: { dx: 0, dy: stepPx }
+      }[event.key];
+      if (!delta) return null;
+      return {
+        dx: (delta.dx / rect.width) * 100,
+        dy: (delta.dy / rect.height) * 100
+      };
+    }
+
+    function moveSelectedTemplateAnchorsByKeyboard(event) {
+      if (document.getElementById('templateManagerView')?.classList.contains('hidden')) return false;
+      const currentAnchors = anchorEditorPreviewAnchors();
+      const anchorKeys = [...selectedAnchorKeys].filter(key => currentAnchors[key]);
+      const delta = anchorKeys.length ? keyboardMoveDelta(event, anchorCanvas) : null;
+      if (!delta) return false;
+      event.preventDefault();
+      updateAnchors(anchorKeys, anchorKey => {
+        const base = currentAnchors[anchorKey];
+        return { ...base, x: base.x + delta.dx, y: base.y + delta.dy };
+      });
+      return true;
+    }
+
+    function moveSelectedPosterAnchorsByKeyboard(event) {
+      if (!generated || document.getElementById('generatorView')?.classList.contains('hidden')) return false;
+      const anchors = effectivePosterAnchorsForSize();
+      const anchorKeys = [...selectedPosterAnchorKeys]
+        .filter(key => key !== 'image' && posterEditableAnchorKeys.includes(key) && anchors[key]);
+      const delta = anchorKeys.length ? keyboardMoveDelta(event, materialCard) : null;
+      if (!delta) return false;
+      event.preventDefault();
+      pushPosterEditHistory();
+      setPosterOverrides(anchorKeys, anchorKey => {
+        const base = anchors[anchorKey];
+        return { ...base, x: base.x + delta.dx, y: base.y + delta.dy };
+      });
+      return true;
+    }
+
+    document.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) || isKeyboardMoveBlocked(event)) return;
+      moveSelectedTemplateAnchorsByKeyboard(event) || moveSelectedPosterAnchorsByKeyboard(event);
+    });
+
     function alignSelectedPosterAnchors(action) {
       if (action === 'reset') {
         pushPosterEditHistory();
-        delete posterAnchorOverrides[posterOverrideKey(materialSizes[currentSizeIndex] || materialSizes[0])];
+        const size = materialSizes[currentSizeIndex] || materialSizes[0];
+        delete posterAnchorOverrides[posterOverrideKey(size)];
+        delete posterAnchorOverrides[posterLanguageOverrideKey(size, currentLanguageIndex)];
         activePosterAnchor = null;
         selectedPosterAnchorKeys = new Set();
         applyPosterLayoutForSize(currentSizeIndex);
-        showToast('当前尺寸手动位置已恢复生成规则');
+        showToast('当前语言文本布局与当前尺寸共享元素已恢复生成规则');
         return;
       }
       const anchorKeys = [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key) && key !== 'image');
@@ -2205,8 +2360,8 @@
     function defaultLocalizedCopy() {
       return {
         title: titleInput.value || localizedCopy[0]?.title || 'Headline Text',
-        subtitle: subtitleInput.value || localizedCopy[0]?.subtitle || 'More information and key features can be detailed here.',
-        cta: ctaInput.value || localizedCopy[0]?.cta || 'Button Text'
+        subtitle: subtitleInput.value || localizedCopy[0]?.subtitle || 'More information and key features here.',
+        cta: ctaInput.value || localizedCopy[0]?.cta || 'Button'
       };
     }
 
@@ -2843,8 +2998,8 @@
     function getSourceCopy() {
       return {
         title: titleInput.value.trim() || localizedCopy[0]?.title || 'Headline Text',
-        subtitle: subtitleInput.value.trim() || localizedCopy[0]?.subtitle || 'More information and key features can be detailed here.',
-        cta: ctaInput.value.trim() || localizedCopy[0]?.cta || 'Button Text'
+        subtitle: subtitleInput.value.trim() || localizedCopy[0]?.subtitle || 'More information and key features here.',
+        cta: ctaInput.value.trim() || localizedCopy[0]?.cta || 'Button'
       };
     }
 
@@ -2923,10 +3078,10 @@
           anchorPreviewTitle.textContent = cleanValue || 'Headline Text';
         } else if (key === 'subtitle') {
           subtitleInput.value = cleanValue;
-          renderMultilineText(anchorPreviewSubtitle, cleanValue || 'More information and key features can be detailed here.');
+          renderMultilineText(anchorPreviewSubtitle, cleanValue || 'More information and key features here.');
         } else if (key === 'cta') {
           ctaInput.value = cleanValue;
-          anchorPreviewCta.textContent = cleanValue || 'Button Text';
+          anchorPreviewCta.textContent = cleanValue || 'Button';
         }
         localizedCopy[0] = { ...(localizedCopy[0] || defaultLocalizedCopy()), [key]: cleanValue };
         updateCounters();
@@ -2995,7 +3150,7 @@
       editor.style.height = formatPct(anchor.h);
       const canEditFontSize = scope === 'template' && key === 'cta';
       const editorHint = canEditFontSize ? '拖动边框调整折行，+ / - 调整字号' : '拖动边框调整折行';
-      editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${key === 'cta' ? 20 : (key === 'title' ? 40 : 80)}"></textarea><label>${editorHint}</label>`;
+      editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${COPY_LIMITS[key] || COPY_LIMITS.subtitle}"></textarea><label>${editorHint}</label>`;
       const textarea = editor.querySelector('textarea');
       const source = scope === 'template' ? getSourceCopy() : copyForAsset(currentPreviewAsset());
       textarea.value = source[key] || '';
@@ -3022,9 +3177,8 @@
       previewTitle.textContent = copy.title;
       renderMultilineText(previewSubtitle, copy.subtitle);
       previewCta.textContent = copy.cta;
-      schedulePosterTextFit();
+      applyPosterLayoutForSize(currentSizeIndex);
       applySelectedLogo(logoBrandForLanguage(languageIndex), asset?.rule?.logoVariant || templateStyles.logoVariant || selectedLogoVariant);
-      renderPosterEditOverlay();
       document.querySelectorAll('.language-pill').forEach(pill => {
         pill.classList.toggle('active', Number(pill.dataset.languagePreviewIndex) === languageIndex);
       });
@@ -3210,19 +3364,21 @@
     }
 
     function syncCopyPlaceholderState() {
-      [
-        [titleInput, localizedCopy[0]?.title || 'Headline Text'],
-        [subtitleInput, localizedCopy[0]?.subtitle || 'More information and key features can be detailed here.'],
-        [ctaInput, localizedCopy[0]?.cta || 'Button Text']
-      ].forEach(([input, placeholderCopy]) => {
-        input?.classList.toggle('copy-placeholder', input.value === placeholderCopy);
-      });
+      [titleInput, subtitleInput, ctaInput].forEach(input => input?.classList.remove('copy-placeholder'));
+    }
+
+    function enforceCopyInputLimit(input, limit) {
+      if (!input || !Number.isFinite(limit)) return;
+      if (input.value.length > limit) input.value = input.value.slice(0, limit);
     }
 
     function updateCounters() {
-      titleCounter.textContent = `${titleInput.value.length}/40`;
-      subtitleCounter.textContent = `${subtitleInput.value.length}/80`;
-      ctaCounter.textContent = `${ctaInput.value.length}/20`;
+      enforceCopyInputLimit(titleInput, COPY_LIMITS.title);
+      enforceCopyInputLimit(subtitleInput, COPY_LIMITS.subtitle);
+      enforceCopyInputLimit(ctaInput, COPY_LIMITS.cta);
+      titleCounter.textContent = `${titleInput.value.length}/${COPY_LIMITS.title}`;
+      subtitleCounter.textContent = `${subtitleInput.value.length}/${COPY_LIMITS.subtitle}`;
+      ctaCounter.textContent = `${ctaInput.value.length}/${COPY_LIMITS.cta}`;
       syncCopyPlaceholderState();
       if (!generated || currentLanguageIndex === 0) applyLanguagePreview(0);
       if (!document.getElementById('templateManagerView')?.classList.contains('hidden')) renderAnchorEditor();
@@ -3230,6 +3386,9 @@
     }
 
     function handleSourceCopyInput() {
+      enforceCopyInputLimit(titleInput, COPY_LIMITS.title);
+      enforceCopyInputLimit(subtitleInput, COPY_LIMITS.subtitle);
+      enforceCopyInputLimit(ctaInput, COPY_LIMITS.cta);
       syncLocalizedCopyFromInputs();
       updateCounters();
       if (generated && currentLanguageIndex !== 0) applyLanguagePreview(currentLanguageIndex);
@@ -3239,10 +3398,7 @@
       if (!input) return;
       const originalPlaceholder = input.getAttribute('placeholder') || '';
       input.addEventListener('focus', () => {
-        if (!input.classList.contains('copy-placeholder')) return;
-        input.value = '';
-        input.setAttribute('placeholder', '');
-        updateCounters();
+        input.setAttribute('placeholder', originalPlaceholder);
       });
       input.addEventListener('blur', () => {
         input.setAttribute('placeholder', originalPlaceholder);
@@ -3686,15 +3842,15 @@
           <div class="poster-edit-form">
             <div class="poster-edit-field">
               <label for="posterEditTitle">标题</label>
-              <input id="posterEditTitle" maxlength="40" />
+              <input id="posterEditTitle" maxlength="${COPY_LIMITS.title}" />
             </div>
             <div class="poster-edit-field">
               <label for="posterEditSubtitle">副标题</label>
-              <textarea id="posterEditSubtitle" maxlength="80"></textarea>
+              <textarea id="posterEditSubtitle" maxlength="${COPY_LIMITS.subtitle}"></textarea>
             </div>
             <div class="poster-edit-field">
               <label for="posterEditCta">按钮文案</label>
-              <input id="posterEditCta" maxlength="20" />
+              <input id="posterEditCta" maxlength="${COPY_LIMITS.cta}" />
             </div>
           </div>
           <div class="confirm-actions">
@@ -3830,7 +3986,7 @@
       showToast('生成失败，已恢复预览界面，请重试');
     }
 
-    function runGeneration() {
+    async function runGeneration() {
       if (isGenerating) return;
       if (!appInitialized) {
         pendingGenerationAfterInit = true;
@@ -3848,7 +4004,8 @@
         return;
       }
       syncSpreadsheetRulesToOptions();
-      localizedCopy = buildLocalizedCopyFromSource(getSourceCopy());
+      showToast('正在翻译多语言文案...');
+      localizedCopy = await buildLocalizedCopyFromSourceAsync(getSourceCopy());
       Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
       const ruleAssets = spreadsheetGenerationRules.map(buildRuleAsset).filter(asset =>
         Number.isInteger(asset?.sizeIndex) && materialSizes[asset.sizeIndex]
@@ -4106,7 +4263,7 @@
           const base = dragState.anchors[dragState.anchorKey];
           updateAnchor(
             dragState.anchorKey,
-            resizeAnchorFromSide(base, delta, dragState.resizeSide, dragState.anchorKey === 'image')
+            resizeAnchorForInteraction(base, delta, dragState.resizeSide, dragState.anchorKey)
           );
         } else {
           updateAnchors(dragState.anchorKeys, anchorKey => {
@@ -4332,7 +4489,7 @@
           const base = dragState.anchors[dragState.anchorKey];
           setPosterOverride(
             dragState.anchorKey,
-            resizeAnchorFromSide(base, delta, dragState.resizeSide, dragState.anchorKey === 'image')
+            resizeAnchorForInteraction(base, delta, dragState.resizeSide, dragState.anchorKey)
           );
         } else {
           setPosterOverrides(dragState.anchorKeys, anchorKey => {

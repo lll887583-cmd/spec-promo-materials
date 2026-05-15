@@ -25,6 +25,25 @@
       return (Number(percent) / 100) * Math.max(1, basis);
     }
 
+    function anchorRect(anchor, fallback = null) {
+      const cardRect = materialCard.getBoundingClientRect();
+      if (!anchor) return fallback || { left: cardRect.left, top: cardRect.top, right: cardRect.right, bottom: cardRect.bottom, width: cardRect.width, height: cardRect.height };
+      const left = cardRect.left + (Number(anchor.x) || 0) / 100 * cardRect.width;
+      const top = cardRect.top + (Number(anchor.y) || 0) / 100 * cardRect.height;
+      const width = Math.max(1, (Number(anchor.w) || 0) / 100 * cardRect.width);
+      const height = Math.max(1, (Number(anchor.h) || 0) / 100 * cardRect.height);
+      return { left, top, right: left + width, bottom: top + height, width, height };
+    }
+
+    function setManualAdjustState(needsManualAdjust, reason = '') {
+      materialCard.classList.toggle('needs-manual-adjust', Boolean(needsManualAdjust));
+      materialCard.dataset.adjustmentState = needsManualAdjust ? '需手动调整' : '';
+      materialCard.dataset.adjustmentReason = reason || '';
+      materialCard.dispatchEvent(new CustomEvent('poster-layout-status', {
+        detail: { needsManualAdjust: Boolean(needsManualAdjust), reason }
+      }));
+    }
+
     function setPosterFontVars(anchors, size) {
       const textScale = posterCore.posterTextScale(size);
       const sizeHeight = Math.max(1, Number(size?.height) || 1);
@@ -37,12 +56,13 @@
         return Number(anchor?.font) || fallbackPercent;
       };
       const stableFonts = typeof getPreviewFontPercents === 'function' ? getPreviewFontPercents(size, anchors) : null;
-      const titleFont = Number(stableFonts?.title) || fontPercentForPreview(anchors.title, Math.max(1, anchors.title.h * 0.58 * textScale));
-      const subtitleFont = Number(stableFonts?.subtitle) || fontPercentForPreview(anchors.subtitle, Math.max(1, anchors.subtitle.h * 0.30 * textScale));
-      const ctaFont = Number(stableFonts?.cta) || fontPercentForPreview(anchors.cta, Math.max(1, anchors.cta.h * 0.38));
-      materialCard.style.setProperty('--title-font', `clamp(6px, ${titleFont}cqh, 84px)`);
-      materialCard.style.setProperty('--subtitle-font', `clamp(5px, ${subtitleFont}cqh, 44px)`);
-      materialCard.style.setProperty('--cta-font', `clamp(5px, ${ctaFont}cqh, 72px)`);
+      const hasExplicitFont = anchor => (Number.isFinite(Number(anchor?.fontPx)) && Number(anchor.fontPx) > 0) || (Number.isFinite(Number(anchor?.font)) && Number(anchor.font) > 0);
+      const titleFont = hasExplicitFont(anchors.title) ? fontPercentForPreview(anchors.title, Math.max(1, anchors.title.h * 0.58 * textScale)) : (Number(stableFonts?.title) || Math.max(1, anchors.title.h * 0.58 * textScale));
+      const subtitleFont = hasExplicitFont(anchors.subtitle) ? fontPercentForPreview(anchors.subtitle, Math.max(1, anchors.subtitle.h * 0.30 * textScale)) : (Number(stableFonts?.subtitle) || Math.max(1, anchors.subtitle.h * 0.30 * textScale));
+      const ctaFont = hasExplicitFont(anchors.cta) ? fontPercentForPreview(anchors.cta, Math.max(1, anchors.cta.h * 0.38)) : (Number(stableFonts?.cta) || Math.max(1, anchors.cta.h * 0.38));
+      materialCard.style.setProperty('--title-font', `max(1px, ${titleFont}cqh)`);
+      materialCard.style.setProperty('--subtitle-font', `max(1px, ${subtitleFont}cqh)`);
+      materialCard.style.setProperty('--cta-font', `max(1px, ${ctaFont}cqh)`);
       if (Number.isFinite(Number(anchors.cta.padX))) {
         materialCard.style.setProperty('--cta-pad-x', `${Number(anchors.cta.padX)}cqw`);
       } else {
@@ -56,23 +76,19 @@
       if (Number.isFinite(Number(anchors.cta.lineHeight))) {
         materialCard.style.setProperty('--cta-line-height', String(Number(anchors.cta.lineHeight)));
       } else {
-        materialCard.style.removeProperty('--cta-line-height');
+        materialCard.style.setProperty('--cta-line-height', '1.4');
       }
       if (Number.isFinite(Number(anchors.title.lineHeight))) {
         materialCard.style.setProperty('--title-line-height', String(Number(anchors.title.lineHeight)));
       } else {
-        materialCard.style.removeProperty('--title-line-height');
+        materialCard.style.setProperty('--title-line-height', '1.4');
       }
       if (Number.isFinite(Number(anchors.subtitle.lineHeight))) {
         materialCard.style.setProperty('--subtitle-line-height', String(Number(anchors.subtitle.lineHeight)));
       } else {
-        materialCard.style.removeProperty('--subtitle-line-height');
+        materialCard.style.setProperty('--subtitle-line-height', '1.4');
       }
-      if (Number.isFinite(Number(anchors.cta.maxW))) {
-        materialCard.style.setProperty('--cta-max-w', `${Number(anchors.cta.maxW)}cqw`);
-      } else {
-        materialCard.style.removeProperty('--cta-max-w');
-      }
+      materialCard.style.removeProperty('--cta-max-w');
     }
 
     function setAnchorVisibility(anchors) {
@@ -84,71 +100,9 @@
     function fitTextElement(element, minSize = 6, resetFontSize = true) {
       if (!element || !element.offsetParent) return;
       if (resetFontSize) element.style.removeProperty('font-size');
-      const computed = window.getComputedStyle(element);
-      const startSize = Number.parseFloat(computed.fontSize) || minSize;
-      let low = minSize;
-      let high = startSize;
-      let best = minSize;
-      for (let index = 0; index < 8; index += 1) {
-        const mid = (low + high) / 2;
-        element.style.fontSize = `${mid}px`;
-        const fits = element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1;
-        if (fits) {
-          best = mid;
-          low = mid;
-        } else {
-          high = mid;
-        }
-      }
-      element.style.fontSize = `${best}px`;
-    }
-
-    function fitTextElementInsideBox(element, anchor = {}, minSize = 6) {
-      if (!element || !element.offsetParent) return;
-      element.style.removeProperty('font-size');
-      element.style.removeProperty('-webkit-line-clamp');
-      element.style.removeProperty('-webkit-box-orient');
-      element.style.removeProperty('max-height');
-      element.style.display = 'block';
-      element.style.overflow = 'hidden';
-      element.style.whiteSpace = 'normal';
-      element.style.wordBreak = 'break-word';
-      element.style.overflowWrap = 'anywhere';
-
-      const computed = window.getComputedStyle(element);
-      const startSize = Number.parseFloat(computed.fontSize) || minSize;
-      const lineHeightRatio = Number(anchor.lineHeight) || (element === previewSubtitle ? 1.48 : 1.06);
-      let low = Math.max(1, Number(anchor.minFontPx) || minSize);
-      let high = Math.max(low, startSize);
-      let best = high;
-
-      element.style.fontSize = `${high}px`;
-      element.style.lineHeight = String(lineHeightRatio);
-      const initialFits = element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1;
-
-      if (!initialFits) {
-        best = low;
-        for (let index = 0; index < 10; index += 1) {
-          const mid = (low + high) / 2;
-          element.style.fontSize = `${mid}px`;
-          element.style.lineHeight = String(lineHeightRatio);
-          const fitsHeight = element.scrollHeight <= element.clientHeight + 1;
-          const fitsWidth = element.scrollWidth <= element.clientWidth + 1;
-          if (fitsHeight && fitsWidth) {
-            best = mid;
-            low = mid;
-          } else {
-            high = mid;
-          }
-        }
-      }
-
-      element.style.fontSize = `${best}px`;
-      element.style.lineHeight = String(lineHeightRatio);
-      const completeBoxLines = Math.max(1, Math.floor(element.clientHeight / Math.max(1, best * lineHeightRatio)));
-      // The Figma max-height is the available wrapping box, not a line-clamp target.
-      // If min font still overflows, clip to whole visible rows so no half-line appears.
-      element.style.maxHeight = `${completeBoxLines * best * lineHeightRatio}px`;
+      element.style.overflow = 'visible';
+      element.style.whiteSpace = 'pre-wrap';
+      element.style.lineHeight = '1.4';
     }
 
     function keepElementInsideCard(element) {
@@ -166,15 +120,9 @@
       if (!previewCta || !previewCta.offsetParent) return;
       previewCta.style.removeProperty('font-size');
       previewCta.style.removeProperty('transform');
-      const cardRect = materialCard.getBoundingClientRect();
-      const computed = window.getComputedStyle(previewCta);
-      const startSize = Number.parseFloat(computed.fontSize) || 6;
-      const maxWidth = Math.max(1, cardRect.width);
-      if (previewCta.getBoundingClientRect().width > maxWidth) {
-        const ratio = maxWidth / Math.max(1, previewCta.getBoundingClientRect().width);
-        previewCta.style.fontSize = `${Math.max(6, startSize * Math.max(0.7, ratio))}px`;
-      }
-      keepElementInsideCard(previewCta);
+      previewCta.style.overflow = 'visible';
+      previewCta.style.textOverflow = 'clip';
+      previewCta.style.whiteSpace = 'normal';
     }
 
     function fitCtaElementInsideSafeArea(anchor = currentAnchors?.cta || {}) {
@@ -183,71 +131,18 @@
       previewCta.style.removeProperty('transform');
       previewCta.style.removeProperty('padding-left');
       previewCta.style.removeProperty('padding-right');
-      previewCta.style.overflow = 'hidden';
-      previewCta.style.textOverflow = 'ellipsis';
-      previewCta.style.whiteSpace = 'nowrap';
+      previewCta.style.removeProperty('max-width');
+      previewCta.style.overflow = 'visible';
+      previewCta.style.textOverflow = 'clip';
+      previewCta.style.whiteSpace = 'normal';
 
-      const cardRect = materialCard.getBoundingClientRect();
       const defaultWidth = Math.max(1, cardPixelsFromPercent(Number(anchor.w) || 1, 'x'));
-      const safeRightPct = Number(currentAnchors?.safeArea?.x) + Number(currentAnchors?.safeArea?.w);
-      const maxWidthPct = Number.isFinite(Number(anchor.maxW))
-        ? Number(anchor.maxW)
-        : Number.isFinite(safeRightPct)
-          ? Math.max(Number(anchor.w) || 1, safeRightPct - (Number(anchor.x) || 0))
-          : Number(anchor.w) || 100;
-      const maxWidth = Math.max(1, (maxWidthPct / 100) * cardRect.width);
-      const textMaxWidth = Number.isFinite(Number(anchor.textMaxW))
-        ? Math.max(1, cardPixelsFromPercent(Number(anchor.textMaxW), 'x'))
-        : null;
       const isAutoWidth = anchor.autoWidth === true;
-      const minWidth = isAutoWidth ? 1 : defaultWidth;
       previewCta.style.width = isAutoWidth ? 'max-content' : `${defaultWidth}px`;
-      previewCta.style.maxWidth = `${maxWidth}px`;
 
       const computed = window.getComputedStyle(previewCta);
       const startSize = Number.parseFloat(computed.fontSize) || 6;
-      const minSize = Math.max(1, Number(anchor.minFontPx) || 5);
-      const startPadX = Number.parseFloat(computed.paddingLeft) || 0;
-      const minPadX = Math.max(1, cardPixelsFromPercent(Number(anchor.minPadX) || 1, 'x'));
-      let low = minSize;
-      let high = Math.max(low, startSize);
-      let best = low;
-
-      const setPaddingForSize = (size) => {
-        const progress = (size - minSize) / Math.max(1, startSize - minSize);
-        const pad = minPadX + Math.max(0, startPadX - minPadX) * Math.max(0, Math.min(1, progress));
-        previewCta.style.paddingLeft = `${pad}px`;
-        previewCta.style.paddingRight = `${pad}px`;
-        return pad;
-      };
-
-      for (let index = 0; index < 10; index += 1) {
-        const mid = (low + high) / 2;
-        previewCta.style.fontSize = `${mid}px`;
-        const pad = setPaddingForSize(mid);
-        previewCta.style.width = 'max-content';
-        const textLimitedWidth = textMaxWidth ? textMaxWidth + pad * 2 : previewCta.scrollWidth;
-        const desiredWidth = Math.min(maxWidth, Math.max(minWidth, Math.min(previewCta.scrollWidth, textLimitedWidth)));
-        previewCta.style.width = `${desiredWidth}px`;
-        const fitsHeight = previewCta.scrollHeight <= previewCta.clientHeight + 1;
-        const fitsWidth = previewCta.getBoundingClientRect().width <= maxWidth + 1;
-        const fits = fitsHeight && fitsWidth;
-        if (fits) {
-          best = mid;
-          low = mid;
-        } else {
-          high = mid;
-        }
-      }
-
-      previewCta.style.fontSize = `${best}px`;
-      const bestPad = setPaddingForSize(best);
-      previewCta.style.width = 'max-content';
-      const bestTextLimitedWidth = textMaxWidth ? textMaxWidth + bestPad * 2 : previewCta.scrollWidth;
-      previewCta.style.width = `${Math.min(maxWidth, Math.max(minWidth, Math.min(previewCta.scrollWidth, bestTextLimitedWidth)))}px`;
-      const rect = previewCta.getBoundingClientRect();
-      const safeRight = Number.isFinite(safeRightPct) ? cardRect.left + (safeRightPct / 100) * cardRect.width : cardRect.right;
-      if (rect.right > safeRight + 1) previewCta.style.transform = `translateX(${safeRight - rect.right}px)`;
+      previewCta.style.fontSize = `${startSize}px`;
     }
 
     function resetTitleAvoidance() {
@@ -263,6 +158,7 @@
     function resetVerticalTextFlow() {
       [previewTitle, previewSubtitle].forEach(element => {
         if (!element) return;
+        element.style.removeProperty('max-height');
         element.style.removeProperty('height');
         element.style.removeProperty('display');
         element.style.removeProperty('overflow');
@@ -286,6 +182,7 @@
         materialCard.style.removeProperty('--image-y');
         materialCard.style.removeProperty('--image-h');
       }
+      setManualAdjustState(false);
     }
 
     function horizontalOverlapRatio(a, b) {
@@ -400,23 +297,18 @@
     function fitPosterTextBoxes() {
       resetTitleAvoidance();
       resetVerticalTextFlow();
-      if (currentAnchors?.safeArea) {
-        fitTextElementInsideBox(previewTitle, currentAnchors.title, 6);
-        if (!materialCard.classList.contains('hide-poster-subtitle')) {
-          fitTextElementInsideBox(previewSubtitle, currentAnchors.subtitle, 5);
-        }
-        fitCtaElementInsideSafeArea(currentAnchors.cta);
-        return;
-      }
-      const subtitleHidden = materialCard.classList.contains('hide-poster-subtitle');
-      if (subtitleHidden) {
-        fitCtaElement();
-        const horizontalAvoided = applyHorizontalTitleAvoidance();
-        fitTextElement(previewTitle, 6, true);
-        if (horizontalAvoided) fitCtaElement();
-        return;
-      }
-      applyVerticalTextFlow();
+      [previewTitle, previewSubtitle].forEach(element => {
+        if (!element) return;
+        element.style.removeProperty('font-size');
+        element.style.removeProperty('max-height');
+        element.style.removeProperty('-webkit-line-clamp');
+        element.style.removeProperty('-webkit-box-orient');
+        element.style.overflow = 'visible';
+        element.style.whiteSpace = 'pre-wrap';
+        element.style.lineHeight = '1.4';
+      });
+      fitCtaElementInsideSafeArea(currentAnchors?.cta || {});
+      setManualAdjustState(false);
     }
 
     function applyLayoutVariables(anchors, size) {

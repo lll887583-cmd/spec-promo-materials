@@ -40,7 +40,7 @@
         text: { x: 8, y: 14, w: 84, h: 27, align: 'left' },
         image: { x: 0, y: 45, w: 100, h: 55 },
         trust: { x: 58, y: 38, w: 30, h: 5 },
-        note: 'Story 规格保留上方安全区，下半屏展示主体图层。'
+        note: 'Story 规格采用上文案、下主体图层。'
       },
       reels_1080x1920: {
         type: '竖屏 Reels',
@@ -145,7 +145,7 @@
         type: '竖向摩天楼',
         logo: { x: 8, y: 4, w: 68, h: 6 },
         text: { x: 6, y: 14, w: 88, h: 25, align: 'left' },
-        cta: { x: 8, y: 40, w: 72, h: 4.8 },
+        cta: { x: 8, y: 40, w: 72, h: 4.8 , lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         image: { x: 0, y: 54, w: 100, h: 46 },
         trust: { x: 8, y: 47, w: 84, h: 5 },
         note: '160 x 600 按窄竖幅重排，上方保留 Logo 与文案，下方填充商品图。'
@@ -156,9 +156,9 @@
         styles: { backgroundMode: 'solid', backgroundColor: '#DFF9FF' },
         image: { x: 68.4375, y: -9.8782, w: 31.584, h: 119.7571 },
         logo: { x: 5.9375, y: 9, w: 24.1934, h: 10.2193 },
-        title: { x: 5.9375, y: 26, w: 59.0625, h: 14, align: 'left', font: 12, fontPx: 12 },
-        subtitle: { x: 5.9375, y: 46, w: 59.0625, h: 20, align: 'left', font: 8, fontPx: 8 },
-        cta: { x: 5.9375, y: 70, w: 20, h: 22, font: 7, fontPx: 7, padX: 3.75, padY: 6, lineHeight: 1.4 },
+        title: { x: 5.9375, y: 26, w: 59.0625, h: 14, align: 'left', font: 12, fontPx: 12 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        subtitle: { x: 5.9375, y: 46, w: 59.0625, h: 20, align: 'left', font: 8, fontPx: 8 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        cta: { x: 5.9375, y: 70, w: 20, h: 22, font: 7, fontPx: 7, padX: 3.75, padY: 6, lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         trust: { hidden: true, x: 0, y: 0, w: 0, h: 0 },
         note: 'Figma 320 x 100 全局精确规则，参数与节点 2:249 对齐。'
       },
@@ -168,9 +168,9 @@
         styles: { backgroundMode: 'solid', backgroundColor: '#DFF9FF' },
         image: { x: 68.9796, y: -22, w: 31.0204, h: 144 },
         logo: { x: 5.3066, y: 10.401, w: 20.8991, h: 10.814 },
-        title: { x: 5.3061, y: 29.6, w: 58.0612, h: 14.4, align: 'left', font: 12, fontPx: 30 },
-        subtitle: { x: 5.3061, y: 50, w: 58.0612, h: 14.4, align: 'left', font: 8.8, fontPx: 22 },
-        cta: { x: 5.3061, y: 71.6, w: 14.3878, h: 19.2, font: 6.8, fontPx: 17, padX: 2.2449, padY: 4.8, lineHeight: 1.4 },
+        title: { x: 5.3061, y: 29.6, w: 58.0612, h: 14.4, align: 'left', font: 12, fontPx: 30 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        subtitle: { x: 5.3061, y: 50, w: 58.0612, h: 14.4, align: 'left', font: 8.8, fontPx: 22 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        cta: { x: 5.3061, y: 71.6, w: 14.3878, h: 19.2, font: 6.8, fontPx: 17, padX: 2.2449, padY: 4.8, lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         trust: { hidden: true, x: 0, y: 0, w: 0, h: 0 },
         note: 'Figma 980 x 250 全局精确规则，按钮字号/行高/内边距与节点 2:314 对齐。'
       },
@@ -178,7 +178,7 @@
         type: '半页竖幅',
         logo: { x: 8, y: 5, w: 48, h: 7 },
         text: { x: 8, y: 16, w: 84, h: 25, align: 'left' },
-        cta: { x: 8, y: 42, w: 48, h: 6 },
+        cta: { x: 8, y: 42, w: 48, h: 6 , lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         image: { x: 0, y: 56, w: 100, h: 44 },
         trust: { x: 58, y: 49, w: 30, h: 5 },
         note: '300 x 600 按半页广告重排，保证 CTA 与主体图上下分区。'
@@ -189,9 +189,9 @@
         styles: { backgroundMode: 'solid', backgroundColor: '#DFF9FF' },
         image: { x: 69.2929, y: -22, w: 30.7071, h: 144 },
         logo: { x: 5.253, y: 10.401, w: 20.688, h: 10.814 },
-        title: { x: 5.2525, y: 29.6, w: 57.4747, h: 14.4, align: 'left', font: 12, fontPx: 30 },
-        subtitle: { x: 5.2525, y: 50, w: 57.4747, h: 14.4, align: 'left', font: 8.8, fontPx: 22 },
-        cta: { x: 5.2525, y: 71.6, w: 14.2424, h: 19.2, font: 6.8, fontPx: 17, padX: 2.2222, padY: 4.8, lineHeight: 1.4 },
+        title: { x: 5.2525, y: 29.6, w: 57.4747, h: 14.4, align: 'left', font: 12, fontPx: 30 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        subtitle: { x: 5.2525, y: 50, w: 57.4747, h: 14.4, align: 'left', font: 8.8, fontPx: 22 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        cta: { x: 5.2525, y: 71.6, w: 14.2424, h: 19.2, font: 6.8, fontPx: 17, padX: 2.2222, padY: 4.8, lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         trust: { hidden: true, x: 0, y: 0, w: 0, h: 0 },
         note: 'Figma 990 x 250 全局精确规则，按钮字号/行高/内边距与节点 2:321 对齐。'
       },
@@ -207,7 +207,7 @@
         type: '移动竖幅',
         logo: { x: 8, y: 5, w: 48, h: 7 },
         text: { x: 8, y: 16, w: 84, h: 25, align: 'left' },
-        cta: { x: 8, y: 42, w: 48, h: 6 },
+        cta: { x: 8, y: 42, w: 48, h: 6 , lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         image: { x: 0, y: 56, w: 100, h: 44 },
         trust: { x: 58, y: 49, w: 30, h: 5 },
         note: '320 x 480 按移动竖幅规则，上方信息、下方商品图。'
@@ -226,9 +226,9 @@
         styles: { backgroundMode: 'solid', backgroundColor: '#DFF9FF' },
         image: { x: 68.6598, y: -22, w: 31.3402, h: 144 },
         logo: { x: 5.3613, y: 10.401, w: 21.1145, h: 10.814 },
-        title: { x: 5.3608, y: 29.6, w: 58.6598, h: 14.4, align: 'left', font: 12, fontPx: 30 },
-        subtitle: { x: 5.3608, y: 50, w: 58.6598, h: 14.4, align: 'left', font: 8.8, fontPx: 22 },
-        cta: { x: 5.3608, y: 71.6, w: 14.5361, h: 19.2, font: 6.8, fontPx: 17, padX: 2.268, padY: 4.8, lineHeight: 1.4 },
+        title: { x: 5.3608, y: 29.6, w: 58.6598, h: 14.4, align: 'left', font: 12, fontPx: 30 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        subtitle: { x: 5.3608, y: 50, w: 58.6598, h: 14.4, align: 'left', font: 8.8, fontPx: 22 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        cta: { x: 5.3608, y: 71.6, w: 14.5361, h: 19.2, font: 6.8, fontPx: 17, padX: 2.268, padY: 4.8, lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         trust: { hidden: true, x: 0, y: 0, w: 0, h: 0 },
         note: 'Figma 970 x 250 全局精确规则，按钮字号/行高/内边距与节点 2:307 对齐。'
       },
@@ -254,9 +254,9 @@
         styles: { backgroundMode: 'solid', backgroundColor: '#DFF9FF' },
         image: { x: -32.9885, y: 60.6667, w: 165.977, h: 39.3334 },
         logo: { x: 6.4535, y: 5.9753, w: 87.0931, h: 2.2993 },
-        title: { x: 6.6667, y: 17.8333, w: 86.6667, h: 9, align: 'left', font: 3, fontPx: 18 },
-        subtitle: { x: 6.6667, y: 29, w: 86.6667, h: 12, align: 'left', font: 2, fontPx: 12 },
-        cta: { x: 6.6667, y: 46.8446, w: 86.6667, h: 6.1667, font: 2, fontPx: 12, padX: 15, padY: 1.6667, lineHeight: 1.4 },
+        title: { x: 6.6667, y: 17.8333, w: 86.6667, h: 9, align: 'left', font: 3, fontPx: 18 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        subtitle: { x: 6.6667, y: 29, w: 86.6667, h: 12, align: 'left', font: 2, fontPx: 12 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        cta: { x: 6.6667, y: 46.8446, w: 86.6667, h: 6.1667, font: 2, fontPx: 12, padX: 15, padY: 1.6667, lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         trust: { hidden: true, x: 0, y: 0, w: 0, h: 0 },
         note: 'Figma 120 x 600 全局精确规则，参数与节点 2:240 对齐。'
       },
@@ -282,9 +282,9 @@
         styles: { backgroundMode: 'solid', backgroundColor: '#DFF9FF' },
         image: { x: 0, y: 48.1667, w: 100, h: 81.7585 },
         logo: { x: 5.6763, y: 5.8333, w: 45.7941, h: 4.1709 },
-        title: { x: 5.6763, y: 14.25, w: 88.5266, h: 5.6667, align: 'left', font: 4.75, fontPx: 57 },
-        subtitle: { x: 5.6763, y: 23.9167, w: 87.0773, h: 6.6667, align: 'left', font: 2.75, fontPx: 33 },
-        cta: { x: 5.6763, y: 37.4167, w: 30.314, h: 7.0833, font: 2.3333, fontPx: 28, padX: 5.5556, padY: 1.9167, lineHeight: 1.4 },
+        title: { x: 5.6763, y: 14.25, w: 88.5266, h: 5.6667, align: 'left', font: 4.75, fontPx: 57 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        subtitle: { x: 5.6763, y: 23.9167, w: 87.0773, h: 6.6667, align: 'left', font: 2.75, fontPx: 33 , lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+        cta: { x: 5.6763, y: 37.4167, w: 30.314, h: 7.0833, font: 2.3333, fontPx: 28, padX: 5.5556, padY: 1.9167, lineHeight: 1.4 , autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
         trust: { hidden: true, x: 0, y: 0, w: 0, h: 0 },
         note: 'Figma 828 x 1200 全局精确规则，参数与节点 2:301 对齐。'
       }

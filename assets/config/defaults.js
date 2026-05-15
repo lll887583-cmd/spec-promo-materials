@@ -30,7 +30,7 @@
 
 
     const LEGACY_TRADING_LOCALIZED_COPY = [
-      { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
+      { title: 'Headline Text', subtitle: 'More information and key features here.', cta: 'Button' },
       { title: '主導権を握る', subtitle: 'Spec Marketsで取引コストを抑えましょう。', cta: '優位性を見つける' },
       { title: '掌控交易', subtitle: '使用 Spec Markets 降低您的交易成本。', cta: '找到你的优势' },
       { title: '掌控交易', subtitle: '使用 Spec Markets 降低您的交易成本。', cta: '找到你的優勢' },
@@ -42,7 +42,7 @@
     ];
 
     const localizedCopy = [
-      { title: 'Headline Text', subtitle: 'More information and key features can be detailed here.', cta: 'Button Text' },
+      { title: 'Headline Text', subtitle: 'More information and key features here.', cta: 'Button' },
       { title: '見出しテキスト', subtitle: '詳細情報や主な機能をここに記載できます。', cta: 'ボタンテキスト' },
       { title: '标题文本', subtitle: '可在此处详细说明更多信息和主要功能。', cta: '按钮文本' },
       { title: '標題文字', subtitle: '可在此處詳細說明更多資訊和主要功能。', cta: '按鈕文字' },
@@ -64,10 +64,10 @@
     const defaultTemplateAnchors = {
       image: { x: 0, y: 0, w: 44.2, h: 100 },
       text: { x: 48.3, y: 30, w: 44, h: 28, align: 'left' },
-      title: { x: 48.3, y: 30, w: 44, h: 12, align: 'left' },
-      subtitle: { x: 48.3, y: 45, w: 44, h: 13, align: 'left' },
-      cta: { x: 48.3, y: 66.8, w: 27, h: 11.5 },
-      logo: { x: 48.3, y: 8, w: 24, h: 10 },
+      title: { x: 48.3, y: 30, w: 44, h: 12, align: 'left', lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+      subtitle: { x: 48.3, y: 45, w: 44, h: 13, align: 'left', lineHeight: 1.4, wrap: true, overflow: 'visible', resizeMode: 'box-and-font' },
+      cta: { x: 48.3, y: 66.8, w: 27, h: 11.5, lineHeight: 1.4, autoWidth: true, overflow: 'visible', resizeMode: 'box-and-font' },
+      logo: { x: 48.3, y: 8, w: 24, h: 10, resizeMode: 'proportional' },
       trust: { x: 81, y: 87, w: 15, h: 8 }
     };
 

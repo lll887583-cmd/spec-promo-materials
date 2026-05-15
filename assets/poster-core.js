@@ -5,7 +5,7 @@
     const defaultAnchors = config.defaultAnchors || {};
     const layoutRules = config.layoutRules || {};
     const templateRatioSize = config.templateRatioSize || { width: 1200, height: 628 };
-    const ctaMinWidthPercent = Number(config.ctaMinWidthPercent) || 10;
+    const ctaMinWidthPercent = Number(config.ctaMinWidthPercent) || 1;
 
     function clamp(value, min, max) {
       return Math.min(max, Math.max(min, value));
@@ -22,10 +22,7 @@
     }
 
     function ctaMaxWidthPercentForSize(size = templateRatioSize) {
-      const aspect = sizeAspectRatio(size);
-      if (aspect < 0.35) return 92;
-      if (aspect < 0.75) return 74;
-      return 58;
+      return 100;
     }
 
     function normalizeCtaAnchorRatio(anchor, size = templateRatioSize) {
@@ -73,14 +70,22 @@
           y: textAnchor.y || 0,
           w: textAnchor.w || 40,
           h: titleH,
-          align: textAnchor.align || 'left'
+          align: textAnchor.align || 'left',
+          lineHeight: 1.4,
+          wrap: true,
+          overflow: 'visible',
+          resizeMode: 'box-and-font'
         },
         subtitle: {
           x: textAnchor.x || 0,
           y: subtitleY,
           w: textAnchor.w || 40,
           h: subtitleH,
-          align: textAnchor.align || 'left'
+          align: textAnchor.align || 'left',
+          lineHeight: 1.4,
+          wrap: true,
+          overflow: 'visible',
+          resizeMode: 'box-and-font'
         }
       };
     }
@@ -106,7 +111,11 @@
         x: textAnchor.x,
         y: Math.min(88, textAnchor.y + 36.8),
         w: Math.min(32, Math.max(20, textAnchor.w * 0.62)),
-        h: 11.5
+        h: 11.5,
+        lineHeight: 1.4,
+        autoWidth: true,
+        overflow: 'visible',
+        resizeMode: 'box-and-font'
       }, size);
     }
 
@@ -158,9 +167,7 @@
           image: { ...rule.image },
           ...(rule.imageVisibleArea ? { imageVisibleArea: { ...rule.imageVisibleArea } } : {}),
           ...(rule.imageVisualArea ? { imageVisualArea: { ...rule.imageVisualArea } } : {}),
-          ...(rule.safeArea ? { safeArea: { ...rule.safeArea } } : {}),
           ...(rule.contentStack ? { contentStack: { ...rule.contentStack } } : {}),
-          ...(rule.textGroup ? { textGroup: { ...rule.textGroup } } : {}),
           logo: { ...rule.logo },
           title: { ...rule.title },
           subtitle: { ...rule.subtitle },
