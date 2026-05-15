@@ -149,7 +149,7 @@
 
       fillCanvasBackground(ctx, posterStyles, width, height);
 
-      if (!isShortWideLayout(size) && !posterAnchors.subtitle.hidden && !posterAnchors.title.hidden) {
+      if (!posterAnchors.safeArea && !isShortWideLayout(size) && !posterAnchors.subtitle.hidden && !posterAnchors.title.hidden) {
         const textScale = posterCore.posterTextScale(size);
         const titleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * textScale), height);
         ctx.font = `700 ${titleStartSize}px ${CANVAS_FONT_FAMILY}`;
@@ -283,6 +283,9 @@
           const maxCtaW = Number.isFinite(Number(posterAnchors.cta.maxW))
             ? (Number(posterAnchors.cta.maxW) / 100) * width
             : Math.max(1, safeRight - ctaRect.x);
+          const ctaTextMaxW = Number.isFinite(Number(posterAnchors.cta.textMaxW))
+            ? Math.max(1, (Number(posterAnchors.cta.textMaxW) / 100) * width)
+            : null;
           const minCtaFont = Math.max(1, Number(posterAnchors.cta.minFontPx) || 5);
           let drawPadX = ctaPaddingX;
           const minPadX = Number.isFinite(Number(posterAnchors.cta.minPadX))
@@ -293,16 +296,18 @@
             const progress = (sizePx - minCtaFont) / Math.max(1, ctaFontSize - minCtaFont);
             drawPadX = minPadX + (ctaPaddingX - minPadX) * Math.max(0, Math.min(1, progress));
             ctx.font = `700 ${sizePx}px ${CANVAS_FONT_FAMILY}`;
-            if (ctx.measureText(ctaText).width + drawPadX * 2 <= maxCtaW + 1) {
+            const allowedTextW = Math.min(maxCtaW - drawPadX * 2, ctaTextMaxW || Number.POSITIVE_INFINITY);
+            if (Math.min(ctx.measureText(ctaText).width, allowedTextW) + drawPadX * 2 <= maxCtaW + 1) {
               ctaFontSize = sizePx;
               break;
             }
             ctaFontSize = minCtaFont;
           }
           ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
-          const textMaxW = Math.max(1, maxCtaW - drawPadX * 2);
+          const textMaxW = Math.max(1, Math.min(maxCtaW - drawPadX * 2, ctaTextMaxW || Number.POSITIVE_INFINITY));
           fittedCtaText = ellipsizeCanvasText(ctx, ctaText, textMaxW);
-          const strictCtaW = Math.min(maxCtaW, Math.max(ctaRect.w, ctx.measureText(fittedCtaText).width + drawPadX * 2));
+          const minCtaW = posterAnchors.cta.autoWidth === true ? 1 : ctaRect.w;
+          const strictCtaW = Math.min(maxCtaW, Math.max(minCtaW, ctx.measureText(fittedCtaText).width + drawPadX * 2));
           const strictCtaX = Math.max(0, Math.min(ctaRect.x, safeRight - strictCtaW, width - strictCtaW));
           ctx.fillStyle = posterStyles.buttonColor || '#72DBF1';
           ctx.beginPath();

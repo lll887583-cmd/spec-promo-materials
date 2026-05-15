@@ -842,10 +842,32 @@
 
     const COPY_TRANSLATION_MAP = window.SpecPromoTranslations?.copyTranslationMap || {};
 
+    function canonicalCopyKey(value) {
+      return normalizeCopyText(value)
+        .toLowerCase()
+        .replace(/\s+([,.;:!?])/g, '$1')
+        .replace(/([,.;:!?])(?=\S)/g, '$1 ')
+        .replace(/[.。．]+$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    const NORMALIZED_COPY_TRANSLATION_MAP = Object.entries(COPY_TRANSLATION_MAP).reduce((lookup, [key, translations]) => {
+      lookup[canonicalCopyKey(key)] = translations;
+      return lookup;
+    }, {});
+
+    function copyTranslationsForKey(key) {
+      return COPY_TRANSLATION_MAP[key] || NORMALIZED_COPY_TRANSLATION_MAP[canonicalCopyKey(key)];
+    }
+
     function translatedCopyValue(value, languageIndex, fallbackValue = '') {
       const key = String(value || '').trim();
-      const translations = COPY_TRANSLATION_MAP[key];
-      return normalizeCopyText(translations?.[languageIndex] || (languageIndex === 0 ? key : fallbackValue || key));
+      const translations = copyTranslationsForKey(key);
+      if (translations?.[languageIndex]) {
+        return normalizeCopyText(languageIndex === 0 ? key : translations[languageIndex]);
+      }
+      return normalizeCopyText(key || fallbackValue);
     }
 
     function buildLocalizedCopyFromSource(sourceCopy) {
@@ -854,6 +876,11 @@
         subtitle: translatedCopyValue(sourceCopy.subtitle, index, cloneDefaultCopy(index).subtitle),
         cta: translatedCopyValue(sourceCopy.cta, index, cloneDefaultCopy(index).cta)
       }));
+    }
+
+    function syncLocalizedCopyFromInputs() {
+      localizedCopy = buildLocalizedCopyFromSource(getSourceCopy());
+      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
     }
 
     function isLegacySpanishLanguage(language) {
@@ -3078,28 +3105,54 @@
       requestAnimationFrame(updateProductImageFrame);
     });
 
-    const DESIGN_PREVIEW_SCALE = 0.7;
+    const PREVIEW_PADDING = 40;
+
+    function clampPreviewScale(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function previewScaleForSize(size = materialSizes[currentSizeIndex]) {
+      const width = Math.max(1, Number(size?.width) || 1);
+      const height = Math.max(1, Number(size?.height) || 1);
+      const areaRect = canvasArea?.getBoundingClientRect();
+      const maxWidth = Math.max(260, (areaRect?.width || 980) - PREVIEW_PADDING);
+      const canvasTop = areaRect?.top || 0;
+      const maxHeight = Math.max(180, Math.min(720, window.innerHeight - canvasTop - 28));
+      const fitScale = Math.min(maxWidth / width, maxHeight / height);
+      const ratio = width / height;
+      const largestSide = Math.max(width, height);
+
+      if (height <= 100) return clampPreviewScale(fitScale, 1.15, 2.35);
+      if (width <= 320 && height <= 250) return clampPreviewScale(fitScale, 1.15, 2);
+      if (width <= 180 && height >= 500) return clampPreviewScale(fitScale, 0.85, 1.3);
+      if (largestSide >= 1000) return clampPreviewScale(fitScale, 0.24, 0.9);
+      if (ratio >= 3) return clampPreviewScale(fitScale, 0.7, 1);
+      return clampPreviewScale(fitScale, 0.55, 1.05);
+    }
 
     function realSizePreviewCanvas(size = materialSizes[currentSizeIndex]) {
       const width = Math.max(1, Number(size?.width) || 1);
       const height = Math.max(1, Number(size?.height) || 1);
+      const scale = previewScaleForSize(size);
       return {
-        width: Math.max(1, Math.round(width * DESIGN_PREVIEW_SCALE)),
-        height: Math.max(1, Math.round(height * DESIGN_PREVIEW_SCALE))
+        scale,
+        width: Math.max(1, Math.round(width * scale)),
+        height: Math.max(1, Math.round(height * scale))
       };
     }
 
-    function updatePreviewZoomControls(size = materialSizes[currentSizeIndex]) {
+    function updatePreviewZoomControls(size = materialSizes[currentSizeIndex], scale = previewScaleForSize(size)) {
       if (previewScaleMeta && size?.width && size?.height) {
-        previewScaleMeta.textContent = `${size.width} × ${size.height} · 设计预览 · ${Math.round(DESIGN_PREVIEW_SCALE * 100)}%`;
+        previewScaleMeta.textContent = `${size.width} × ${size.height} · 预览 ${Math.round(scale * 100)}%`;
       }
       canvasArea?.classList.toggle('is-fixed-zoom', true);
     }
 
     function fitMaterialPreview(size = materialSizes[currentSizeIndex]) {
       if (!materialCard || !canvasArea || !size?.width || !size?.height) return;
-      updatePreviewZoomControls(size);
+      canvasArea.classList.toggle('is-fixed-zoom', true);
       const dimensions = realSizePreviewCanvas(size);
+      updatePreviewZoomControls(size, dimensions.scale);
       materialCard.style.setProperty('--preview-w', `${Math.max(1, Math.round(dimensions.width))}px`);
       materialCard.style.setProperty('--preview-h', `${Math.max(1, Math.round(dimensions.height))}px`);
       requestAnimationFrame(updateProductImageFrame);
@@ -3174,6 +3227,12 @@
       if (!generated || currentLanguageIndex === 0) applyLanguagePreview(0);
       if (!document.getElementById('templateManagerView')?.classList.contains('hidden')) renderAnchorEditor();
       updateUploadState();
+    }
+
+    function handleSourceCopyInput() {
+      syncLocalizedCopyFromInputs();
+      updateCounters();
+      if (generated && currentLanguageIndex !== 0) applyLanguagePreview(currentLanguageIndex);
     }
 
     function bindCopyPlaceholderBehavior(input) {
@@ -4393,7 +4452,7 @@
     initializePersistentApp();
 
     [titleInput, subtitleInput, ctaInput].forEach(input => {
-      input.addEventListener('input', updateCounters);
+      input.addEventListener('input', handleSourceCopyInput);
       bindCopyPlaceholderBehavior(input);
     });
 

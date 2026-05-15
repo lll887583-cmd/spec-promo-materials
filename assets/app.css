@@ -1538,7 +1538,7 @@
       height: var(--title-h, 16%);
       margin: 0;
       font-size: var(--title-font, clamp(10px, 5.8cqw, 50px));
-      line-height: 1.06;
+      line-height: var(--title-line-height, 1.4);
       letter-spacing: -.04em;
       color: var(--copy-color, #081840);
       max-width: 100%;
@@ -1561,7 +1561,7 @@
       margin: 0;
       font-weight: 400;
       font-size: var(--subtitle-font, clamp(7px, 3.1cqw, 27px));
-      line-height: 1.48;
+      line-height: var(--subtitle-line-height, 1.4);
       letter-spacing: -.02em;
       max-width: 100%;
       overflow: hidden;
@@ -1673,9 +1673,12 @@
       pointer-events: none;
     }
 
-    .creative-copy,
+    .creative-copy {
+      z-index: 3;
+    }
+
     .creative-cta {
-      z-index: 2;
+      z-index: 5;
     }
 
     .creative-logo {

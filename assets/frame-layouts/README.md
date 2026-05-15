@@ -10,11 +10,14 @@ Frame anchors use percentages so the same config works in preview, editing, and 
 
 Layouts synced from Figma node `3:464` include these safety constraints:
 
-- `safeArea` - the hard boundary for title, subtitle, and CTA.
+- `safeArea1`, `safeArea2`, `safeArea3` - the Figma safe-area hierarchy for brand/content/text stack boundaries.
+- `safeArea` - alias of `safeArea3`, the hard boundary for title, subtitle, and CTA.
 - `contentStack` - the full title/subtitle/button group area.
 - `textGroup` - the Figma auto-layout frame for title and subtitle when a subtitle exists.
 - `title.maxH`, `subtitle.maxH` - maximum text-box heights from Figma.
-- `cta.maxW`, `cta.maxH` - button bounds so long CTA copy cannot push outside the safe area.
+- `title.lineHeight`, `subtitle.lineHeight`, `cta.textLineHeight` - fixed at `1.4` to match the 140% Figma text rule.
+- `cta.textMaxW`, `cta.textMaxH` - button text bounds from the Figma `Button Text` layer.
+- `cta.maxW`, `cta.maxH` - outer button bounds inside the safe area; button width still auto-fits the text plus padding.
 
 The renderer and canvas export shrink text, reduce CTA padding, and clamp/ellipsis overflow instead of letting multilingual copy break the frame.
 

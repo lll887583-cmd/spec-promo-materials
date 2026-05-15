@@ -58,6 +58,16 @@
       } else {
         materialCard.style.removeProperty('--cta-line-height');
       }
+      if (Number.isFinite(Number(anchors.title.lineHeight))) {
+        materialCard.style.setProperty('--title-line-height', String(Number(anchors.title.lineHeight)));
+      } else {
+        materialCard.style.removeProperty('--title-line-height');
+      }
+      if (Number.isFinite(Number(anchors.subtitle.lineHeight))) {
+        materialCard.style.setProperty('--subtitle-line-height', String(Number(anchors.subtitle.lineHeight)));
+      } else {
+        materialCard.style.removeProperty('--subtitle-line-height');
+      }
       if (Number.isFinite(Number(anchors.cta.maxW))) {
         materialCard.style.setProperty('--cta-max-w', `${Number(anchors.cta.maxW)}cqw`);
       } else {
@@ -186,7 +196,12 @@
           ? Math.max(Number(anchor.w) || 1, safeRightPct - (Number(anchor.x) || 0))
           : Number(anchor.w) || 100;
       const maxWidth = Math.max(1, (maxWidthPct / 100) * cardRect.width);
-      previewCta.style.width = `${defaultWidth}px`;
+      const textMaxWidth = Number.isFinite(Number(anchor.textMaxW))
+        ? Math.max(1, cardPixelsFromPercent(Number(anchor.textMaxW), 'x'))
+        : null;
+      const isAutoWidth = anchor.autoWidth === true;
+      const minWidth = isAutoWidth ? 1 : defaultWidth;
+      previewCta.style.width = isAutoWidth ? 'max-content' : `${defaultWidth}px`;
       previewCta.style.maxWidth = `${maxWidth}px`;
 
       const computed = window.getComputedStyle(previewCta);
@@ -203,15 +218,20 @@
         const pad = minPadX + Math.max(0, startPadX - minPadX) * Math.max(0, Math.min(1, progress));
         previewCta.style.paddingLeft = `${pad}px`;
         previewCta.style.paddingRight = `${pad}px`;
+        return pad;
       };
 
       for (let index = 0; index < 10; index += 1) {
         const mid = (low + high) / 2;
         previewCta.style.fontSize = `${mid}px`;
-        setPaddingForSize(mid);
-        const desiredWidth = Math.min(maxWidth, Math.max(defaultWidth, previewCta.scrollWidth));
+        const pad = setPaddingForSize(mid);
+        previewCta.style.width = 'max-content';
+        const textLimitedWidth = textMaxWidth ? textMaxWidth + pad * 2 : previewCta.scrollWidth;
+        const desiredWidth = Math.min(maxWidth, Math.max(minWidth, Math.min(previewCta.scrollWidth, textLimitedWidth)));
         previewCta.style.width = `${desiredWidth}px`;
-        const fits = previewCta.scrollWidth <= desiredWidth + 1 && previewCta.getBoundingClientRect().width <= maxWidth + 1;
+        const fitsHeight = previewCta.scrollHeight <= previewCta.clientHeight + 1;
+        const fitsWidth = previewCta.getBoundingClientRect().width <= maxWidth + 1;
+        const fits = fitsHeight && fitsWidth;
         if (fits) {
           best = mid;
           low = mid;
@@ -221,8 +241,10 @@
       }
 
       previewCta.style.fontSize = `${best}px`;
-      setPaddingForSize(best);
-      previewCta.style.width = `${Math.min(maxWidth, Math.max(defaultWidth, previewCta.scrollWidth))}px`;
+      const bestPad = setPaddingForSize(best);
+      previewCta.style.width = 'max-content';
+      const bestTextLimitedWidth = textMaxWidth ? textMaxWidth + bestPad * 2 : previewCta.scrollWidth;
+      previewCta.style.width = `${Math.min(maxWidth, Math.max(minWidth, Math.min(previewCta.scrollWidth, bestTextLimitedWidth)))}px`;
       const rect = previewCta.getBoundingClientRect();
       const safeRight = Number.isFinite(safeRightPct) ? cardRect.left + (safeRightPct / 100) * cardRect.width : cardRect.right;
       if (rect.right > safeRight + 1) previewCta.style.transform = `translateX(${safeRight - rect.right}px)`;
@@ -259,8 +281,11 @@
         previewCta.style.removeProperty('text-overflow');
         previewCta.style.removeProperty('overflow');
       }
-      materialCard.style.removeProperty('--image-y');
-      materialCard.style.removeProperty('--image-h');
+      if (currentAnchors?.image) setAnchorVars('image', currentAnchors.image);
+      else {
+        materialCard.style.removeProperty('--image-y');
+        materialCard.style.removeProperty('--image-h');
+      }
     }
 
     function horizontalOverlapRatio(a, b) {

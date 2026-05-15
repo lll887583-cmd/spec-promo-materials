@@ -6,7 +6,7 @@
   <title>Promo Materials UIDemo</title>
   <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260513-9" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="assets/app.css?v=20260515-design1" />
+  <link rel="stylesheet" href="assets/app.css?v=20260515-safearea2" />
 
 
 </head>
@@ -25,10 +25,12 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15.5 15.5 5a2.1 2.1 0 0 1 3 3L8 18.5l-4 1 1-4z"/><path d="m14 6 4 4"/><path d="M6.5 4.5v3"/><path d="M5 6h3"/><path d="M18 15.5v3"/><path d="M16.5 17h3"/></svg>
           <span class="nav-text">素材生成</span>
         </button>
+        <!--
         <button class="nav-item" type="button" data-view-target="templateManagerView" aria-label="框架管理">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 8 4-8 4-8-4 8-4z"/><path d="m4 12 8 4 8-4"/><path d="m4 17 8 4 8-4"/></svg>
           <span class="nav-text">框架管理</span>
         </button>
+        -->
         <button class="nav-item" type="button" data-view-target="sizeLanguageSettingsView" aria-label="尺寸/语言设置">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M8 9h8"/><path d="M8 13h4"/></svg>
           <span class="nav-text">尺寸/语言设置</span>
@@ -425,9 +427,9 @@
   <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="assets/poster-core.js?v=20260513-10"></script>
   <script src="assets/frame-store.js?v=20260513-9"></script>
-  <script src="assets/poster-renderer.js?v=20260514-master1"></script>
+  <script src="assets/poster-renderer.js?v=20260515-safearea2"></script>
   <script src="assets/frame-editor.js?v=20260514-4"></script>
-  <script src="assets/poster-canvas.js?v=20260514-align1"></script>
+  <script src="assets/poster-canvas.js?v=20260515-imagebottom1"></script>
   <script src="assets/export-assets.js?v=20260513-14"></script>
   <script src="assets/rules-parser.js?v=20260513-9"></script>
   <!-- frame-layouts rule: every alignment parameter must be read from the Figma node below, not guessed from the local baseline align buttons. -->
@@ -440,29 +442,29 @@
     };
   </script>
   <script src="assets/frame-layouts/registry.js?v=20260513-21"></script>
-  <script src="assets/frame-layouts/120x600.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/320x50.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/320x100.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/720x90.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/728x90.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/160x600.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/300x250.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/300x600.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/320x480.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/800x800.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/628x1200.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/828x1200.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/970x250.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/980x250.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/990x250.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/1200x628.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/1200x1500.js?v=20260514-align1"></script>
-  <script src="assets/frame-layouts/1200x1200.js?v=20260514-align1"></script>
+  <script src="assets/frame-layouts/120x600.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/320x50.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/320x100.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/720x90.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/728x90.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/160x600.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/300x250.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/300x600.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/320x480.js?v=20260515-ctatextmax1"></script>
+  <script src="assets/frame-layouts/800x800.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/628x1200.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/828x1200.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/970x250.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/980x250.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/990x250.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/1200x628.js?v=20260515-safearea2"></script>
+  <script src="assets/frame-layouts/1200x1500.js?v=20260515-ctatextmax1"></script>
+  <script src="assets/frame-layouts/1200x1200.js?v=20260515-safearea2"></script>
   <script src="assets/config/defaults.js?v=20260514-align1"></script>
   <script src="assets/config/layout-rules.js?v=20260514-3"></script>
   <script src="assets/config/translations.js?v=20260514-1"></script>
   <script src="assets/modules/product-image.js?v=20260514-1"></script>
-  <script src="assets/app.js?v=20260515-largeportrait1"></script>
+  <script src="assets/app.js?v=20260515-copylookup1"></script>
 
 
 </body>

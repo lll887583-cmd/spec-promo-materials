@@ -840,10 +840,32 @@
 
     const COPY_TRANSLATION_MAP = window.SpecPromoTranslations?.copyTranslationMap || {};
 
+    function canonicalCopyKey(value) {
+      return normalizeCopyText(value)
+        .toLowerCase()
+        .replace(/\s+([,.;:!?])/g, '$1')
+        .replace(/([,.;:!?])(?=\S)/g, '$1 ')
+        .replace(/[.。．]+$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    const NORMALIZED_COPY_TRANSLATION_MAP = Object.entries(COPY_TRANSLATION_MAP).reduce((lookup, [key, translations]) => {
+      lookup[canonicalCopyKey(key)] = translations;
+      return lookup;
+    }, {});
+
+    function copyTranslationsForKey(key) {
+      return COPY_TRANSLATION_MAP[key] || NORMALIZED_COPY_TRANSLATION_MAP[canonicalCopyKey(key)];
+    }
+
     function translatedCopyValue(value, languageIndex, fallbackValue = '') {
       const key = String(value || '').trim();
-      const translations = COPY_TRANSLATION_MAP[key];
-      return normalizeCopyText(translations?.[languageIndex] || (languageIndex === 0 ? key : fallbackValue || key));
+      const translations = copyTranslationsForKey(key);
+      if (translations?.[languageIndex]) {
+        return normalizeCopyText(languageIndex === 0 ? key : translations[languageIndex]);
+      }
+      return normalizeCopyText(key || fallbackValue);
     }
 
     function buildLocalizedCopyFromSource(sourceCopy) {

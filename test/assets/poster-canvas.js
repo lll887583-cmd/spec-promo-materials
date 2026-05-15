@@ -113,7 +113,7 @@
       ctx.fillStyle = posterRenderer.canvasBackgroundFill(ctx, posterStyles, width, height);
       ctx.fillRect(0, 0, width, height);
 
-      if (!isShortWideLayout(size) && !posterAnchors.subtitle.hidden && !posterAnchors.title.hidden) {
+      if (!posterAnchors.safeArea && !isShortWideLayout(size) && !posterAnchors.subtitle.hidden && !posterAnchors.title.hidden) {
         const textScale = posterCore.posterTextScale(size);
         const titleStartSize = posterRenderer.canvasAnchorFontSize(posterAnchors.title, Math.round(titleRect.h * 0.58 * textScale), height);
         ctx.font = `700 ${titleStartSize}px ${CANVAS_FONT_FAMILY}`;
