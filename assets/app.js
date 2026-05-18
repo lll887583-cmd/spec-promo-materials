@@ -2098,14 +2098,51 @@
       return Number.isFinite(value) ? value : ctaDefaultPaddingPercent(size, axis);
     }
 
-    function ctaTextHeightPercent(anchor, size) {
+    function ctaWrapLines(ctx, text, maxWidth) {
+      const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
+      if (!cleanText) return [''];
+      const lines = [];
+      cleanText.split('\n').forEach(sourceLine => {
+        const hasSpaces = /\s/.test(sourceLine.trim());
+        const parts = hasSpaces ? sourceLine.split(/(\s+)/).filter(Boolean) : [...sourceLine];
+        let current = '';
+        parts.forEach(part => {
+          const next = current + part;
+          if (current && ctx.measureText(next).width > maxWidth) {
+            lines.push(current.trim());
+            current = part.trimStart();
+          } else {
+            current = next;
+          }
+        });
+        if (current) lines.push(current.trim());
+      });
+      return lines.length ? lines : [''];
+    }
+
+    function ctaTextHeightPercent(anchor, size, text = '', padXPercent = ctaPaddingPercent(anchor, size, 'x')) {
       const height = Math.max(1, Number(size?.height) || CTA_TEMPLATE_RATIO_SIZE.height);
+      const width = Math.max(1, Number(size?.width) || CTA_TEMPLATE_RATIO_SIZE.width);
       const fontPx = Number(anchor?.fontPx);
       const fontScale = Number(anchor?.fontScale);
       const fontPercent = Number.isFinite(fontPx) && fontPx > 0
         ? (fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1) / height) * 100
         : (Number(anchor?.font) || Math.max(1, (Number(anchor?.h) || 8) * 0.38));
-      return fontPercent * (Number(anchor?.lineHeight) || 1.4);
+      const lineHeight = Number(anchor?.lineHeight) || 1.4;
+      const fontSize = (fontPercent / 100) * height;
+      const padX = (Number(padXPercent) / 100) * width;
+      const rectWidth = Math.max(1, ((Number(anchor?.w) || 1) / 100) * width);
+      let lineCount = String(text || '').split('\n').length || 1;
+      const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
+      if (cleanText && anchor?.autoWidth !== true) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.font = `700 ${fontSize}px Arial, "Noto Sans CJK SC", "PingFang SC", sans-serif`;
+          lineCount = ctaWrapLines(ctx, cleanText, Math.max(1, rectWidth - padX * 2)).length;
+        }
+      }
+      return fontPercent * lineHeight * Math.max(1, lineCount);
     }
 
     function applyCtaSizePreset(preset) {
@@ -2117,13 +2154,17 @@
       const basePadX = ctaPaddingPercent(base, size, 'x');
       const basePadY = ctaPaddingPercent(base, size, 'y');
       const scale = preset === 'small' ? 0.5 : 1;
+      const nextPadX = basePadX * scale;
+      const nextPadY = basePadY * scale;
+      const contentHeight = ctaTextHeightPercent(current, size, previewCta?.textContent || getLanguageCopy(currentLanguageIndex).cta, nextPadX);
+      const fittedHeight = clamp(contentHeight + nextPadY * 2, 4, 100);
       const next = {
         ...current,
-        padX: basePadX * scale,
-        padY: basePadY * scale,
+        padX: nextPadX,
+        padY: nextPadY,
         h: preset === 'small'
-          ? clamp(ctaTextHeightPercent(current, size) + basePadY, 4, 100)
-          : (Number(base.h) || current.h)
+          ? fittedHeight
+          : Math.max(Number(base.h) || current.h, fittedHeight)
       };
       pushPosterEditHistory();
       setPosterOverride('cta', next);
