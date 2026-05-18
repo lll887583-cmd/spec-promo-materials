@@ -1807,11 +1807,34 @@
 
     function elementTextBounds(element) {
       if (!element) return null;
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      const rect = range.getBoundingClientRect();
-      range.detach?.();
-      return rect.width && rect.height ? rect : element.getBoundingClientRect();
+      const rects = [];
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        const text = node.textContent || '';
+        for (let index = 0; index < text.length; index += 1) {
+          if (!/\S/.test(text[index])) continue;
+          const range = document.createRange();
+          range.setStart(node, index);
+          range.setEnd(node, index + 1);
+          const rect = range.getBoundingClientRect();
+          range.detach?.();
+          if (rect.width && rect.height) rects.push(rect);
+        }
+        node = walker.nextNode();
+      }
+      if (rects.length) {
+        const left = Math.min(...rects.map(rect => rect.left));
+        const top = Math.min(...rects.map(rect => rect.top));
+        const right = Math.max(...rects.map(rect => rect.right));
+        const bottom = Math.max(...rects.map(rect => rect.bottom));
+        return { left, top, right, bottom, width: right - left, height: bottom - top };
+      }
+      const fallbackRange = document.createRange();
+      fallbackRange.selectNodeContents(element);
+      const fallbackRect = fallbackRange.getBoundingClientRect();
+      fallbackRange.detach?.();
+      return fallbackRect.width && fallbackRect.height ? fallbackRect : element.getBoundingClientRect();
     }
 
     function imageAlphaBounds(image) {
