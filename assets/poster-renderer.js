@@ -323,6 +323,8 @@
       setAnchorVars('trust', anchors.trust);
       setAnchorVisibility(anchors);
       materialCard.style.setProperty('--text-align', anchors.title.align || anchors.subtitle.align || anchors.text.align || 'left');
+      materialCard.style.setProperty('--title-align', anchors.title.align || anchors.text.align || 'left');
+      materialCard.style.setProperty('--subtitle-align', anchors.subtitle.align || anchors.text.align || 'left');
       materialCard.style.setProperty('--title-v-justify', anchors.title.vAlign === 'center' ? 'center' : 'flex-start');
       setPosterFontVars(anchors, size);
     }

@@ -4,26 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Promo Materials UIDemo</title>
-  <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260513-9" />
+  <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260518-align-outer-frame" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="assets/app.css?v=20260515-elastictext1" />
+  <link rel="stylesheet" href="assets/app.css?v=20260518-align-outer-frame" />
 
 
 </head>
 <body class="spec-ui-root">
   <div class="mobile-topbar">
     <button class="menu-button" id="menuButton" aria-label="打开导航"><span class="hamburger"></span></button>
-    <div class="brand" style="margin:0"><img class="brand-logo" src="assets/logo.png" alt="Promo Materials"></div>
+    <div class="brand" style="margin:0"><img class="brand-logo" src="assets/logo.png?v=20260518-align-outer-frame" alt="Promo Materials"></div>
     <button class="icon-button" aria-label="用户入口">PM</button>
   </div>
 
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><img class="brand-logo" src="assets/logo.png" alt="Promo Materials"></div>
+      <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260518-align-outer-frame" alt="Promo Materials"></div>
       <nav class="nav" aria-label="主导航">
-        <button class="nav-item active" type="button" data-view-target="generatorView" aria-label="素材生成">
+        <button class="nav-item active" type="button" data-view-target="generatorView" aria-label="促销材料">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15.5 15.5 5a2.1 2.1 0 0 1 3 3L8 18.5l-4 1 1-4z"/><path d="m14 6 4 4"/><path d="M6.5 4.5v3"/><path d="M5 6h3"/><path d="M18 15.5v3"/><path d="M16.5 17h3"/></svg>
-          <span class="nav-text">素材生成</span>
+          <span class="nav-text">促销材料</span>
         </button>
         <!--
         <button class="nav-item" type="button" data-view-target="templateManagerView" aria-label="框架管理">
@@ -31,6 +31,10 @@
           <span class="nav-text">框架管理</span>
         </button>
         -->
+        <button class="nav-item" type="button" data-view-target="styleSettingsView" aria-label="样式设置">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 20.5 8 12 12.5 3.5 8 12 3.5z"/><path d="M5 11.5 12 15.2l7-3.7"/><path d="M5 15.5 12 19.2l7-3.7"/><path d="M16.5 6.2 18 4.7"/></svg>
+          <span class="nav-text">样式设置</span>
+        </button>
         <button class="nav-item" type="button" data-view-target="sizeLanguageSettingsView" aria-label="尺寸/语言设置">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M8 9h8"/><path d="M8 13h4"/></svg>
           <span class="nav-text">尺寸/语言设置</span>
@@ -47,7 +51,9 @@
     <main class="workspace">
       <section class="view-section" id="generatorView">
       <div class="layout" id="generatorLayout">
-        <section class="panel settings-panel" id="settingsPanel" aria-label="基础设置">
+        <section class="panel generator-side-panel" id="generatorSidePanel" aria-label="促销材料操作区">
+          <div class="generator-panel-body">
+        <section class="settings-panel hidden" id="settingsPanel" aria-label="基础设置">
           <div class="panel-head">
             <h1 class="panel-title">基础设置</h1>
             <button class="reset-button" id="resetButton" type="button">重置</button>
@@ -56,81 +62,9 @@
           <div class="group style-selection-group">
             <div class="label-row style-selection-head">
               <span>样式选择</span>
-              <div class="template-actions style-actions" aria-label="样式操作">
-                <button class="add-template-btn" id="addStyleButton" type="button">新增样式</button>
-                <button class="delete-template-btn" id="deleteStyleButton" type="button">删除样式</button>
-              </div>
+              <span class="muted">如需新增、删除或改颜色，请到侧边栏“样式设置”</span>
             </div>
             <div class="template-grid" id="templateGrid" aria-label="样式选择"></div>
-            <div class="logo-tone-panel style-logo-panel">
-              <div class="label-row"><span>Logo 切换</span></div>
-              <div class="logo-tone-grid" aria-label="Logo 明暗版本切换">
-                <button class="logo-tone-card active" type="button" data-logo-variant="black">
-                  <span>暗版</span>
-                </button>
-                <button class="logo-tone-card" type="button" data-logo-variant="white">
-                  <span>亮版</span>
-                </button>
-              </div>
-            </div>
-            <div class="style-panel">
-              <div class="label-row"><span>颜色配置</span></div>
-              <div class="style-grid">
-                <div class="field style-field">
-                  <label class="field-label" for="backgroundModeSelect">背景类型</label>
-                  <select id="backgroundModeSelect">
-                    <option value="solid">纯色</option>
-                    <option value="gradient">渐变</option>
-                  </select>
-                </div>
-                <div class="field style-field" data-background-field="solid">
-                  <label class="field-label" for="backgroundColorInput">背景纯色</label>
-                  <span class="color-control">
-                    <input id="backgroundColorInput" type="color" value="#dcf9ff">
-                    <input class="hex-input" id="backgroundColorHexInput" value="#DCF9FF" maxlength="7" spellcheck="false" aria-label="背景纯色 HEX">
-                  </span>
-                </div>
-                <div class="field style-field" data-background-field="gradient">
-                  <label class="field-label" for="gradientStartInput">背景渐变起点</label>
-                  <span class="color-control">
-                    <input id="gradientStartInput" type="color" value="#dcf9ff">
-                    <input class="hex-input" id="gradientStartHexInput" value="#DCF9FF" maxlength="7" spellcheck="false" aria-label="背景渐变起点 HEX">
-                  </span>
-                </div>
-                <div class="field style-field" data-background-field="gradient">
-                  <label class="field-label" for="gradientEndInput">背景渐变终点</label>
-                  <span class="color-control">
-                    <input id="gradientEndInput" type="color" value="#ffffff">
-                    <input class="hex-input" id="gradientEndHexInput" value="#FFFFFF" maxlength="7" spellcheck="false" aria-label="背景渐变终点 HEX">
-                  </span>
-                </div>
-                <div class="field style-field" data-background-field="gradient">
-                  <label class="field-label" for="gradientAngleInput">背景渐变角度</label>
-                  <input id="gradientAngleInput" type="number" min="0" max="360" step="15" value="135">
-                </div>
-                <div class="field style-field">
-                  <label class="field-label" for="textColorInput">文案纯色</label>
-                  <span class="color-control">
-                    <input id="textColorInput" type="color" value="#081840">
-                    <input class="hex-input" id="textColorHexInput" value="#081840" maxlength="7" spellcheck="false" aria-label="文案纯色 HEX">
-                  </span>
-                </div>
-                <div class="field style-field">
-                  <label class="field-label" for="buttonColorInput">按钮背景纯色</label>
-                  <span class="color-control">
-                    <input id="buttonColorInput" type="color" value="#72DBF1">
-                    <input class="hex-input" id="buttonColorHexInput" value="#72DBF1" maxlength="7" spellcheck="false" aria-label="按钮背景纯色 HEX">
-                  </span>
-                </div>
-                <div class="field style-field">
-                  <label class="field-label" for="buttonTextColorInput">按钮文案纯色</label>
-                  <span class="color-control">
-                    <input id="buttonTextColorInput" type="color" value="#27376F">
-                    <input class="hex-input" id="buttonTextColorHexInput" value="#27376F" maxlength="7" spellcheck="false" aria-label="按钮文案纯色 HEX">
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div class="field">
@@ -204,13 +138,13 @@
           </div>
 
           <div class="generate-action-dock">
-            <button class="primary-action" id="generateButton" type="button" disabled>生成素材</button>
+            <button class="primary-action" id="generateButton" type="button" disabled>生成</button>
           </div>
         </section>
 
-        <section class="panel result-preview-panel hidden" id="resultPreviewPanel" aria-label="生成结果筛选">
+        <section class="result-preview-panel" id="resultPreviewPanel" aria-label="素材预览筛选">
           <div class="panel-head">
-            <h1 class="panel-title">生成结果</h1>
+            <h1 class="panel-title">素材预览</h1>
           </div>
 
           <div class="preview-strip" id="sizePreviewSection">
@@ -241,6 +175,8 @@
             </div>
           </div>
         </section>
+          </div>
+        </section>
 
         <section class="preview-shell" aria-label="预览区">
           <header class="preview-header">
@@ -249,7 +185,9 @@
               <div class="preview-scale-meta" id="previewScaleMeta">设计预览</div>
             </div>
             <div class="preview-actions">
-
+              <button class="edit-poster-btn" id="editPosterButton" type="button">多语言设置</button>
+              <button class="poster-upload-action hidden" id="posterUploadAction" type="button">上传主图</button>
+              <button class="style-switch-btn" id="styleSwitchButton" type="button">切换样式</button>
               <div class="download-menu" id="downloadMenu">
                 <button class="download-btn" id="downloadButton" type="button" aria-haspopup="menu" aria-expanded="false">下载</button>
                 <div class="download-menu-list" id="downloadMenuList" role="menu" aria-label="下载选项">
@@ -257,16 +195,14 @@
                   <button class="download-menu-item" type="button" role="menuitem" data-download-kind="all">全部</button>
                 </div>
               </div>
-              <button class="edit-poster-btn" id="editPosterButton" type="button">编辑文案</button>
-              <button class="regenerate-btn hidden" id="regenerateButton" type="button">再次生成</button>
             </div>
           </header>
 
           <div class="canvas-area">
             <div class="material-card empty" id="materialCard">
-              <div class="poster-image-placeholder placeholder-surface placeholder-surface--checkerboard" id="posterImagePlaceholder"></div>
+              <div class="poster-image-placeholder placeholder-surface placeholder-surface--checkerboard" id="posterImagePlaceholder" role="button" tabindex="0" aria-label="上传主图"><span>上传主图</span></div>
               <div class="kline-bg"></div>
-              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png" alt="SPEC MARKETS 浅色海报字标"></div>
+              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png?v=20260518-align-outer-frame" alt="SPEC MARKETS 浅色海报字标"></div>
               <div class="creative-copy">
                 <h1 id="previewTitle">Headline Text</h1>
                 <p id="previewSubtitle">More information and key features here.</p>
@@ -294,6 +230,129 @@
 
         </section>
       </div>
+      </section>
+
+      <section class="settings-view style-settings-view view-section hidden" id="styleSettingsView" aria-label="样式设置">
+        <div class="manager-card">
+          <div class="panel-head">
+            <div>
+              <h1 class="manager-title">样式设置</h1>
+              <p class="manager-desc">集中管理海报样式、Logo 明暗和颜色配置；基础设置中仅保留样式切换，方便运营快速生成。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="style-settings-layout">
+          <section class="panel style-settings-panel" aria-label="样式配置区">
+            <div class="style-settings-scroll">
+              <div class="manager-card style-settings-card">
+                <div class="section-head">
+                  <div class="label-row"><span>样式选择</span><span class="muted">当前样式会同步到基础设置和生成结果</span></div>
+                  <div class="template-actions style-actions" aria-label="样式操作">
+                    <button class="add-template-btn" id="addStyleButton" type="button">新增样式</button>
+                    <button class="delete-template-btn" id="deleteStyleButton" type="button">删除样式</button>
+                  </div>
+                </div>
+                <div class="template-grid style-settings-template-grid" id="styleSettingsGrid" aria-label="样式设置选择"></div>
+              </div>
+
+              <div class="manager-card style-settings-card">
+                <div class="logo-tone-panel style-logo-panel">
+                  <div class="label-row"><span>Logo 切换</span></div>
+                  <div class="logo-tone-grid" aria-label="Logo 明暗版本切换">
+                    <button class="logo-tone-card active" type="button" data-logo-variant="black">
+                      <span>暗版</span>
+                    </button>
+                    <button class="logo-tone-card" type="button" data-logo-variant="white">
+                      <span>亮版</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="manager-card style-settings-card">
+                <div class="style-panel">
+                  <div class="label-row"><span>颜色配置</span></div>
+                  <div class="style-grid">
+                    <div class="field style-field">
+                      <label class="field-label" for="backgroundModeSelect">背景类型</label>
+                      <select id="backgroundModeSelect">
+                        <option value="solid">纯色</option>
+                        <option value="gradient">渐变</option>
+                      </select>
+                    </div>
+                    <div class="field style-field" data-background-field="solid">
+                      <label class="field-label" for="backgroundColorInput">背景纯色</label>
+                      <span class="color-control">
+                        <input id="backgroundColorInput" type="color" value="#dcf9ff">
+                        <input class="hex-input" id="backgroundColorHexInput" value="#DCF9FF" maxlength="7" spellcheck="false" aria-label="背景纯色 HEX">
+                      </span>
+                    </div>
+                    <div class="field style-field" data-background-field="gradient">
+                      <label class="field-label" for="gradientStartInput">背景渐变起点</label>
+                      <span class="color-control">
+                        <input id="gradientStartInput" type="color" value="#dcf9ff">
+                        <input class="hex-input" id="gradientStartHexInput" value="#DCF9FF" maxlength="7" spellcheck="false" aria-label="背景渐变起点 HEX">
+                      </span>
+                    </div>
+                    <div class="field style-field" data-background-field="gradient">
+                      <label class="field-label" for="gradientEndInput">背景渐变终点</label>
+                      <span class="color-control">
+                        <input id="gradientEndInput" type="color" value="#ffffff">
+                        <input class="hex-input" id="gradientEndHexInput" value="#FFFFFF" maxlength="7" spellcheck="false" aria-label="背景渐变终点 HEX">
+                      </span>
+                    </div>
+                    <div class="field style-field" data-background-field="gradient">
+                      <label class="field-label" for="gradientAngleInput">背景渐变角度</label>
+                      <input id="gradientAngleInput" type="number" min="0" max="360" step="15" value="135">
+                    </div>
+                    <div class="field style-field">
+                      <label class="field-label" for="textColorInput">文案纯色</label>
+                      <span class="color-control">
+                        <input id="textColorInput" type="color" value="#081840">
+                        <input class="hex-input" id="textColorHexInput" value="#081840" maxlength="7" spellcheck="false" aria-label="文案纯色 HEX">
+                      </span>
+                    </div>
+                    <div class="field style-field">
+                      <label class="field-label" for="buttonColorInput">按钮背景纯色</label>
+                      <span class="color-control">
+                        <input id="buttonColorInput" type="color" value="#72DBF1">
+                        <input class="hex-input" id="buttonColorHexInput" value="#72DBF1" maxlength="7" spellcheck="false" aria-label="按钮背景纯色 HEX">
+                      </span>
+                    </div>
+                    <div class="field style-field">
+                      <label class="field-label" for="buttonTextColorInput">按钮文案纯色</label>
+                      <span class="color-control">
+                        <input id="buttonTextColorInput" type="color" value="#27376F">
+                        <input class="hex-input" id="buttonTextColorHexInput" value="#27376F" maxlength="7" spellcheck="false" aria-label="按钮文案纯色 HEX">
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="preview-shell style-demo-shell" aria-label="样式预览区">
+            <header class="preview-header">
+              <div class="preview-heading">
+                <h2 class="preview-title">样式预览</h2>
+                <div class="preview-scale-meta">1200 × 628 Demo</div>
+              </div>
+            </header>
+            <div class="style-demo-canvas-area">
+              <div class="style-demo-card" id="styleDemoCard">
+                <div class="style-demo-logo"><img id="styleDemoLogo" src="assets/logo-market-light.png?v=20260518-align-outer-frame" alt="SPEC MARKETS 浅色海报字标"></div>
+                <div class="style-demo-copy">
+                  <h1>Headline Text</h1>
+                  <p>More information and key features here.</p>
+                </div>
+                <div class="style-demo-cta">Button</div>
+                <div class="style-demo-image placeholder-surface placeholder-surface--checkerboard"></div>
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
 
       <section class="template-manager view-section hidden" id="templateManagerView" aria-label="框架管理">
@@ -331,7 +390,7 @@
             </div>
             <div class="anchor-canvas" id="anchorCanvas" aria-label="框架视觉锚点编辑画布">
               <div class="anchor-preview-image placeholder-surface placeholder-surface--solid" id="anchorPreviewImage"></div>
-              <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png" alt="SPEC MARKETS"></div>
+              <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png?v=20260518-align-outer-frame" alt="SPEC MARKETS"></div>
               <div class="anchor-preview-title" id="anchorPreviewTitle">Headline Text</div>
               <div class="anchor-preview-subtitle" id="anchorPreviewSubtitle">More information and key features here.</div>
               <div class="anchor-preview-cta" id="anchorPreviewCta">Button</div>
@@ -357,7 +416,7 @@
           <div class="panel-head">
             <div>
               <h1 class="manager-title">尺寸/语言设置</h1>
-              <p class="manager-desc">维护素材生成可选尺寸和语言；支持拖拽排序，排序会映射到素材生成、预览和下载顺序。</p>
+              <p class="manager-desc">维护促销材料可选尺寸和语言；支持拖拽排序，排序会映射到促销材料、预览和下载顺序。</p>
             </div>
           </div>
         </div>
@@ -396,7 +455,7 @@
           <div class="rules-header">
             <div>
               <h1 class="rules-title">生成规则</h1>
-              <p class="rules-desc" id="rulesDesc">上传生成规则文档后，系统会解析 MD、Word、PDF、XLSX 中的结构化规则并用于素材生成。</p>
+              <p class="rules-desc" id="rulesDesc">上传生成规则文档后，系统会解析 MD、Word、PDF、XLSX 中的结构化规则并用于促销材料。</p>
             </div>
             <span class="rules-count spec-tag" id="rulesDocStatus">未上传</span>
           </div>
@@ -421,17 +480,42 @@
     <div class="status-line"><span>生成任务</span><span>已完成</span></div>
     <div class="muted" id="statusMeta">18 个尺寸 × 9 种语言，共 162 张素材已准备下载。</div>
   </div>
+  <div class="help-widget" id="helpWidget">
+    <button class="help-button" id="helpButton" type="button" aria-label="打开使用说明" aria-expanded="false" aria-controls="helpPopover">?</button>
+    <div class="help-popover" id="helpPopover" role="dialog" aria-modal="false" aria-labelledby="helpPopoverTitle">
+      <div class="help-popover-title" id="helpPopoverTitle">使用说明</div>
+      <div class="help-steps">
+        <p>第1步：点击【多语言设置】输入想要产出促销材料的对应文案</p>
+        <p>第2步：点击【上传主图】</p>
+        <p>第3步：检查并调整多语言/多尺寸的摆放效果</p>
+        <p>第4步：点击【下载】-全部</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="style-modal confirm-modal side-drawer-modal" id="styleSwitchModal" aria-hidden="true">
+    <div class="confirm-dialog style-switch-dialog side-drawer-dialog" role="dialog" aria-modal="true" aria-labelledby="styleSwitchTitle">
+      <div class="style-switch-head">
+        <div>
+          <div class="confirm-title" id="styleSwitchTitle">切换样式</div>
+          <p class="style-switch-desc">仅更新 Logo 明暗、背景、文案和按钮颜色，不改变 18 个海报的版式。</p>
+        </div>
+        <button class="image-close" id="styleSwitchCloseButton" type="button" aria-label="关闭样式选择">×</button>
+      </div>
+      <div class="style-switch-grid" id="styleSwitchGrid"></div>
+    </div>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script async src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/poster-core.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-store.js?v=20260513-9"></script>
-  <script src="assets/poster-renderer.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-editor.js?v=20260515-elastictext1"></script>
-  <script src="assets/poster-canvas.js?v=20260515-elastictext1"></script>
-  <script src="assets/export-assets.js?v=20260513-14"></script>
-  <script src="assets/rules-parser.js?v=20260513-9"></script>
+  <script src="assets/poster-core.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-store.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/poster-renderer.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-editor.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/poster-canvas.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/export-assets.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/rules-parser.js?v=20260518-align-outer-frame"></script>
   <!-- frame-layouts rule: every alignment parameter must be read from the Figma node below, not guessed from the local baseline align buttons. -->
   <script>
     window.SpecPromoFrameLayoutRules = {
@@ -441,30 +525,33 @@
       rule: 'When creating or updating assets/frame-layouts/*.js, fetch and apply alignment coordinates from this Figma node for each size.'
     };
   </script>
-  <script src="assets/frame-layouts/registry.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/120x600.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/320x50.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/320x100.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/720x90.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/728x90.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/160x600.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/300x250.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/300x600.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/320x480.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/800x800.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/628x1200.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/828x1200.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/970x250.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/980x250.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/990x250.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/1200x628.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/1200x1500.js?v=20260515-elastictext1"></script>
-  <script src="assets/frame-layouts/1200x1200.js?v=20260515-elastictext1"></script>
-  <script src="assets/config/defaults.js?v=20260515-elastictext1"></script>
-  <script src="assets/config/layout-rules.js?v=20260515-elastictext1"></script>
-  <script src="assets/config/translations.js?v=20260515-button1"></script>
-  <script src="assets/modules/product-image.js?v=20260514-1"></script>
-  <script src="assets/app.js?v=20260515-langoverride1"></script>
+  <script src="assets/frame-layouts/registry.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/120x600.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/320x50.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/320x100.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/720x90.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/728x90.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/160x600.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/300x250.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/300x600.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/320x480.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/800x800.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/628x1200.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/828x1200.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/970x250.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/980x250.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/990x250.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/1200x628.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/1200x1500.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/frame-layouts/1200x1200.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/config/defaults.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/config/layout-rules.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/config/translations.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/modules/dom-refs.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/modules/persistence.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/modules/app-state.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/modules/product-image.js?v=20260518-align-outer-frame"></script>
+  <script src="assets/app.js?v=20260518-align-outer-frame"></script>
 
 
 </body>

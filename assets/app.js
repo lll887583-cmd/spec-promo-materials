@@ -68,37 +68,37 @@
       return [
         { id: 'style-1', name: '样式 1' },
         { id: 'style-2', name: '样式 2' },
-        { id: 'style-3', name: '样式 3' }
+        { id: 'style-3', name: '样式 3' },
+        { id: 'style-4', name: '样式 4' },
+        { id: 'style-5', name: '样式 5' }
       ];
     }
 
-    function thirdTemplateStyles() {
+    function solidPresetStyles(backgroundColor, buttonColor = FIGMA_BUTTON_FILL_COLOR, buttonTextColor = FIGMA_BUTTON_TEXT_COLOR) {
       return {
         ...defaultTemplateStyles,
         backgroundMode: 'solid',
-        backgroundColor: '#EEF6FE',
-        gradientStart: '#EEF6FE',
+        backgroundColor,
+        gradientStart: backgroundColor,
         gradientEnd: '#FFFFFF',
         gradientAngle: 135,
-        textColor: '#0B1944',
-        buttonColor: FIGMA_BUTTON_FILL_COLOR,
-        buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
+        textColor: FIGMA_BUTTON_TEXT_COLOR,
+        buttonColor,
+        buttonTextColor,
         logoVariant: 'black'
       };
     }
 
     function defaultStylesForId(styleId) {
       if (styleId === 'style-2') return { ...darkTemplateStyles, gradientAngle: 165 };
-      if (styleId === 'style-3') return thirdTemplateStyles();
-      return defaultTemplateStyles;
+      if (styleId === 'style-3') return solidPresetStyles('#EEF6FE');
+      if (styleId === 'style-4') return solidPresetStyles('#FFFFFF');
+      if (styleId === 'style-5') return solidPresetStyles('#FFF5FB', '#EC65B4', '#FFFFFF');
+      return solidPresetStyles('#DCF9FF');
     }
 
     function defaultStyleMaps() {
-      return {
-        'style-1': cloneStyles(defaultStylesForId('style-1')),
-        'style-2': cloneStyles(defaultStylesForId('style-2')),
-        'style-3': cloneStyles(defaultStylesForId('style-3'))
-      };
+      return Object.fromEntries(defaultStylePresets().map(style => [style.id, cloneStyles(defaultStylesForId(style.id))]));
     }
 
     let templates = defaultTemplates();
@@ -116,121 +116,148 @@
       return CANVAS_ASSET_DATA_URLS[src] || src;
     }
 
-    const sizeChecks = document.getElementById('sizeChecks');
-    const generatorLayout = document.getElementById('generatorLayout');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const resultPreviewPanel = document.getElementById('resultPreviewPanel');
-    const templateGrid = document.getElementById('templateGrid');
-    const managerTemplateGrid = document.getElementById('managerTemplateGrid');
-    const frameworkSizePreviewRow = document.getElementById('frameworkSizePreviewRow');
-    const languageChecks = document.getElementById('languageChecks');
-    const sizePreviewRow = document.getElementById('sizePreviewRow');
-    const languagePreviewRow = document.getElementById('languagePreviewRow');
-    const previewBottomSwitcher = document.getElementById('previewBottomSwitcher');
-    const bottomSizePreviewRow = document.getElementById('bottomSizePreviewRow');
-    const bottomLanguagePreviewRow = document.getElementById('bottomLanguagePreviewRow');
-    const bottomSizePreviewTitle = document.getElementById('bottomSizePreviewTitle');
-    const bottomLanguagePreviewTitle = document.getElementById('bottomLanguagePreviewTitle');
-    const titleInput = document.getElementById('titleInput');
-    const subtitleInput = document.getElementById('subtitleInput');
-    const ctaInput = document.getElementById('ctaInput');
-    const titleCounter = document.getElementById('titleCounter');
-    const subtitleCounter = document.getElementById('subtitleCounter');
-    const ctaCounter = document.getElementById('ctaCounter');
-    const previewTitle = document.getElementById('previewTitle');
-    const previewScaleMeta = document.getElementById('previewScaleMeta');
-    const previewSubtitle = document.getElementById('previewSubtitle');
-    const previewCta = document.getElementById('previewCta');
-    const creativeLogo = document.getElementById('creativeLogo');
-    const creativeLogoImage = document.getElementById('creativeLogoImage');
-    const trustSwitch = document.getElementById('trustSwitch');
-    const removeUpload = document.getElementById('removeUpload');
-    const uploadCard = document.getElementById('uploadCard');
-    const uploadInput = document.getElementById('uploadInput');
-    const uploadPreview = document.getElementById('uploadPreview');
-    const uploadMeta = document.getElementById('uploadMeta');
-    const uploadName = document.getElementById('uploadName');
-    const uploadZone = document.getElementById('uploadZone');
-    const materialCard = document.getElementById('materialCard');
-    const canvasArea = document.querySelector('.canvas-area');
-    const productFrame = document.getElementById('productFrame');
-    const phoneHand = document.getElementById('phoneHand');
-    const emptyNote = document.getElementById('emptyNote');
-    const generateButton = document.getElementById('generateButton');
-    const progressCard = document.getElementById('progressCard');
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const statusDock = document.getElementById('statusDock');
-    const statusMeta = document.getElementById('statusMeta');
-    const sidebar = document.getElementById('sidebar');
-    const appShell = document.querySelector('.app');
-    const sidebarCollapseButton = document.getElementById('sidebarCollapseButton');
-    const downloadMenu = document.getElementById('downloadMenu');
-    const downloadButton = document.getElementById('downloadButton');
-    const editPosterButton = document.getElementById('editPosterButton');
-    const regenerateButton = document.getElementById('regenerateButton');
-    const posterUndoButton = document.getElementById('posterUndoButton');
-    const sizePreviewSection = document.getElementById('sizePreviewSection');
-    const sizePreviewTitle = document.getElementById('sizePreviewTitle');
-    const frameworkSizePreviewTitle = document.getElementById('frameworkSizePreviewTitle');
-    const languagePreviewTitle = document.getElementById('languagePreviewTitle');
-    const languagePreviewSection = document.getElementById('languagePreviewSection');
-    const posterEditOverlay = document.getElementById('posterEditOverlay');
-    const anchorCanvas = document.getElementById('anchorCanvas');
-    const anchorPreviewTitle = document.getElementById('anchorPreviewTitle');
-    const anchorPreviewSubtitle = document.getElementById('anchorPreviewSubtitle');
-    const anchorPreviewCta = document.getElementById('anchorPreviewCta');
-    const gradientControl = document.getElementById('gradientControl');
-    const gradientLine = document.getElementById('gradientLine');
-    const resetAnchorsButton = document.getElementById('resetAnchorsButton');
-    const commitAnchorsButton = document.getElementById('commitAnchorsButton');
-    const addStyleButton = document.getElementById('addStyleButton');
-    const deleteStyleButton = document.getElementById('deleteStyleButton');
-    const addTemplateButton = document.getElementById('addTemplateButton');
-    const deleteTemplateButton = document.getElementById('deleteTemplateButton');
-    const templateMappingStatus = document.getElementById('templateMappingStatus');
-    const backgroundModeSelect = document.getElementById('backgroundModeSelect');
-    const backgroundColorInput = document.getElementById('backgroundColorInput');
-    const gradientStartInput = document.getElementById('gradientStartInput');
-    const gradientEndInput = document.getElementById('gradientEndInput');
-    const gradientAngleInput = document.getElementById('gradientAngleInput');
-    const textColorInput = document.getElementById('textColorInput');
-    const buttonColorInput = document.getElementById('buttonColorInput');
-    const buttonTextColorInput = document.getElementById('buttonTextColorInput');
-    const backgroundColorHexInput = document.getElementById('backgroundColorHexInput');
-    const gradientStartHexInput = document.getElementById('gradientStartHexInput');
-    const gradientEndHexInput = document.getElementById('gradientEndHexInput');
-    const textColorHexInput = document.getElementById('textColorHexInput');
-    const buttonColorHexInput = document.getElementById('buttonColorHexInput');
-    const buttonTextColorHexInput = document.getElementById('buttonTextColorHexInput');
-    const sizeChoiceLabel = document.getElementById('sizeChoiceLabel');
-    const languageChoiceLabel = document.getElementById('languageChoiceLabel');
-    const sizeOptionsToggle = document.getElementById('sizeOptionsToggle');
-    const languageOptionsToggle = document.getElementById('languageOptionsToggle');
-    const sizeSettingsBody = document.getElementById('sizeSettingsBody');
-    const languageSettingsBody = document.getElementById('languageSettingsBody');
-    const sizeSettingsCount = document.getElementById('sizeSettingsCount');
-    const languageSettingsCount = document.getElementById('languageSettingsCount');
-    const rulesDesc = document.getElementById('rulesDesc');
-    const rulesDocStatus = document.getElementById('rulesDocStatus');
-    const rulesFileInput = document.getElementById('rulesFileInput');
-    const rulesUploadCard = document.getElementById('rulesUploadCard');
-    const rulesDocList = document.getElementById('rulesDocList');
+    const {
+      sizeChecks,
+      generatorLayout,
+      settingsPanel,
+      resultPreviewPanel,
+      templateGrid,
+      styleSettingsGrid,
+      styleDemoCard,
+      styleDemoLogo,
+      managerTemplateGrid,
+      frameworkSizePreviewRow,
+      languageChecks,
+      sizePreviewRow,
+      languagePreviewRow,
+      previewBottomSwitcher,
+      bottomSizePreviewRow,
+      bottomLanguagePreviewRow,
+      bottomSizePreviewTitle,
+      bottomLanguagePreviewTitle,
+      titleInput,
+      subtitleInput,
+      ctaInput,
+      titleCounter,
+      subtitleCounter,
+      ctaCounter,
+      previewTitle,
+      previewScaleMeta,
+      previewSubtitle,
+      previewCta,
+      creativeLogo,
+      creativeLogoImage,
+      trustSwitch,
+      removeUpload,
+      uploadCard,
+      uploadInput,
+      uploadPreview,
+      uploadMeta,
+      uploadName,
+      uploadZone,
+      materialCard,
+      posterImagePlaceholder,
+      canvasArea,
+      productFrame,
+      phoneHand,
+      emptyNote,
+      posterUploadAction,
+      generateButton,
+      progressCard,
+      progressFill,
+      progressText,
+      statusDock,
+      statusMeta,
+      sidebar,
+      appShell,
+      sidebarCollapseButton,
+      downloadMenu,
+      downloadButton,
+      styleSwitchButton,
+      styleSwitchModal,
+      styleSwitchGrid,
+      styleSwitchCloseButton,
+      settingsTabButton,
+      resultsTabButton,
+      editPosterButton,
+      regenerateButton,
+      posterUndoButton,
+      sizePreviewSection,
+      sizePreviewTitle,
+      frameworkSizePreviewTitle,
+      languagePreviewTitle,
+      languagePreviewSection,
+      posterEditOverlay,
+      anchorCanvas,
+      anchorPreviewTitle,
+      anchorPreviewSubtitle,
+      anchorPreviewCta,
+      gradientControl,
+      gradientLine,
+      resetAnchorsButton,
+      commitAnchorsButton,
+      addStyleButton,
+      deleteStyleButton,
+      addTemplateButton,
+      deleteTemplateButton,
+      templateMappingStatus,
+      backgroundModeSelect,
+      backgroundColorInput,
+      gradientStartInput,
+      gradientEndInput,
+      gradientAngleInput,
+      textColorInput,
+      buttonColorInput,
+      buttonTextColorInput,
+      backgroundColorHexInput,
+      gradientStartHexInput,
+      gradientEndHexInput,
+      textColorHexInput,
+      buttonColorHexInput,
+      buttonTextColorHexInput,
+      sizeChoiceLabel,
+      languageChoiceLabel,
+      sizeOptionsToggle,
+      languageOptionsToggle,
+      sizeSettingsBody,
+      languageSettingsBody,
+      sizeSettingsCount,
+      languageSettingsCount,
+      rulesDesc,
+      rulesDocStatus,
+      rulesFileInput,
+      rulesUploadCard,
+      rulesDocList
+    } = window.createSpecPromoDomRefs();
 
+    // State groups are documented in assets/modules/app-state.js and docs/state-model.md.
+    // Upload state
     let hasImage = false;
-    let trustVisible = false;
-    let generated = false;
     let uploadedImageSrc = '';
     let uploadedImageName = '未上传图片';
+    let uploadCropper = null;
+    let uploadCropFile = null;
+
+    // Rules document state
     let rulesDocuments = [];
     let spreadsheetGenerationRules = [];
     let rulesPreviewIndex = 0;
     let rulesReplaceIndex = null;
-    let uploadCropper = null;
-    let uploadCropFile = null;
+
+    // Generation and preview state
+    let trustVisible = false;
+    let generated = false;
     let toastTimer = null;
     let generatedLanguageIndices = [0];
     let generatedSizeIndices = [templatePreviewSizeIndex()];
+    let activeGeneratorPanel = 'results';
+    let isGenerating = false;
+    let appInitialized = false;
+    let pendingGenerationAfterInit = false;
+    let generationToken = 0;
+    let generatedAssets = [];
+
+    // Selection state
     let currentLanguageIndex = 0;
     let currentSizeIndex = templatePreviewSizeIndex();
     let frameworkSizeIndex = templatePreviewSizeIndex();
@@ -240,23 +267,16 @@
     let selectedLogoTheme = 'light';
     let selectedTemplate = 'template-1';
     let selectedStyle = 'style-1';
-    let isGenerating = false;
-    let appInitialized = false;
-    let pendingGenerationAfterInit = false;
-    let generationToken = 0;
-    let generatedAssets = [];
     let sizeOptionsExpanded = true;
     let languageOptionsExpanded = true;
+
+    // Template/style editing state
     let activeAnchor = null;
     let selectedAnchorKeys = new Set();
     let activePosterAnchor = null;
     let selectedPosterAnchorKeys = new Set();
     let posterAnchorOverrides = {};
     let gradientControlActive = false;
-    let posterEditUndoStack = [];
-    let isRestoringPosterHistory = false;
-    let productWheelUndoTimer = null;
-    let productWheelUndoActive = false;
     let templateAnchorMaps = {
       'template-1': JSON.parse(JSON.stringify(defaultTemplateAnchors))
     };
@@ -265,6 +285,12 @@
     let draftTemplateAnchors = JSON.parse(JSON.stringify(templateAnchors));
     let templateStyles = JSON.parse(JSON.stringify(styleMaps[selectedStyle]));
     let draftTemplateStyles = JSON.parse(JSON.stringify(templateStyles));
+
+    // Interaction and undo state
+    let posterEditUndoStack = [];
+    let isRestoringPosterHistory = false;
+    let productWheelUndoTimer = null;
+    let productWheelUndoActive = false;
     let settingsDragState = null;
     let templateDragState = null;
     let templateClickTimer = null;
@@ -365,6 +391,7 @@
         </button>
       `).join('');
       if (templateGrid) templateGrid.innerHTML = renderStyleCards();
+      if (styleSettingsGrid) styleSettingsGrid.innerHTML = renderStyleCards();
       if (managerTemplateGrid) managerTemplateGrid.innerHTML = renderFrameworkCards();
       if (deleteStyleButton) deleteStyleButton.disabled = stylePresets.length <= 1;
     }
@@ -401,6 +428,29 @@
     function cloneState(value) {
       return JSON.parse(JSON.stringify(value));
     }
+
+    const {
+      openAppDatabase,
+      appDatabaseTransaction,
+      dbRequest,
+      serverDatabaseRequest,
+      saveServerSizeLanguageState,
+      loadServerSizeLanguageState,
+      persistStateRecord,
+      loadStateRecord,
+      loadLegacyJsonState,
+      mirrorStateToLegacyStorage,
+      newestState,
+      newestAvailableState
+    } = window.createSpecPromoPersistence({
+      databaseName: APP_DATABASE_NAME,
+      databaseVersion: APP_DATABASE_VERSION,
+      appStateStore: APP_STATE_STORE,
+      rulesDocumentStore: RULES_DOCUMENT_STORE,
+      serverDatabaseApi: SERVER_DATABASE_API,
+      serverDatabaseTimeout: SERVER_DATABASE_TIMEOUT,
+      cloneState
+    });
 
     const posterRenderer = window.createPosterRenderer({
       posterCore,
@@ -545,136 +595,6 @@
       showToast('已返回上一步');
     }
 
-    function openAppDatabase() {
-      return new Promise((resolve, reject) => {
-        if (!window.indexedDB) {
-          reject(new Error('IndexedDB is not available'));
-          return;
-        }
-        const request = indexedDB.open(APP_DATABASE_NAME, APP_DATABASE_VERSION);
-        request.onupgradeneeded = () => {
-          const db = request.result;
-          if (!db.objectStoreNames.contains(APP_STATE_STORE)) {
-            db.createObjectStore(APP_STATE_STORE, { keyPath: 'key' });
-          }
-          if (!db.objectStoreNames.contains(RULES_DOCUMENT_STORE)) {
-            db.createObjectStore(RULES_DOCUMENT_STORE, { keyPath: 'id' });
-          }
-        };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error || new Error('Failed to open app database'));
-        request.onblocked = () => reject(new Error('App database upgrade was blocked'));
-      });
-    }
-
-    function appDatabaseTransaction(storeName, mode, handler) {
-      return openAppDatabase().then(db => new Promise((resolve, reject) => {
-        const transaction = db.transaction(storeName, mode);
-        const store = transaction.objectStore(storeName);
-        let result;
-        transaction.oncomplete = () => {
-          db.close();
-          resolve(result);
-        };
-        transaction.onerror = () => {
-          db.close();
-          reject(transaction.error || new Error('App database transaction failed'));
-        };
-        transaction.onabort = () => {
-          db.close();
-          reject(transaction.error || new Error('App database transaction aborted'));
-        };
-        try {
-          result = handler(store);
-        } catch (error) {
-          transaction.abort();
-          db.close();
-          reject(error);
-        }
-      }));
-    }
-
-    function dbRequest(request, message = 'Database request failed') {
-      return new Promise((resolve, reject) => {
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error || new Error(message));
-      });
-    }
-
-    async function serverDatabaseRequest(path, options = {}) {
-      if (!/^https?:$/.test(window.location.protocol)) throw new Error('Server database requires HTTP(S)');
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), SERVER_DATABASE_TIMEOUT);
-      try {
-        const response = await fetch(`${SERVER_DATABASE_API}${path}`, {
-          method: options.method || 'GET',
-          headers: {
-            Accept: 'application/json',
-            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-            ...(options.headers || {})
-          },
-          body: options.body ? JSON.stringify(options.body) : undefined,
-          signal: controller.signal
-        });
-        if (!response.ok) throw new Error(`Server database returned ${response.status}`);
-        const payload = await response.json();
-        if (payload && payload.ok === false) throw new Error(payload.error || 'Server database request failed');
-        return payload;
-      } finally {
-        window.clearTimeout(timeout);
-      }
-    }
-
-    async function saveServerSizeLanguageState(snapshot) {
-      return serverDatabaseRequest('/state/size-language', {
-        method: 'PUT',
-        body: { data: snapshot }
-      });
-    }
-
-    async function loadServerSizeLanguageState() {
-      const payload = await serverDatabaseRequest('/state/size-language');
-      return payload?.data || null;
-    }
-
-    async function persistStateRecord(key, value) {
-      await appDatabaseTransaction(APP_STATE_STORE, 'readwrite', store => {
-        store.put({ key, value: cloneState(value), updatedAt: Date.now() });
-      });
-    }
-
-    async function loadStateRecord(key) {
-      const record = await appDatabaseTransaction(APP_STATE_STORE, 'readonly', store => dbRequest(store.get(key)));
-      return record?.value || null;
-    }
-
-    function loadLegacyJsonState(key) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : null;
-      } catch (error) {
-        console.warn('Legacy local state failed to read', error);
-        return null;
-      }
-    }
-
-    function mirrorStateToLegacyStorage(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (error) {
-        console.warn('Legacy local state failed to mirror', error);
-      }
-    }
-
-    function newestState(primaryState, legacyState) {
-      const primaryTime = Number(primaryState?.updatedAt || 0);
-      const legacyTime = Number(legacyState?.updatedAt || 0);
-      return legacyTime > primaryTime ? legacyState : primaryState;
-    }
-
-    function newestAvailableState(...states) {
-      return states.filter(Boolean).reduce((latest, state) => newestState(latest, state), null);
-    }
 
     const generationRuleForSize = posterCore.generationRuleForSize;
     function layoutAnchorsForSize(size, base = templateAnchors) {
@@ -738,6 +658,17 @@
         && String(styles?.gradientEnd || '').toLowerCase() === '#1f3472';
     }
 
+    function isLegacyLightPresetStyles(styleId, styles) {
+      if (!styles || styles.backgroundMode !== 'solid') return false;
+      const backgroundColor = String(styles.backgroundColor || '').toLowerCase();
+      const textColor = String(styles.textColor || '').toLowerCase();
+      const defaultButton = String(styles.buttonColor || '').toLowerCase() === FIGMA_BUTTON_FILL_COLOR.toLowerCase();
+      if (!defaultButton) return false;
+      if (styleId === 'style-1') return backgroundColor === '#dcf9ff' && ['#081840', '#27376f'].includes(textColor);
+      if (styleId === 'style-3') return backgroundColor === '#eef6fe' && ['#0b1944', '#27376f'].includes(textColor);
+      return false;
+    }
+
     function normalizeButtonColors(styles) {
       if (!styles || typeof styles !== 'object') return styles;
       const buttonColor = String(styles.buttonColor || '').toLowerCase();
@@ -745,7 +676,7 @@
         styles.buttonColor = FIGMA_BUTTON_FILL_COLOR;
       }
       const buttonTextColor = String(styles.buttonTextColor || '').toLowerCase();
-      if (!buttonTextColor || buttonTextColor === LEGACY_BUTTON_TEXT_COLOR) {
+      if (!buttonTextColor) {
         styles.buttonTextColor = FIGMA_BUTTON_TEXT_COLOR;
       }
       return styles;
@@ -794,7 +725,7 @@
         if (!styleIds.has(styleKey)) delete styleMaps[styleKey];
       });
       stylePresets.forEach(style => {
-        if (!styleMaps[style.id] || isLegacyDarkDefaultStyles(styleMaps[style.id])) {
+        if (!styleMaps[style.id] || isLegacyDarkDefaultStyles(styleMaps[style.id]) || isLegacyLightPresetStyles(style.id, styleMaps[style.id])) {
           styleMaps[style.id] = cloneStyles(defaultStylesForId(style.id));
         }
         if (style.id === 'style-2') styleMaps[style.id].gradientAngle = 165;
@@ -1188,7 +1119,7 @@
     function updateTemplateMappingStatus() {
       const pending = hasPendingAnchorChanges();
       if (templateMappingStatus) {
-        templateMappingStatus.textContent = `当前编辑：${templateName()} · ${pending ? '有未提交框架变更' : '已映射到素材生成'}`;
+        templateMappingStatus.textContent = `当前编辑：${templateName()} · ${pending ? '有未提交框架变更' : '已映射到促销材料'}`;
       }
       if (commitAnchorsButton) commitAnchorsButton.disabled = !pending;
       if (deleteStyleButton) deleteStyleButton.disabled = stylePresets.length <= 1;
@@ -1202,10 +1133,20 @@
       requestAnimationFrame(fitPosterTextBoxes);
     }
 
+    function syncImagePlaceholderArea(anchors) {
+      const visualAnchor = posterRenderer.imageVisualAnchor(anchors);
+      if (!visualAnchor) return;
+      materialCard.style.setProperty('--image-placeholder-x', formatPct(visualAnchor.x));
+      materialCard.style.setProperty('--image-placeholder-y', formatPct(visualAnchor.y));
+      materialCard.style.setProperty('--image-placeholder-w', formatPct(visualAnchor.w));
+      materialCard.style.setProperty('--image-placeholder-h', formatPct(visualAnchor.h));
+    }
+
     function applyPosterLayoutForSize(sizeIndex = currentSizeIndex) {
       const size = materialSizes[sizeIndex] || materialSizes[0];
       const anchors = effectivePosterAnchorsForSize(size);
       posterRenderer.applyLayoutVariables(anchors, size);
+      syncImagePlaceholderArea(anchors);
       renderPosterEditOverlay(anchors);
       schedulePosterTextFit();
     }
@@ -1522,6 +1463,106 @@
       return resized;
     }
 
+    const ALIGNMENT_GUIDE_SNAP_PX = 6;
+
+    function anchorBounds(anchors, anchorKeys) {
+      const selected = anchorKeys.map(key => anchors[key]).filter(Boolean);
+      if (!selected.length) return null;
+      const left = Math.min(...selected.map(anchor => anchor.x));
+      const top = Math.min(...selected.map(anchor => anchor.y));
+      const right = Math.max(...selected.map(anchor => anchor.x + anchor.w));
+      const bottom = Math.max(...selected.map(anchor => anchor.y + anchor.h));
+      return { x: left, y: top, w: right - left, h: bottom - top };
+    }
+
+    function alignmentCandidates(allAnchors, ignoredKeys = []) {
+      const ignored = new Set(ignoredKeys);
+      const vertical = [
+        { value: 0, kind: 'edge' },
+        { value: 100, kind: 'edge' }
+      ];
+      const horizontal = [
+        { value: 0, kind: 'edge' },
+        { value: 100, kind: 'edge' }
+      ];
+      Object.entries(allAnchors || {}).forEach(([key, anchor]) => {
+        if (ignored.has(key) || !anchor || anchor.hidden) return;
+        vertical.push(
+          { value: anchor.x, kind: 'edge' },
+          { value: anchor.x + anchor.w, kind: 'edge' }
+        );
+        horizontal.push(
+          { value: anchor.y, kind: 'edge' },
+          { value: anchor.y + anchor.h, kind: 'edge' }
+        );
+      });
+      return { vertical, horizontal };
+    }
+
+    function closestGuide(points, candidates, threshold) {
+      let match = null;
+      points.forEach(point => {
+        candidates.forEach(candidate => {
+          const distance = Math.abs(candidate.value - point.value);
+          if (distance <= threshold && (!match || distance < match.distance)) {
+            match = {
+              value: candidate.value,
+              kind: candidate.kind,
+              offset: candidate.value - point.value,
+              distance
+            };
+          }
+        });
+      });
+      return match;
+    }
+
+    function getAlignmentForBounds(host, bounds, allAnchors, movingKeys) {
+      const rect = host?.getBoundingClientRect?.();
+      if (!rect?.width || !rect?.height || !bounds) return { dx: 0, dy: 0, guides: [] };
+      const thresholdX = (ALIGNMENT_GUIDE_SNAP_PX / rect.width) * 100;
+      const thresholdY = (ALIGNMENT_GUIDE_SNAP_PX / rect.height) * 100;
+      const candidates = alignmentCandidates(allAnchors, movingKeys);
+      const verticalMatch = closestGuide([
+        { value: bounds.x },
+        { value: bounds.x + bounds.w }
+      ], candidates.vertical, thresholdX);
+      const horizontalMatch = closestGuide([
+        { value: bounds.y },
+        { value: bounds.y + bounds.h }
+      ], candidates.horizontal, thresholdY);
+      return {
+        dx: verticalMatch?.offset || 0,
+        dy: horizontalMatch?.offset || 0,
+        guides: [
+          ...(verticalMatch ? [{ axis: 'x', value: verticalMatch.value, kind: verticalMatch.kind }] : []),
+          ...(horizontalMatch ? [{ axis: 'y', value: horizontalMatch.value, kind: horizontalMatch.kind }] : [])
+        ]
+      };
+    }
+
+    function showAlignmentGuides(host, guides = []) {
+      if (!host) return;
+      let layer = host.querySelector(':scope > .alignment-guide-layer');
+      if (!layer) {
+        layer = document.createElement('div');
+        layer.className = 'alignment-guide-layer';
+        host.appendChild(layer);
+      }
+      layer.replaceChildren(...guides.map(guide => {
+        const line = document.createElement('span');
+        line.className = `alignment-guide alignment-guide--${guide.axis} alignment-guide--${guide.kind}`;
+        if (guide.axis === 'x') line.style.left = formatPct(guide.value);
+        else line.style.top = formatPct(guide.value);
+        return line;
+      }));
+      layer.classList.toggle('is-visible', guides.length > 0);
+    }
+
+    function clearAlignmentGuides(host) {
+      showAlignmentGuides(host, []);
+    }
+
     function renderAnchorEditor() {
       if (!anchorCanvas) return;
       draftTemplateAnchors = ensureIndependentCopyAnchors(draftTemplateAnchors);
@@ -1573,7 +1614,9 @@
 
     function syncColorControl(colorInput, hexInput, value) {
       const hex = normalizeHexColor(value) || '#000000';
-      if (colorInput) colorInput.value = hex;
+      // Native color inputs are strict in some browsers and may fall back to black
+      // when assigned uppercase hex values such as #FFFFFF.
+      if (colorInput) colorInput.value = hex.toLowerCase();
       if (hexInput) hexInput.value = hex;
     }
 
@@ -1591,6 +1634,21 @@
         button.classList.toggle('active', button.dataset.logoVariant === (draftTemplateStyles.logoVariant || 'black'));
       });
       updateBackgroundFieldVisibility();
+      syncStyleDemoPreview();
+    }
+
+    function syncStyleDemoPreview(styles = draftTemplateStyles) {
+      if (!styleDemoCard) return;
+      const previewStyles = normalizeButtonColors(styles || defaultTemplateStyles);
+      styleDemoCard.style.setProperty('--style-demo-bg', templateBackgroundCss(previewStyles));
+      styleDemoCard.style.setProperty('--style-demo-copy', previewStyles.textColor || '#081840');
+      styleDemoCard.style.setProperty('--style-demo-button', previewStyles.buttonColor || FIGMA_BUTTON_FILL_COLOR);
+      styleDemoCard.style.setProperty('--style-demo-button-text', previewStyles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR);
+      if (styleDemoLogo) {
+        const variant = previewStyles.logoVariant || 'black';
+        styleDemoLogo.src = logoSrcFor('market', variant);
+        styleDemoLogo.alt = logoAltFor('market', variant);
+      }
     }
 
     function updateDraftTemplateStyle(key, value) {
@@ -1823,6 +1881,7 @@
     }
 
     function posterOverlayAnchor(key, anchor) {
+      if (key === 'title' || key === 'subtitle') return anchor;
       const bounds = posterVisibleBoundsForAnchor(key);
       const host = materialCard?.getBoundingClientRect();
       if (!bounds || !host || !bounds.width || !bounds.height) return anchor;
@@ -1855,7 +1914,7 @@
         const anchor = anchors[key];
         if (!anchor) return;
         const overlayAnchor = posterOverlayAnchor(key, anchor);
-        box.classList.toggle('hidden', Boolean(anchor.hidden) || (key === 'image' && !hasImage) || (key === 'trust' && !effectiveTrustVisible()));
+        box.classList.toggle('hidden', Boolean(anchor.hidden) || (key === 'trust' && !effectiveTrustVisible()));
         box.style.left = formatPct(overlayAnchor.x);
         box.style.top = formatPct(overlayAnchor.y);
         box.style.width = formatPct(overlayAnchor.w);
@@ -1882,6 +1941,91 @@
       updatePosterUndoState();
     }
 
+    const POSTER_CONTEXT_ALIGN_ACTIONS = [
+      { action: 'left', label: '左对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v13"/><path d="M8 6h8"/><path d="M8 10h6"/><path d="M8 14h9"/></svg>' },
+      { action: 'hcenter', label: '水平居中', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v13"/><path d="M6 6h8"/><path d="M7.5 10h5"/><path d="M5 14h10"/></svg>' },
+      { action: 'right', label: '右对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3.5v13"/><path d="M4 6h8"/><path d="M6 10h6"/><path d="M3 14h9"/></svg>' },
+      { action: 'top', label: '顶对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4h13"/><path d="M6 8v8"/><path d="M10 8v6"/><path d="M14 8v9"/></svg>' },
+      { action: 'vcenter', label: '垂直居中', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10h13"/><path d="M6 6v8"/><path d="M10 7.5v5"/><path d="M14 5v10"/></svg>' },
+      { action: 'bottom', label: '底对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 16h13"/><path d="M6 4v8"/><path d="M10 6v6"/><path d="M14 3v9"/></svg>' },
+      { action: 'reset', label: '恢复当前尺寸', icon: '' }
+    ];
+
+    const POSTER_CONTEXT_CTA_SIZE_ACTIONS = [
+      { action: 'cta-size-large', label: '大尺寸', hint: '当前间距' },
+      { action: 'cta-size-small', label: '小尺寸', hint: '间距减半' }
+    ];
+
+    function ensurePosterContextMenu() {
+      let menu = document.getElementById('posterContextMenu');
+      if (menu) return menu;
+      menu = document.createElement('div');
+      menu.id = 'posterContextMenu';
+      menu.className = 'poster-context-menu';
+      menu.setAttribute('role', 'menu');
+      menu.innerHTML = POSTER_CONTEXT_ALIGN_ACTIONS.map(item => `
+        <button class="poster-context-action ${item.action === 'reset' ? 'poster-context-action--reset' : ''}" type="button" role="menuitem" data-poster-context-action="${item.action}">
+          ${item.icon}
+          <span>${item.label}</span>
+        </button>
+      `).join('') + `
+        <div class="poster-context-section-title">按钮尺寸</div>
+        ${POSTER_CONTEXT_CTA_SIZE_ACTIONS.map(item => `
+          <button class="poster-context-action poster-context-action--cta-size" type="button" role="menuitem" data-poster-context-action="${item.action}">
+            <span>${item.label}</span>
+            <small>${item.hint}</small>
+          </button>
+        `).join('')}
+      `;
+      menu.addEventListener('click', event => {
+        const button = event.target.closest('[data-poster-context-action]');
+        if (!button || button.disabled) return;
+        const action = button.dataset.posterContextAction;
+        hidePosterContextMenu();
+        if (action?.startsWith('cta-size-')) {
+          applyCtaSizePreset(action === 'cta-size-small' ? 'small' : 'large');
+          return;
+        }
+        alignSelectedPosterAnchors(action);
+      });
+      document.body.appendChild(menu);
+      return menu;
+    }
+
+    function hidePosterContextMenu() {
+      const menu = document.getElementById('posterContextMenu');
+      if (!menu) return;
+      menu.classList.remove('open');
+      menu.style.removeProperty('left');
+      menu.style.removeProperty('top');
+    }
+
+    function hideMainImageMenus() {
+      hidePosterContextMenu();
+    }
+
+    function showPosterContextMenu(event) {
+      const menu = ensurePosterContextMenu();
+      const alignableCount = [...selectedPosterAnchorKeys]
+        .filter(key => key !== 'image' && posterEditableAnchorKeys.includes(key))
+        .length;
+      const singleCopyAnchorSelected = selectedPosterAnchorKeys.size === 1 && ['logo', 'title', 'subtitle', 'cta'].includes(activePosterAnchor);
+      menu.classList.toggle('show-cta-size', activePosterAnchor === 'cta');
+      menu.querySelectorAll('[data-poster-context-action]').forEach(button => {
+        const action = button.dataset.posterContextAction;
+        const isCtaSizeAction = action?.startsWith('cta-size-');
+        button.disabled = !generated
+          || (isCtaSizeAction && activePosterAnchor !== 'cta')
+          || (!isCtaSizeAction && action !== 'reset' && alignableCount < 2 && !singleCopyAnchorSelected);
+      });
+      menu.classList.add('open');
+      const rect = menu.getBoundingClientRect();
+      const left = Math.min(event.clientX, window.innerWidth - rect.width - 12);
+      const top = Math.min(event.clientY, window.innerHeight - rect.height - 12);
+      menu.style.left = `${Math.max(12, left)}px`;
+      menu.style.top = `${Math.max(12, top)}px`;
+    }
+
     function normalizedPosterAnchor(anchorKey, nextAnchor, baseAnchor, size = materialSizes[currentSizeIndex]) {
       const minSize = anchorKey === 'logo' || anchorKey === 'trust' ? 4 : 5;
       const normalized = {
@@ -1893,9 +2037,66 @@
       };
       if (Number.isFinite(Number(nextAnchor.font))) normalized.font = clamp(Number(nextAnchor.font), 0.6, 40);
       if (Number.isFinite(Number(nextAnchor.fontScale))) normalized.fontScale = clamp(Number(nextAnchor.fontScale), 0.05, 8);
+      if (['left', 'center', 'right'].includes(nextAnchor.align)) normalized.align = nextAnchor.align;
+      if (['top', 'center', 'bottom'].includes(nextAnchor.vAlign)) normalized.vAlign = nextAnchor.vAlign;
+      if (anchorKey === 'cta') {
+        if (Number.isFinite(Number(nextAnchor.padX))) normalized.padX = Math.max(0, Number(nextAnchor.padX));
+        if (Number.isFinite(Number(nextAnchor.padY))) normalized.padY = Math.max(0, Number(nextAnchor.padY));
+        if (Number.isFinite(Number(nextAnchor.lineHeight))) normalized.lineHeight = Math.max(0.5, Number(nextAnchor.lineHeight));
+        if (typeof nextAnchor.autoWidth === 'boolean') normalized.autoWidth = nextAnchor.autoWidth;
+      }
       normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
       normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size) : normalized;
+    }
+
+    function ctaDefaultPaddingPercent(size, axis) {
+      const width = Number(size?.width) || CTA_TEMPLATE_RATIO_SIZE.width;
+      const height = Number(size?.height) || CTA_TEMPLATE_RATIO_SIZE.height;
+      const scale = Math.max(0.08, Math.min(width / 1200, height / 628));
+      const px = axis === 'y' ? Math.max(2, 20 * scale) : Math.max(4, 40 * scale);
+      return (px / Math.max(1, axis === 'y' ? height : width)) * 100;
+    }
+
+    function ctaPaddingPercent(anchor, size, axis) {
+      const key = axis === 'y' ? 'padY' : 'padX';
+      const value = Number(anchor?.[key]);
+      return Number.isFinite(value) ? value : ctaDefaultPaddingPercent(size, axis);
+    }
+
+    function ctaTextHeightPercent(anchor, size) {
+      const height = Math.max(1, Number(size?.height) || CTA_TEMPLATE_RATIO_SIZE.height);
+      const fontPx = Number(anchor?.fontPx);
+      const fontScale = Number(anchor?.fontScale);
+      const fontPercent = Number.isFinite(fontPx) && fontPx > 0
+        ? (fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1) / height) * 100
+        : (Number(anchor?.font) || Math.max(1, (Number(anchor?.h) || 8) * 0.38));
+      return fontPercent * (Number(anchor?.lineHeight) || 1.4);
+    }
+
+    function applyCtaSizePreset(preset) {
+      const size = materialSizes[currentSizeIndex] || materialSizes[0];
+      const anchors = effectivePosterAnchorsForSize();
+      const current = anchors.cta;
+      if (!generated || !current) return;
+      const base = basePosterAnchorsForSize(size, templateAnchors).cta || current;
+      const basePadX = ctaPaddingPercent(base, size, 'x');
+      const basePadY = ctaPaddingPercent(base, size, 'y');
+      const scale = preset === 'small' ? 0.5 : 1;
+      const next = {
+        ...current,
+        padX: basePadX * scale,
+        padY: basePadY * scale,
+        h: preset === 'small'
+          ? clamp(ctaTextHeightPercent(current, size) + basePadY, 4, 100)
+          : (Number(base.h) || current.h)
+      };
+      pushPosterEditHistory();
+      setPosterOverride('cta', next);
+      activePosterAnchor = 'cta';
+      selectedPosterAnchorKeys = new Set(['cta']);
+      renderPosterEditOverlay();
+      showToast(preset === 'small' ? '按钮已切换为小尺寸：上下左右间距约为当前一半' : '按钮已切换为大尺寸：恢复当前尺寸默认间距');
     }
 
     function setPosterOverride(anchorKey, nextAnchor) {
@@ -1973,6 +2174,42 @@
       return true;
     }
 
+    function posterCopyFrameForAlignment(anchors) {
+      const stack = anchors?.contentStack;
+      if (['x', 'y', 'w', 'h'].every(key => Number.isFinite(Number(stack?.[key])))) {
+        return {
+          x: Number(stack.x),
+          y: Number(stack.y),
+          w: Number(stack.w),
+          h: Number(stack.h)
+        };
+      }
+      const copyAnchors = ['title', 'subtitle', 'cta'].map(key => anchors?.[key]).filter(anchor => anchor && !anchor.hidden);
+      if (!copyAnchors.length) return null;
+      const left = Math.min(...copyAnchors.map(anchor => Number(anchor.x) || 0));
+      const top = Math.min(...copyAnchors.map(anchor => Number(anchor.y) || 0));
+      const right = Math.max(...copyAnchors.map(anchor => (Number(anchor.x) || 0) + (Number(anchor.w) || 0)));
+      const bottom = Math.max(...copyAnchors.map(anchor => (Number(anchor.y) || 0) + (Number(anchor.h) || 0)));
+      return { x: left, y: top, w: right - left, h: bottom - top };
+    }
+
+    function alignSinglePosterCopyAnchor(anchorKey, action, anchors) {
+      const anchor = anchors?.[anchorKey];
+      const frame = posterCopyFrameForAlignment(anchors);
+      if (!anchor || !frame) return false;
+      const next = { ...anchor };
+      if (action === 'left') next.x = frame.x;
+      if (action === 'hcenter') next.x = frame.x + (frame.w - anchor.w) / 2;
+      if (action === 'right') next.x = frame.x + frame.w - anchor.w;
+      if (action === 'top') next.y = frame.y;
+      if (action === 'vcenter') next.y = frame.y + (frame.h - anchor.h) / 2;
+      if (action === 'bottom') next.y = frame.y + frame.h - anchor.h;
+      pushPosterEditHistory();
+      setPosterOverride(anchorKey, next);
+      showToast('已按当前尺寸文案区对齐选中元素');
+      return true;
+    }
+
     document.addEventListener('keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) || isKeyboardMoveBlocked(event)) return;
       moveSelectedTemplateAnchorsByKeyboard(event) || moveSelectedPosterAnchorsByKeyboard(event);
@@ -1987,15 +2224,20 @@
         activePosterAnchor = null;
         selectedPosterAnchorKeys = new Set();
         applyPosterLayoutForSize(currentSizeIndex);
+        renderPosterEditOverlay();
         showToast('当前语言文本布局与当前尺寸共享元素已恢复生成规则');
         return;
       }
       const anchorKeys = [...selectedPosterAnchorKeys].filter(key => posterEditableAnchorKeys.includes(key) && key !== 'image');
+      const anchors = effectivePosterAnchorsForSize();
+      if (anchorKeys.length === 1 && ['logo', 'title', 'subtitle', 'cta'].includes(anchorKeys[0])) {
+        alignSinglePosterCopyAnchor(anchorKeys[0], action, anchors);
+        return;
+      }
       if (anchorKeys.length < 2) {
         showToast(selectedPosterAnchorKeys.has('image') ? '主图仅支持拖动图片，不支持对齐框位置' : '请先多选至少两个元素');
         return;
       }
-      const anchors = effectivePosterAnchorsForSize();
       const selectedAnchors = anchorKeys.map(key => anchors[key]);
       const left = Math.min(...selectedAnchors.map(anchor => anchor.x));
       const top = Math.min(...selectedAnchors.map(anchor => anchor.y));
@@ -2028,6 +2270,52 @@
       saveTemplateState();
     }
 
+    function renderStyleSwitchOptions() {
+      if (!styleSwitchGrid) return;
+      styleSwitchGrid.innerHTML = stylePresets.map(style => {
+        const styles = normalizeButtonColors(cloneStyles(styleMaps[style.id] || defaultStylesForId(style.id)));
+        const background = templateBackgroundCss(styles);
+        const isActive = style.id === selectedStyle;
+        return `
+          <button class="style-option-card ${isActive ? 'active' : ''}" type="button" data-style-switch="${escapeHtml(style.id)}" aria-label="切换到${escapeHtml(styleDisplayName(style))}">
+            <span class="style-option-preview" style="--style-bg:${escapeHtml(background)};--style-copy:${escapeHtml(styles.textColor || '#081840')};--style-button:${escapeHtml(styles.buttonColor || FIGMA_BUTTON_FILL_COLOR)};--style-button-text:${escapeHtml(styles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR)}" aria-hidden="true">
+              <span class="style-option-dot"></span>
+              <span class="style-option-title">Text</span>
+              <span class="style-option-pill">Text</span>
+            </span>
+            <span class="style-option-copy">
+              <span class="style-option-name">${escapeHtml(styleDisplayName(style))}</span>
+            </span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function closeStyleSwitchModal() {
+      styleSwitchModal?.classList.remove('open');
+      styleSwitchModal?.setAttribute('aria-hidden', 'true');
+    }
+
+    function openStyleSwitchModal() {
+      if (!generated) {
+        showToast('请先生成后再切换样式');
+        return;
+      }
+      renderStyleSwitchOptions();
+      styleSwitchModal?.classList.add('open');
+      styleSwitchModal?.setAttribute('aria-hidden', 'false');
+    }
+
+    function applyStylePresetFromResults(styleKey) {
+      if (!styleKey || !styleMaps[styleKey]) return;
+      loadStyleMapping(styleKey);
+      applyRuleVisualStyles(currentPreviewAsset());
+      applyPosterLayoutForSize(currentSizeIndex);
+      renderStyleSwitchOptions();
+      showToast(`已切换为${styleName(styleKey)}`);
+      closeStyleSwitchModal();
+    }
+
     function loadTemplateMapping(templateKey) {
       selectedTemplate = templateKey || templates[0].id;
       templateAnchorMaps[selectedTemplate] = completeAnchors(templateAnchorMaps[selectedTemplate] || defaultTemplateAnchors);
@@ -2050,7 +2338,7 @@
       templateAnchors = cloneAnchors(templateAnchorMaps[selectedTemplate]);
       applyTemplateAnchors();
       saveTemplateState();
-      showToast(`${templateName()}已同步到素材生成`);
+      showToast(`${templateName()}已同步到促销材料`);
     }
 
     function nextTemplateId() {
@@ -2100,7 +2388,7 @@
       templateAnchorMaps[id] = completeAnchors(templateAnchors || defaultTemplateAnchors);
       loadTemplateMapping(id);
       saveTemplateState();
-      showToast(`${templateName(id)}已新增，并映射到素材生成`);
+      showToast(`${templateName(id)}已新增，并映射到促销材料`);
     }
 
     function deleteTemplate() {
@@ -2116,7 +2404,7 @@
       const nextTemplate = templates[Math.min(deleteIndex, templates.length - 1)] || templates[0];
       loadTemplateMapping(nextTemplate.id);
       saveTemplateState();
-      showToast(`${deletedName}已删除，并同步到素材生成`);
+      showToast(`${deletedName}已删除，并同步到促销材料`);
     }
 
     function reorderTemplate(from, to) {
@@ -2124,7 +2412,7 @@
       moveArrayItem(templates, from, to);
       renderTemplateOptions();
       saveTemplateState();
-      showToast('模板排序已同步到素材生成');
+      showToast('模板排序已同步到促销材料');
     }
 
     function renameTemplate(templateKey, nextName) {
@@ -2139,7 +2427,7 @@
       renderTemplateOptions();
       updateTemplateMappingStatus();
       saveTemplateState();
-      showToast(`${template.name}已重命名，并同步到素材生成`);
+      showToast(`${template.name}已重命名，并同步到促销材料`);
       return true;
     }
 
@@ -2195,7 +2483,7 @@
       modal.innerHTML = `
         <div class="confirm-dialog poster-edit-dialog" role="dialog" aria-modal="true" aria-label="重命名模板">
           <div class="confirm-title">重命名模板</div>
-          <div class="confirm-desc">输入新的模板名称，确认后会同步到素材生成和模板管理。</div>
+          <div class="confirm-desc">输入新的模板名称，确认后会同步到促销材料和模板管理。</div>
           <div class="poster-edit-form">
             <div class="poster-edit-field">
               <label for="templateRenameInput">模板名称</label>
@@ -2384,7 +2672,7 @@
       const currentSizeId = materialSizes[currentSizeIndex]?.id;
       moveArrayItem(materialSizes, from, to);
       currentSizeIndex = Math.max(0, materialSizes.findIndex(size => size.id === currentSizeId));
-      syncSettingsToGenerator('尺寸排序已同步到素材生成');
+      syncSettingsToGenerator('尺寸排序已同步到促销材料');
     }
 
     function reorderLanguageSetting(from, to) {
@@ -2393,12 +2681,12 @@
       moveArrayItem(languages, from, to);
       moveArrayItem(localizedCopy, from, to);
       currentLanguageIndex = Math.max(0, languages.indexOf(currentLanguage));
-      syncSettingsToGenerator('语言排序已同步到素材生成');
+      syncSettingsToGenerator('语言排序已同步到促销材料');
     }
 
     function renderGenerationRules() {
       if (rulesDesc) {
-        rulesDesc.textContent = `上传生成规则文档后，系统会解析 MD、Word、PDF、XLSX 中的结构化规则并用于素材生成。当前已解析 ${parsedRulesCount()} 条规则。`;
+        rulesDesc.textContent = `上传生成规则文档后，系统会解析 MD、Word、PDF、XLSX 中的结构化规则并用于促销材料。当前已解析 ${parsedRulesCount()} 条规则。`;
       }
       updateRulesDocumentState();
     }
@@ -2884,7 +3172,7 @@
       }
     }
 
-    function syncSettingsToGenerator(message = '设置已同步到素材生成') {
+    function syncSettingsToGenerator(message = '设置已同步到促销材料') {
       Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
       normalizeSizeLanguageState();
       currentSizeIndex = Math.min(currentSizeIndex, Math.max(0, materialSizes.length - 1));
@@ -2925,7 +3213,7 @@
       if (labelInput) labelInput.value = '';
       if (widthInput) widthInput.value = '';
       if (heightInput) heightInput.value = '';
-      syncSettingsToGenerator('尺寸已新增并同步到素材生成');
+      syncSettingsToGenerator('尺寸已新增并同步到促销材料');
       return true;
     }
 
@@ -2939,7 +3227,7 @@
         return;
       }
       materialSizes[index] = { ...materialSizes[index], label: normalizeSizeLabel(width, height, row.querySelector('[data-size-field="label"]')?.value), width, height };
-      syncSettingsToGenerator('尺寸已更新并同步到素材生成');
+      syncSettingsToGenerator('尺寸已更新并同步到促销材料');
     }
 
     function deleteSizeSetting(row) {
@@ -2950,7 +3238,7 @@
         return;
       }
       materialSizes.splice(index, 1);
-      syncSettingsToGenerator('尺寸已删除并同步到素材生成');
+      syncSettingsToGenerator('尺寸已删除并同步到促销材料');
     }
 
     function addLanguageSetting() {
@@ -2966,7 +3254,7 @@
       localizedCopy.push(defaultLocalizedCopy());
       if (cnInput) cnInput.value = '';
       if (nativeInput) nativeInput.value = '';
-      syncSettingsToGenerator('语言已新增并同步到素材生成');
+      syncSettingsToGenerator('语言已新增并同步到促销材料');
       return true;
     }
 
@@ -2980,7 +3268,7 @@
         return;
       }
       languages[index] = [cn, en];
-      syncSettingsToGenerator('语言已更新并同步到素材生成');
+      syncSettingsToGenerator('语言已更新并同步到促销材料');
     }
 
     function deleteLanguageSetting(row) {
@@ -2992,7 +3280,7 @@
       }
       languages.splice(index, 1);
       localizedCopy.splice(index, 1);
-      syncSettingsToGenerator('语言已删除并同步到素材生成');
+      syncSettingsToGenerator('语言已删除并同步到促销材料');
     }
 
     function getSourceCopy() {
@@ -3330,11 +3618,28 @@
     function renderLanguagePreview(indices = generatedLanguageIndices) {
       const html = indices.map(index => {
         const [cn, en] = languages[index] || languages[0];
-        return `<button class="language-pill ${index === currentLanguageIndex ? 'active' : ''}" type="button" data-language-preview-index="${index}">${cn}<span>${en}</span></button>`;
+        const complete = isPosterCopyComplete(languageEditorCopy(index));
+        return `
+          <button class="language-pill ${index === currentLanguageIndex ? 'active' : ''} ${complete ? 'is-complete' : ''}" type="button" data-language-preview-index="${index}">
+            ${complete ? '<i class="language-complete-dot" aria-label="已填写"></i>' : ''}
+            ${cn}<span>${en}</span>
+          </button>
+        `;
       }).join('');
       languagePreviewRow.innerHTML = html;
       if (bottomLanguagePreviewRow) bottomLanguagePreviewRow.innerHTML = html;
       syncResultCollapseState();
+    }
+
+    function setLanguagePreviewCompleteState(languageIndex, complete) {
+      document.querySelectorAll(`.language-pill[data-language-preview-index="${languageIndex}"]`).forEach(pill => {
+        pill.classList.toggle('is-complete', complete);
+        const existing = pill.querySelector('.language-complete-dot');
+        if (complete && !existing) {
+          pill.insertAdjacentHTML('afterbegin', '<i class="language-complete-dot" aria-label="已填写"></i>');
+        }
+        if (!complete) existing?.remove();
+      });
     }
 
     function generatedAssetCount() {
@@ -3361,6 +3666,43 @@
       if (targetPanel?.scrollIntoView) {
         requestAnimationFrame(() => targetPanel.scrollIntoView({ block: 'start', inline: 'nearest' }));
       }
+    }
+
+    function syncGeneratorPanelState() {
+      activeGeneratorPanel = 'results';
+      const showingResults = true;
+      settingsPanel?.classList.add('hidden');
+      resultPreviewPanel?.classList.remove('hidden');
+      settingsTabButton?.classList.remove('active');
+      resultsTabButton?.classList.add('active');
+      settingsTabButton?.setAttribute('aria-selected', 'false');
+      resultsTabButton?.setAttribute('aria-selected', 'true');
+      resultsTabButton?.setAttribute('aria-disabled', generated ? 'false' : 'true');
+      if (resultsTabButton) resultsTabButton.disabled = !generated || isGenerating;
+      if (settingsTabButton) settingsTabButton.disabled = isGenerating;
+      syncPreviewActionVisibility(showingResults);
+    }
+
+    function syncPreviewActionVisibility(showingResults = generated && activeGeneratorPanel === 'results') {
+      const shouldShowActions = Boolean(generated && showingResults);
+      downloadMenu?.classList.toggle('hidden', !shouldShowActions);
+      downloadButton?.classList.toggle('hidden', !shouldShowActions);
+      styleSwitchButton?.classList.toggle('hidden', !shouldShowActions);
+      editPosterButton?.classList.toggle('hidden', !shouldShowActions);
+      regenerateButton?.classList.toggle('hidden', !shouldShowActions);
+      if (!shouldShowActions) closeDownloadMenu();
+    }
+
+    function switchGeneratorPanel(panel, options = {}) {
+      const target = panel === 'results' ? 'results' : 'settings';
+      if (target === 'results' && !generated && !options.force) {
+        showToast('请先填写信息并点击生成');
+        syncGeneratorPanelState();
+        return;
+      }
+      activeGeneratorPanel = target;
+      syncGeneratorPanelState();
+      resetGeneratorPanelScroll(target === 'results' ? resultPreviewPanel : settingsPanel);
     }
 
     function syncCopyPlaceholderState() {
@@ -3410,7 +3752,6 @@
       return titleInput.value.trim()
         && subtitleInput.value.trim()
         && ctaInput.value.trim()
-        && hasImage
         && selectedSizeIndices().length > 0
         && selectedLanguageIndices().length > 0;
     }
@@ -3420,7 +3761,11 @@
       uploadMeta.classList.toggle('hidden', !hasImage);
       uploadCard.classList.toggle('hidden', hasImage);
       productFrame.classList.toggle('hidden', !hasImage);
-      if (!hasImage) selectProductFrame(false);
+      if (!hasImage && activePosterAnchor !== 'image') selectProductFrame(false);
+      if (posterUploadAction) {
+        posterUploadAction.textContent = hasImage ? '重新上传' : '上传主图';
+        posterUploadAction.classList.remove('hidden');
+      }
       emptyNote.classList.add('hidden');
       materialCard.classList.toggle('empty', !generated && !hasImage);
       materialCard.classList.toggle('generated', generated);
@@ -3432,14 +3777,10 @@
       renderPosterEditOverlay();
       generateButton.disabled = !appInitialized || !isGenerationReady();
       downloadButton.disabled = !generated;
+      if (styleSwitchButton) styleSwitchButton.disabled = !generated;
       editPosterButton.disabled = !generated;
-      regenerateButton.disabled = !generated;
-      downloadButton.classList.toggle('hidden', !generated);
-      if (!generated) closeDownloadMenu();
-      editPosterButton.classList.toggle('hidden', !generated);
-      regenerateButton.classList.toggle('hidden', !generated);
-      settingsPanel.classList.toggle('hidden', generated);
-      resultPreviewPanel.classList.toggle('hidden', !generated);
+      if (regenerateButton) regenerateButton.disabled = !generated;
+      syncGeneratorPanelState();
       previewBottomSwitcher?.classList.toggle('hidden', !generated);
       generatorLayout.classList.toggle('result-mode', generated);
       sizePreviewSection.classList.toggle('is-empty', !generated);
@@ -3461,9 +3802,11 @@
       isGenerating = next;
       generateButton.disabled = next || !appInitialized || !isGenerationReady();
       downloadButton.disabled = next || !generated;
+      if (styleSwitchButton) styleSwitchButton.disabled = next || !generated;
       if (next) closeDownloadMenu();
       editPosterButton.disabled = next || !generated;
-      regenerateButton.disabled = next || !generated;
+      if (regenerateButton) regenerateButton.disabled = next || !generated;
+      syncGeneratorPanelState();
       uploadInput.disabled = next;
       uploadCard.disabled = next;
       removeUpload.disabled = next;
@@ -3493,7 +3836,6 @@
 
     function setUploadEmpty() {
       hasImage = false;
-      generated = false;
       uploadedImageSrc = '';
       uploadedImageName = '未上传图片';
       productImageAdjustments = {};
@@ -3510,7 +3852,6 @@
 
     function setUploadImage(file, src) {
       hasImage = true;
-      generated = false;
       uploadedImageSrc = src;
       uploadedImageName = file.name || '已上传图片';
       productImageAdjustments = {};
@@ -3774,6 +4115,33 @@
       });
 
       uploadZone.addEventListener('drop', event => handleUploadFile(event.dataTransfer?.files?.[0]));
+      posterUploadAction?.addEventListener('click', event => {
+        event.stopPropagation();
+        openUploadPicker();
+      });
+      const selectMainImageArea = () => {
+        activePosterAnchor = 'image';
+        selectedPosterAnchorKeys = new Set(['image']);
+        renderPosterEditOverlay();
+        updateUploadState();
+      };
+      posterImagePlaceholder?.addEventListener('click', event => {
+        event.stopPropagation();
+        if (!hasImage) {
+          openUploadPicker();
+          return;
+        }
+        selectMainImageArea();
+      });
+      posterImagePlaceholder?.addEventListener('keydown', event => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        if (!hasImage) {
+          openUploadPicker();
+          return;
+        }
+        selectMainImageArea();
+      });
     }
 
     function beginProductWheelUndo() {
@@ -3791,7 +4159,13 @@
     }
 
     document.addEventListener('click', event => {
-      if (event.target.closest('#productFrame, .poster-anchor-box[data-poster-anchor="image"]')) return;
+      if (event.target.closest('#productFrame, #posterUploadAction, #posterImagePlaceholder, .poster-anchor-box[data-poster-anchor="image"]')) return;
+      if (activePosterAnchor === 'image') {
+        activePosterAnchor = null;
+        selectedPosterAnchorKeys.delete('image');
+        renderPosterEditOverlay();
+        updateUploadState();
+      }
       selectProductFrame(false);
     });
 
@@ -3814,11 +4188,31 @@
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'editPosterModal';
-        modal.className = 'confirm-modal';
+        modal.className = 'confirm-modal side-drawer-modal';
         document.body.appendChild(modal);
         modal.addEventListener('click', event => {
           if (event.target === modal || event.target.closest('[data-edit-action="cancel"]')) closeEditPosterModal();
           if (event.target.closest('[data-edit-action="submit"]')) submitPosterEdit();
+          const removeButton = event.target.closest('[data-remove-copy-language]');
+          if (removeButton) {
+            event.stopPropagation();
+            removePosterCopyLanguage(Number(removeButton.dataset.removeCopyLanguage));
+            return;
+          }
+          const selector = event.target.closest('[data-language-selector-toggle]');
+          if (selector) {
+            event.stopPropagation();
+            togglePosterLanguageDropdown();
+            return;
+          }
+          const addButton = event.target.closest('[data-add-copy-language]');
+          if (addButton && !addButton.disabled) {
+            event.stopPropagation();
+            addPosterCopyLanguage(Number(addButton.dataset.addCopyLanguage));
+          }
+        });
+        modal.addEventListener('input', event => {
+          if (event.target.closest('[data-copy-field]')) syncPosterCopyStatus();
         });
         document.addEventListener('keydown', event => {
           if (event.key === 'Escape') closeEditPosterModal();
@@ -3827,64 +4221,270 @@
       return modal;
     }
 
-    function openEditPosterModal() {
-      if (!generated) {
-        showToast('请先生成素材后再编辑海报');
-        return;
-      }
-      const modal = ensureEditPosterModal();
-      const [cn, en] = languages[currentLanguageIndex] || languages[0];
-      const copy = copyForAsset(currentPreviewAsset());
-      modal.innerHTML = `
-        <div class="confirm-dialog poster-edit-dialog" role="dialog" aria-modal="true" aria-label="编辑海报文案">
-          <div class="confirm-title">编辑海报文案</div>
-          <div class="confirm-desc">当前语言：${cn} / ${en}。提交后会直接写入右侧预览，并作为下载结果。</div>
-          <div class="poster-edit-form">
-            <div class="poster-edit-field">
-              <label for="posterEditTitle">标题</label>
-              <input id="posterEditTitle" maxlength="${COPY_LIMITS.title}" />
+    function selectedPosterCopyLanguageIndices() {
+      const selected = generatedLanguageIndices.length ? generatedLanguageIndices : selectedLanguageIndices();
+      const valid = validIndices(selected, languages);
+      return valid.length ? valid : (languages.length ? [0] : []);
+    }
+
+    function posterCopyLanguageIndicesFromModal() {
+      const modal = document.getElementById('editPosterModal');
+      const selected = [...modal?.querySelectorAll('[data-selected-copy-language]') || []]
+        .map(item => Number(item.dataset.selectedCopyLanguage))
+        .filter(index => Number.isInteger(index) && languages[index]);
+      return validIndices(selected, languages);
+    }
+
+    function isPosterCopyComplete(copy) {
+      return ['title', 'subtitle', 'cta'].every(key => String(copy?.[key] || '').trim());
+    }
+
+    function posterCopyStatus(copy) {
+      return isPosterCopyComplete(copy) ? '已填写' : '';
+    }
+
+    function isInitialCopyPlaceholderValue(value, languageIndex, key) {
+      const current = normalizeCopyText(value);
+      const defaultValue = normalizeCopyText(cloneDefaultCopy(languageIndex)?.[key]);
+      const placeholderSourceKeys = {
+        title: ['Headline Text'],
+        subtitle: [
+          'More information and key features here.',
+          'More information and key features can be detailed here.'
+        ],
+        cta: ['Button', 'Button Text']
+      };
+      const translatedDefaults = (placeholderSourceKeys[key] || [])
+        .map(sourceKey => COPY_TRANSLATION_MAP[sourceKey]?.[languageIndex] || sourceKey)
+        .map(normalizeCopyText);
+      return Boolean(current && (current === defaultValue || translatedDefaults.includes(current)));
+    }
+
+    function copyValueForPosterEditor(copy, languageIndex, key) {
+      const value = normalizeCopyText(copy?.[key]);
+      return isInitialCopyPlaceholderValue(value, languageIndex, key) ? '' : value;
+    }
+
+    function languageEditorCopy(languageIndex) {
+      const copy = normalizeCopy(localizedCopy[languageIndex] || getLanguageCopy(languageIndex), languageIndex);
+      return {
+        title: copyValueForPosterEditor(copy, languageIndex, 'title'),
+        subtitle: copyValueForPosterEditor(copy, languageIndex, 'subtitle'),
+        cta: copyValueForPosterEditor(copy, languageIndex, 'cta')
+      };
+    }
+
+    function posterEditorCopyFromCard(card) {
+      return {
+        title: normalizeCopyText(card.querySelector('[data-copy-field="title"]')?.value),
+        subtitle: normalizeCopyText(card.querySelector('[data-copy-field="subtitle"]')?.value),
+        cta: normalizeCopyText(card.querySelector('[data-copy-field="cta"]')?.value)
+      };
+    }
+
+    function posterCopyCardHtml(index) {
+      const [cn = '', en = ''] = languages[index] || [];
+      const editorCopy = languageEditorCopy(index);
+      const complete = isPosterCopyComplete(editorCopy);
+      return `
+        <section class="language-copy-card ${complete ? 'is-complete' : ''}" data-copy-language-index="${index}">
+          <div class="language-copy-head">
+            <div>
+              <strong>${escapeHtml(cn)}</strong>
+              <span>${escapeHtml(en)}</span>
             </div>
-            <div class="poster-edit-field">
-              <label for="posterEditSubtitle">副标题</label>
-              <textarea id="posterEditSubtitle" maxlength="${COPY_LIMITS.subtitle}"></textarea>
-            </div>
-            <div class="poster-edit-field">
-              <label for="posterEditCta">按钮文案</label>
-              <input id="posterEditCta" maxlength="${COPY_LIMITS.cta}" />
-            </div>
+            <em data-copy-status>${complete ? '<i>✓</i>已填写' : ''}</em>
           </div>
-          <div class="confirm-actions">
-            <button class="modal-btn" type="button" data-edit-action="cancel">取消</button>
-            <button class="modal-btn primary" type="button" data-edit-action="submit">提交</button>
+          <label>标题
+            <input data-copy-field="title" maxlength="${COPY_LIMITS.title}" placeholder="请输入内容" value="${escapeHtml(editorCopy.title)}">
+          </label>
+          <label>副标题
+            <textarea data-copy-field="subtitle" maxlength="${COPY_LIMITS.subtitle}" placeholder="请输入内容">${escapeHtml(editorCopy.subtitle)}</textarea>
+          </label>
+          <label>按钮文案
+            <input data-copy-field="cta" maxlength="${COPY_LIMITS.cta}" placeholder="请输入内容" value="${escapeHtml(editorCopy.cta)}">
+          </label>
+        </section>
+      `;
+    }
+
+    function posterLanguageSelectHtml(selectedIndices) {
+      const selectedSet = new Set(selectedIndices);
+      const chips = selectedIndices.map(index => {
+        const [cn = '', en = ''] = languages[index] || [];
+        const removable = selectedIndices.length > 1;
+        return `
+          <span class="copy-language-chip" data-selected-copy-language="${index}">
+            ${escapeHtml(cn)}
+            <button type="button" ${removable ? '' : 'disabled'} data-remove-copy-language="${index}" aria-label="移除 ${escapeHtml(cn)}">×</button>
+          </span>
+        `;
+      }).join('');
+      const options = languages.map(([cn, en], index) => {
+        const selected = selectedSet.has(index);
+        return `
+          <button class="copy-language-option${selected ? ' is-selected' : ''}" type="button" data-add-copy-language="${index}" ${selected ? 'disabled' : ''}>
+            <span>${escapeHtml(cn)} <small>${escapeHtml(en)}</small></span>
+            <em>${selected ? '已选择' : '添加'}</em>
+          </button>
+        `;
+      }).join('');
+      return `
+        <div class="copy-language-select-wrap">
+          <div class="copy-language-label">本次产出语言</div>
+          <div class="copy-language-select" role="button" tabindex="0" data-language-selector-toggle aria-expanded="false">
+            <span class="copy-language-chip-list">${chips}</span>
+            <span class="copy-language-arrow">▾</span>
+          </div>
+          <div class="copy-language-menu" data-copy-language-menu>
+            ${options}
           </div>
         </div>
       `;
-      modal.querySelector('#posterEditTitle').value = copy.title;
-      modal.querySelector('#posterEditSubtitle').value = copy.subtitle;
-      modal.querySelector('#posterEditCta').value = copy.cta;
+    }
+
+    function normalizedPosterCopyLanguageSelection(selectedIndices = selectedPosterCopyLanguageIndices()) {
+      const validSelected = validIndices(selectedIndices, languages);
+      return validSelected.length ? validSelected : (languages.length ? [0] : []);
+    }
+
+    function posterEditLanguageFormHtml(selectedIndices = selectedPosterCopyLanguageIndices()) {
+      const safeSelected = normalizedPosterCopyLanguageSelection(selectedIndices);
+      return `
+        ${posterLanguageSelectHtml(safeSelected)}
+        <div class="multi-language-divider"></div>
+        ${safeSelected.map(index => posterCopyCardHtml(index)).join('')}
+      `;
+    }
+
+    function renderPosterEditModalContent(modal, selectedIndices = selectedPosterCopyLanguageIndices()) {
+      modal.innerHTML = `
+        <div class="confirm-dialog poster-edit-dialog side-drawer-dialog multi-language-dialog" role="dialog" aria-modal="true" aria-label="多语言设置">
+          <div class="style-switch-head">
+            <div>
+              <div class="confirm-title">多语言设置</div>
+              <p class="style-switch-desc">选择本次要预览和产出的语言，未选择的语言不会生成素材。</p>
+            </div>
+            <button class="image-close" type="button" data-edit-action="cancel" aria-label="关闭多语言设置">×</button>
+          </div>
+          <div class="multi-language-form">
+            ${posterEditLanguageFormHtml(selectedIndices)}
+          </div>
+          <div class="confirm-actions drawer-actions">
+            <button class="modal-btn" type="button" data-edit-action="cancel">取消</button>
+            <button class="modal-btn primary" type="button" data-edit-action="submit">保存设置</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function syncPosterCopyFromModal() {
+      const modal = document.getElementById('editPosterModal');
+      if (!modal) return;
+      modal.querySelectorAll('[data-copy-language-index]').forEach(card => {
+        const index = Number(card.dataset.copyLanguageIndex);
+        if (!Number.isInteger(index) || !languages[index]) return;
+        localizedCopy[index] = posterEditorCopyFromCard(card);
+      });
+    }
+
+    function syncPosterCopyStatus() {
+      const modal = document.getElementById('editPosterModal');
+      modal?.querySelectorAll('[data-copy-language-index]').forEach(card => {
+        const copy = posterEditorCopyFromCard(card);
+        const status = card.querySelector('[data-copy-status]');
+        const complete = isPosterCopyComplete(copy);
+        card.classList.toggle('is-complete', complete);
+        if (status) status.innerHTML = complete ? '<i>✓</i>已填写' : '';
+        const index = Number(card.dataset.copyLanguageIndex);
+        if (Number.isInteger(index)) setLanguagePreviewCompleteState(index, complete);
+      });
+    }
+
+    function togglePosterLanguageDropdown(forceOpen = null) {
+      const modal = document.getElementById('editPosterModal');
+      const select = modal?.querySelector('[data-language-selector-toggle]');
+      const wrap = modal?.querySelector('.copy-language-select-wrap');
+      if (!select || !wrap) return;
+      const open = forceOpen === null ? !wrap.classList.contains('open') : Boolean(forceOpen);
+      wrap.classList.toggle('open', open);
+      select.setAttribute('aria-expanded', String(open));
+    }
+
+    function updatePosterCopyLanguages(nextIndices) {
+      const modal = document.getElementById('editPosterModal');
+      if (!modal) return;
+      const form = modal.querySelector('.multi-language-form');
+      if (!form) return;
+      const previousScrollTop = form.scrollTop;
+      syncPosterCopyFromModal();
+      form.innerHTML = posterEditLanguageFormHtml(nextIndices);
+      form.scrollTop = previousScrollTop;
+      syncPosterCopyStatus();
+    }
+
+    function addPosterCopyLanguage(index) {
+      if (!Number.isInteger(index) || !languages[index]) return;
+      const selected = posterCopyLanguageIndicesFromModal();
+      if (selected.includes(index)) return;
+      updatePosterCopyLanguages([...selected, index].sort((a, b) => a - b));
+      togglePosterLanguageDropdown(true);
+    }
+
+    function removePosterCopyLanguage(index) {
+      const selected = posterCopyLanguageIndicesFromModal();
+      if (selected.length <= 1) {
+        showToast('至少需要保留一种产出语言');
+        return;
+      }
+      updatePosterCopyLanguages(selected.filter(item => item !== index));
+    }
+
+    function openEditPosterModal() {
+      if (!generated) {
+        showToast('素材正在初始化，请稍候');
+        return;
+      }
+      const modal = ensureEditPosterModal();
+      renderPosterEditModalContent(modal);
       modal.classList.add('open');
-      modal.querySelector('#posterEditTitle')?.focus();
+      modal.querySelector('[data-copy-field="title"]')?.focus();
     }
 
     function submitPosterEdit() {
       const modal = document.getElementById('editPosterModal');
       if (!modal) return;
-      const nextCopy = {
-        title: modal.querySelector('#posterEditTitle')?.value.trim() || localizedCopy[0].title,
-        subtitle: modal.querySelector('#posterEditSubtitle')?.value.trim() || localizedCopy[0].subtitle,
-        cta: modal.querySelector('#posterEditCta')?.value.trim() || localizedCopy[0].cta
-      };
       pushPosterEditHistory();
-      posterCopyOverrides[currentLanguageIndex] = nextCopy;
-      if (currentLanguageIndex === 0) {
-        titleInput.value = nextCopy.title;
-        subtitleInput.value = nextCopy.subtitle;
-        ctaInput.value = nextCopy.cta;
-        updateCounters();
-      }
+      const selectedLanguages = posterCopyLanguageIndicesFromModal();
+      modal.querySelectorAll('[data-copy-language-index]').forEach(card => {
+        const index = Number(card.dataset.copyLanguageIndex);
+        if (!Number.isInteger(index) || !languages[index]) return;
+        localizedCopy[index] = posterEditorCopyFromCard(card);
+        delete posterCopyOverrides[index];
+      });
+      document.querySelectorAll('.language-card').forEach(card => {
+        const index = Number(card.dataset.languageIndex);
+        card.classList.toggle('active', selectedLanguages.includes(index));
+      });
+      generatedLanguageIndices = selectedLanguages;
+      if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0] || 0;
+      generatedAssets = generatedSizeIndices.flatMap(sizeIndex =>
+        generatedLanguageIndices.map(languageIndex => ({
+          sizeIndex,
+          languageIndex,
+          fileName: buildAssetFileName(sizeIndex, languageIndex)
+        }))
+      );
+      titleInput.value = localizedCopy[0]?.title || '';
+      subtitleInput.value = localizedCopy[0]?.subtitle || '';
+      ctaInput.value = localizedCopy[0]?.cta || '';
+      updateCounters();
+      renderLanguagePreview(generatedLanguageIndices);
       applyLanguagePreview(currentLanguageIndex);
+      updateGeneratedMeta();
+      updateUploadState();
       closeEditPosterModal();
-      showToast('海报文案已更新，可直接下载');
+      showToast('多语言设置已同步到预览和下载素材');
     }
 
     function setTrustVisible() {
@@ -3986,6 +4586,37 @@
       showToast('生成失败，已恢复预览界面，请重试');
     }
 
+    function buildDefaultGeneratedAssets() {
+      return generatedSizeIndices.flatMap(sizeIndex =>
+        generatedLanguageIndices.map(languageIndex => ({
+          sizeIndex,
+          languageIndex,
+          fileName: buildAssetFileName(sizeIndex, languageIndex)
+        }))
+      );
+    }
+
+    function initializeGeneratedPreview() {
+      normalizeSizeLanguageState();
+      loadStyleMapping(stylePresets[0]?.id || 'style-1');
+      generated = true;
+      activeGeneratorPanel = 'results';
+      generatedSizeIndices = materialSizes.map((_, index) => index);
+      generatedLanguageIndices = languages.map((_, index) => index);
+      generatedAssets = buildDefaultGeneratedAssets();
+      if (!generatedSizeIndices.includes(currentSizeIndex)) currentSizeIndex = generatedSizeIndices[0] || 0;
+      if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0] || 0;
+      renderSizePreview(generatedSizeIndices);
+      renderLanguagePreview(generatedLanguageIndices);
+      applySizePreview(currentSizeIndex);
+      applyLanguagePreview(currentLanguageIndex);
+      updateGeneratedMeta();
+      progressCard.classList.remove('visible');
+      materialCard.classList.remove('hidden');
+      statusDock.classList.remove('visible');
+      updateUploadState();
+    }
+
     async function runGeneration() {
       if (isGenerating) return;
       if (!appInitialized) {
@@ -4073,6 +4704,7 @@
               renderSizePreview(generatedSizeIndices);
               renderLanguagePreview(generatedLanguageIndices);
               clearPosterEditHistory();
+              activeGeneratorPanel = 'results';
               applySizePreview(currentSizeIndex);
               applyLanguagePreview(currentLanguageIndex);
               updateGeneratedMeta();
@@ -4133,11 +4765,10 @@
       generationToken += 1;
       isGenerating = false;
       normalizeTemplateState();
-      titleInput.value = '';
-      subtitleInput.value = '';
-      ctaInput.value = '';
+      titleInput.value = localizedCopy[0]?.title || 'Headline Text';
+      subtitleInput.value = localizedCopy[0]?.subtitle || 'More information and key features here.';
+      ctaInput.value = localizedCopy[0]?.cta || 'Button';
       hasImage = false;
-      generated = false;
       uploadedImageSrc = '';
       uploadedImageName = '未上传图片';
       productImageAdjustments = {};
@@ -4162,15 +4793,9 @@
       document.querySelectorAll('.language-card').forEach(card => card.classList.add('active'));
       Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
       alignUngeneratedPreviewWithTemplateManager();
-      generatedLanguageIndices = [0];
-      generatedAssets = [];
       currentLanguageIndex = 0;
-      renderSizePreview(generatedSizeIndices);
-      renderLanguagePreview(generatedLanguageIndices);
-      applySizePreview(currentSizeIndex);
-      updateGeneratedMeta();
       updateCounters();
-      updateUploadState();
+      initializeGeneratedPreview();
       setGeneratingState(false);
       setTrustVisible(true);
     }
@@ -4236,6 +4861,7 @@
           startX: event.clientX,
           startY: event.clientY,
           rect,
+          allAnchors: currentAnchors,
           anchors,
           startSide: anchorSide(anchors[activeAnchor]),
           moved: false
@@ -4261,15 +4887,27 @@
         dragState.moved = dragState.moved || Math.abs(event.clientX - dragState.startX) > 3 || Math.abs(event.clientY - dragState.startY) > 3;
         if (dragState.mode === 'resize') {
           const base = dragState.anchors[dragState.anchorKey];
+          const nextAnchor = resizeAnchorForInteraction(base, delta, dragState.resizeSide, dragState.anchorKey);
           updateAnchor(
             dragState.anchorKey,
-            resizeAnchorForInteraction(base, delta, dragState.resizeSide, dragState.anchorKey)
+            nextAnchor
+          );
+          showAlignmentGuides(
+            anchorCanvas,
+            getAlignmentForBounds(anchorCanvas, nextAnchor, dragState.allAnchors, dragState.anchorKeys).guides
           );
         } else {
-          updateAnchors(dragState.anchorKeys, anchorKey => {
+          const nextAnchors = Object.fromEntries(dragState.anchorKeys.map(anchorKey => {
             const base = dragState.anchors[anchorKey];
-            return { ...base, x: base.x + delta.dx, y: base.y + delta.dy };
+            return [anchorKey, { ...base, x: base.x + delta.dx, y: base.y + delta.dy }];
+          }));
+          const movingBounds = anchorBounds(nextAnchors, dragState.anchorKeys);
+          const alignment = getAlignmentForBounds(anchorCanvas, movingBounds, dragState.allAnchors, dragState.anchorKeys);
+          updateAnchors(dragState.anchorKeys, anchorKey => {
+            const next = nextAnchors[anchorKey];
+            return { ...next, x: next.x + alignment.dx, y: next.y + alignment.dy };
           });
+          showAlignmentGuides(anchorCanvas, alignment.guides);
         }
       });
 
@@ -4292,6 +4930,7 @@
           showToast('左右板块已自动互换，请提交模板映射');
         }
         dragState = null;
+        clearAlignmentGuides(anchorCanvas);
         if (
           completedDrag
           && completedDrag.mode === 'move'
@@ -4382,15 +5021,19 @@
       let dragState = null;
       document.addEventListener('pointerdown', event => {
         if (!generated || dragState) return;
-        if (event.target.closest('.poster-anchor-box, .poster-edit-panel')) return;
+        if (event.target.closest('.poster-anchor-box, .poster-edit-panel, .poster-context-menu')) return;
+        hidePosterContextMenu();
         clearPosterAnchorSelection();
       });
       materialCard?.addEventListener('pointerdown', event => {
         if (!generated || event.target.closest('.poster-anchor-box')) return;
+        hidePosterContextMenu();
         clearPosterAnchorSelection();
       });
       posterEditOverlay.addEventListener('pointerdown', event => {
         if (!generated) return;
+        if (event.button === 2) return;
+        hidePosterContextMenu();
         const fontButton = event.target.closest('[data-font-size-action]');
         if (fontButton) {
           adjustCopyFontFromToolbar(fontButton);
@@ -4410,6 +5053,15 @@
         }
         activePosterAnchor = box.dataset.posterAnchor;
         selectProductFrame(activePosterAnchor === 'image');
+        if (activePosterAnchor === 'image' && !hasImage) {
+          selectedPosterAnchorKeys = new Set(['image']);
+          renderPosterEditOverlay();
+          updateUploadState();
+          openUploadPicker();
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
         const isMultiSelect = event.shiftKey || event.metaKey || event.ctrlKey;
         if (isMultiSelect) {
           if (selectedPosterAnchorKeys.has(activePosterAnchor) && selectedPosterAnchorKeys.size > 1) {
@@ -4451,6 +5103,7 @@
             startX: event.clientX,
             startY: event.clientY,
             rect,
+            allAnchors: anchors,
             anchors: Object.fromEntries(anchorKeys.map(key => [key, { ...anchors[key] }])),
             historyCaptured: false,
             moved: false
@@ -4459,6 +5112,28 @@
         box.setPointerCapture?.(event.pointerId);
         renderPosterEditOverlay(anchors);
         event.preventDefault();
+      });
+
+      posterEditOverlay.addEventListener('contextmenu', event => {
+        if (!generated) return;
+        const box = event.target.closest('.poster-anchor-box');
+        if (!box) {
+          hidePosterContextMenu();
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        activePosterAnchor = box.dataset.posterAnchor;
+        selectProductFrame(activePosterAnchor === 'image');
+        if (!selectedPosterAnchorKeys.has(activePosterAnchor)) {
+          selectedPosterAnchorKeys = new Set([activePosterAnchor]);
+        }
+        renderPosterEditOverlay();
+        if (activePosterAnchor === 'image') {
+          hidePosterContextMenu();
+          return;
+        }
+        showPosterContextMenu(event);
       });
 
       posterEditOverlay.addEventListener('pointermove', event => {
@@ -4487,15 +5162,27 @@
         }
         if (dragState.mode === 'resize') {
           const base = dragState.anchors[dragState.anchorKey];
+          const nextAnchor = resizeAnchorForInteraction(base, delta, dragState.resizeSide, dragState.anchorKey);
           setPosterOverride(
             dragState.anchorKey,
-            resizeAnchorForInteraction(base, delta, dragState.resizeSide, dragState.anchorKey)
+            nextAnchor
+          );
+          showAlignmentGuides(
+            materialCard,
+            getAlignmentForBounds(materialCard, nextAnchor, dragState.allAnchors, dragState.anchorKeys).guides
           );
         } else {
-          setPosterOverrides(dragState.anchorKeys, anchorKey => {
+          const nextAnchors = Object.fromEntries(dragState.anchorKeys.map(anchorKey => {
             const base = dragState.anchors[anchorKey];
-            return { ...base, x: base.x + delta.dx, y: base.y + delta.dy };
+            return [anchorKey, { ...base, x: base.x + delta.dx, y: base.y + delta.dy }];
+          }));
+          const movingBounds = anchorBounds(nextAnchors, dragState.anchorKeys);
+          const alignment = getAlignmentForBounds(materialCard, movingBounds, dragState.allAnchors, dragState.anchorKeys);
+          setPosterOverrides(dragState.anchorKeys, anchorKey => {
+            const next = nextAnchors[anchorKey];
+            return { ...next, x: next.x + alignment.dx, y: next.y + alignment.dy };
           });
+          showAlignmentGuides(materialCard, alignment.guides);
         }
       });
 
@@ -4507,6 +5194,7 @@
           if (completedDrag.moved) showToast('主图已在框内移动，超出部分会被裁切');
           return;
         }
+        clearAlignmentGuides(materialCard);
         if (
           completedDrag.mode === 'move'
           && !completedDrag.moved
@@ -4535,6 +5223,16 @@
         if (!generated) return;
         const box = event.target.closest('.poster-anchor-box');
         const key = box?.dataset.posterAnchor;
+        if (key === 'image') {
+          activePosterAnchor = 'image';
+          selectedPosterAnchorKeys = new Set(['image']);
+          selectProductFrame(hasImage);
+          renderPosterEditOverlay();
+          updateUploadState();
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
         if (!['title', 'subtitle', 'cta'].includes(key) || event.target.closest('.poster-anchor-handle, .font-size-toolbar')) return;
         // Single click only keeps the current selection; double click opens inline edit.
         event.preventDefault();
@@ -4565,6 +5263,10 @@
       });
       sidebar.classList.remove('open');
       if (viewId === 'templateManagerView') renderAnchorEditor();
+      if (viewId === 'styleSettingsView') {
+        renderTemplateOptions();
+        renderStyleEditor();
+      }
       if (viewId === 'generatorView') {
         resetGeneratorPanelScroll(settingsPanel);
         updateUploadState();
@@ -4599,7 +5301,7 @@
       await restoreRulesDocuments();
       updateGeneratedMeta();
       appInitialized = true;
-      updateUploadState();
+      initializeGeneratedPreview();
       if (pendingGenerationAfterInit) {
         pendingGenerationAfterInit = false;
         runGeneration();
@@ -4767,7 +5469,7 @@
     });
     editPosterButton.addEventListener('click', openEditPosterModal);
     posterUndoButton?.addEventListener('click', undoPosterEdit);
-    regenerateButton.addEventListener('click', prepareRegeneration);
+    regenerateButton?.addEventListener('click', prepareRegeneration);
 
     removeUpload.addEventListener('click', event => {
       event.stopPropagation();
@@ -5050,6 +5752,20 @@
       requestAnimationFrame(() => modal.querySelector('#downloadFolderName')?.select());
     }
 
+    settingsTabButton?.addEventListener('click', () => switchGeneratorPanel('settings'));
+    resultsTabButton?.addEventListener('click', () => switchGeneratorPanel('results'));
+
+    styleSwitchButton?.addEventListener('click', openStyleSwitchModal);
+    styleSwitchCloseButton?.addEventListener('click', closeStyleSwitchModal);
+    styleSwitchModal?.addEventListener('click', event => {
+      if (event.target === styleSwitchModal) {
+        closeStyleSwitchModal();
+        return;
+      }
+      const option = event.target.closest('[data-style-switch]');
+      if (option) applyStylePresetFromResults(option.dataset.styleSwitch);
+    });
+
     downloadButton.addEventListener('click', event => {
       event.stopPropagation();
       toggleDownloadMenu();
@@ -5069,4 +5785,43 @@
 
     document.addEventListener('click', event => {
       if (!event.target.closest('#downloadMenu')) closeDownloadMenu();
+      if (!event.target.closest('#posterContextMenu')) hidePosterContextMenu();
     });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeStyleSwitchModal();
+        hideMainImageMenus();
+      }
+    });
+
+    function closeHelpPopover() {
+      const helpWidget = document.getElementById('helpWidget');
+      const helpButton = document.getElementById('helpButton');
+      helpWidget?.classList.remove('open');
+      helpButton?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleHelpPopover() {
+      const helpWidget = document.getElementById('helpWidget');
+      const helpButton = document.getElementById('helpButton');
+      if (!helpWidget || !helpButton) return;
+      const isOpen = helpWidget.classList.toggle('open');
+      helpButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    document.getElementById('helpButton')?.addEventListener('click', event => {
+      event.stopPropagation();
+      toggleHelpPopover();
+    });
+
+    document.addEventListener('click', event => {
+      if (!event.target.closest('#helpWidget')) closeHelpPopover();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeHelpPopover();
+    });
+
+    window.addEventListener('resize', hideMainImageMenus);
+    window.addEventListener('scroll', hideMainImageMenus, true);

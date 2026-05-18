@@ -180,11 +180,18 @@
         }
       }
 
-      const isCenter = (posterAnchors.title.align || posterAnchors.text.align) === 'center';
-      const titleX = isCenter ? titleRect.x + titleRect.w / 2 : titleRect.x;
-      const subtitleX = isCenter ? subtitleRect.x + subtitleRect.w / 2 : subtitleRect.x;
+      const titleAlign = ['left', 'center', 'right'].includes(posterAnchors.title.align)
+        ? posterAnchors.title.align
+        : (posterAnchors.text.align || 'left');
+      const subtitleAlign = ['left', 'center', 'right'].includes(posterAnchors.subtitle.align)
+        ? posterAnchors.subtitle.align
+        : (posterAnchors.text.align || 'left');
+      const anchorTextX = (rect, align) => {
+        if (align === 'center') return rect.x + rect.w / 2;
+        if (align === 'right') return rect.x + rect.w;
+        return rect.x;
+      };
       ctx.fillStyle = posterStyles.textColor;
-      ctx.textAlign = isCenter ? 'center' : 'left';
       ctx.textBaseline = 'top';
       const textScale = posterCore.posterTextScale(size);
       const ctaPaddingScale = Math.max(0.08, Math.min(width / 1200, height / 628));
@@ -261,12 +268,14 @@
         }
         titleFit.lines.forEach((line, index) => {
           ctx.font = `700 ${titleFit.size}px ${CANVAS_FONT_FAMILY}`;
-          ctx.fillText(line, isCenter ? titleLeft + titleWidth / 2 : titleLeft, titleStartY + index * titleLineHeight);
+          ctx.textAlign = titleAlign;
+          ctx.fillText(line, anchorTextX({ x: titleLeft, w: titleWidth }, titleAlign), titleStartY + index * titleLineHeight);
         });
         if (!subtitleHidden) {
           subtitleLines.forEach((line, index) => {
             ctx.font = `400 ${subtitleStartSize}px ${CANVAS_FONT_FAMILY}`;
-            ctx.fillText(line, subtitleX, subtitleDrawY + index * subtitleLineHeight);
+            ctx.textAlign = subtitleAlign;
+            ctx.fillText(line, anchorTextX(subtitleRect, subtitleAlign), subtitleDrawY + index * subtitleLineHeight);
           });
         }
       }

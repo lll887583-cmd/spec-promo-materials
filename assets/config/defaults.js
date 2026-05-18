@@ -73,11 +73,11 @@
 
     const defaultTemplateStyles = {
       backgroundMode: 'solid',
-      backgroundColor: '#dcf9ff',
-      gradientStart: '#dcf9ff',
+      backgroundColor: '#DCF9FF',
+      gradientStart: '#DCF9FF',
       gradientEnd: '#ffffff',
       gradientAngle: 135,
-      textColor: '#081840',
+      textColor: FIGMA_BUTTON_TEXT_COLOR,
       buttonColor: FIGMA_BUTTON_FILL_COLOR,
       buttonTextColor: FIGMA_BUTTON_TEXT_COLOR,
       logoVariant: 'black'
