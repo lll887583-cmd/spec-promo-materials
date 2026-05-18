@@ -41,9 +41,17 @@
       { title: 'Kuasai dagangan', subtitle: 'Kurangkan kos dagangan anda bersama Spec Markets.', cta: 'Cari kelebihan anda' }
     ];
 
-    const emptyLocalizedCopy = () => ({ title: '', subtitle: '', cta: '' });
-
-    const localizedCopy = languages.map(emptyLocalizedCopy);
+    const localizedCopy = [
+      { title: 'Headline Text', subtitle: 'More information and key features here.', cta: 'Button' },
+      { title: '見出しテキスト', subtitle: '詳細情報や主な機能をここに記載できます。', cta: 'ボタンテキスト' },
+      { title: '标题文本', subtitle: '可在此处详细说明更多信息和主要功能。', cta: '按钮文本' },
+      { title: '標題文字', subtitle: '可在此處詳細說明更多資訊和主要功能。', cta: '按鈕文字' },
+      { title: 'Văn bản tiêu đề', subtitle: 'Có thể trình bày thêm thông tin và các tính năng chính tại đây.', cta: 'Văn bản nút' },
+      { title: 'ข้อความหัวข้อ', subtitle: 'สามารถใส่ข้อมูลเพิ่มเติมและฟีเจอร์หลักได้ที่นี่', cta: 'ข้อความปุ่ม' },
+      { title: '제목 텍스트', subtitle: '자세한 정보와 주요 기능을 여기에 설명할 수 있습니다.', cta: '버튼 텍스트' },
+      { title: 'Teks Judul', subtitle: 'Informasi tambahan dan fitur utama dapat dijelaskan di sini.', cta: 'Teks Tombol' },
+      { title: 'Teks Tajuk', subtitle: 'Maklumat lanjut dan ciri utama boleh diterangkan di sini.', cta: 'Teks Butang' }
+    ];
 
     const TEMPLATE_PREVIEW_SIZE_ID = 'landscape_1200x628';
     const FIGMA_BUTTON_TEXT_COLOR = '#27376F';

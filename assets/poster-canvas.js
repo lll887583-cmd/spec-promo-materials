@@ -38,46 +38,6 @@
       return lines.slice(0, maxLines);
     }
 
-    function ctaTextLines(ctx, text, maxWidth) {
-      const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
-      if (!cleanText) return [''];
-      return wrapCanvasText(ctx, cleanText, Math.max(1, maxWidth), Number.POSITIVE_INFINITY);
-    }
-
-    function canvasCtaLayout(ctx, anchor, rect, size, text) {
-      const width = Number(size?.width) || 1;
-      const height = Number(size?.height) || 1;
-      const ctaPaddingScale = Math.max(0.08, Math.min(width / 1200, height / 628));
-      const padX = Number.isFinite(Number(anchor?.padX))
-        ? Math.max(1, (Number(anchor.padX) / 100) * width)
-        : Math.max(4, 40 * ctaPaddingScale);
-      const padY = Number.isFinite(Number(anchor?.padY))
-        ? Math.max(1, (Number(anchor.padY) / 100) * height)
-        : Math.max(2, 20 * ctaPaddingScale);
-      const fontSize = posterRenderer.canvasAnchorFontSize(anchor, Math.max(8, Math.round(rect.h * 0.38)), height);
-      const lineHeight = fontSize * (Number(anchor?.lineHeight) || 1.4);
-      const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
-      ctx.font = `700 ${fontSize}px ${CANVAS_FONT_FAMILY}`;
-      const measuredWidth = ctx.measureText(cleanText).width + padX * 2;
-      const drawW = anchor?.autoWidth === true
-        ? Math.min(width, Math.max(1, measuredWidth))
-        : Math.max(1, rect.w);
-      const drawX = Math.max(0, Math.min(rect.x, width - drawW));
-      const textMaxWidth = Math.max(1, drawW - padX * 2);
-      const lines = ctaTextLines(ctx, cleanText, textMaxWidth);
-      return {
-        x: drawX,
-        y: rect.y,
-        w: drawW,
-        h: rect.h,
-        padX,
-        padY,
-        fontSize,
-        lineHeight,
-        lines
-      };
-    }
-
     function isShortWideLayout(size) {
       const width = Number(size?.width) || 0;
       const height = Number(size?.height) || 0;
@@ -153,9 +113,15 @@
         const subtitleLines = wrapCanvasText(ctx, copy.subtitle, subtitleRect.w, Number.POSITIVE_INFINITY);
         const subtitleLineHeight = subtitleStartSize * 1.4;
         let subtitleCtaGap = Math.max(6, ctaRect.y - (subtitleRect.y + subtitleRect.h));
-        const ctaLayout = canvasCtaLayout(ctx, posterAnchors.cta, ctaRect, size, copy.cta);
-        const ctaDrawW = ctaLayout.w;
-        const ctaDrawX = ctaLayout.x;
+        const ctaPaddingScale = Math.max(0.08, Math.min(width / 1200, height / 628));
+        const ctaPaddingX = Number.isFinite(Number(posterAnchors.cta.padX))
+          ? Math.max(1, (Number(posterAnchors.cta.padX) / 100) * width)
+          : Math.max(4, 40 * ctaPaddingScale);
+        const ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
+        const ctaText = String(copy.cta || '').replace(/\s+/g, ' ').trim();
+        ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+        const ctaDrawW = Math.min(width, Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2));
+        const ctaDrawX = Math.max(0, Math.min(ctaRect.x, width - ctaDrawW));
         let subtitleDrawY = titleRect.y + titleLines.length * titleLineHeight + titleSubtitleGap;
         let ctaDrawY = subtitleDrawY + subtitleLines.length * subtitleLineHeight + subtitleCtaGap;
         const bottomPadding = Math.max(4, height * 0.04);
@@ -228,11 +194,22 @@
       ctx.fillStyle = posterStyles.textColor;
       ctx.textBaseline = 'top';
       const textScale = posterCore.posterTextScale(size);
-      const ctaLayout = canvasCtaLayout(ctx, posterAnchors.cta, ctaRect, size, copy.cta);
-      const ctaDrawH = ctaLayout.h;
-      let ctaDrawY = ctaLayout.y;
-      const ctaDrawW = ctaLayout.w;
-      const ctaDrawX = ctaLayout.x;
+      const ctaPaddingScale = Math.max(0.08, Math.min(width / 1200, height / 628));
+      const ctaPaddingX = Number.isFinite(Number(posterAnchors.cta.padX))
+        ? Math.max(1, (Number(posterAnchors.cta.padX) / 100) * width)
+        : Math.max(4, 40 * ctaPaddingScale);
+      const ctaPaddingY = Number.isFinite(Number(posterAnchors.cta.padY))
+        ? Math.max(1, (Number(posterAnchors.cta.padY) / 100) * height)
+        : Math.max(2, 20 * ctaPaddingScale);
+      let ctaFontSize = posterRenderer.canvasAnchorFontSize(posterAnchors.cta, Math.max(8, Math.round(ctaRect.h * 0.38)), height);
+      const ctaDrawH = ctaRect.h;
+      let ctaDrawY = ctaRect.y;
+      const ctaText = String(copy.cta || '').replace(/\s+/g, ' ').trim();
+      ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+      let ctaDrawW = posterAnchors.cta.autoWidth === true
+        ? Math.max(1, ctx.measureText(ctaText).width + ctaPaddingX * 2)
+        : ctaRect.w;
+      const ctaDrawX = Math.max(0, Math.min(ctaRect.x, width - ctaDrawW));
       const subtitleHidden = Boolean(posterAnchors.subtitle.hidden);
       if (!posterAnchors.title.hidden) {
         const titleGap = Math.max(4, width * 0.015);
@@ -311,12 +288,8 @@
         ctx.fillStyle = posterStyles.buttonTextColor || '#27376F';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = `700 ${ctaLayout.fontSize}px ${CANVAS_FONT_FAMILY}`;
-        const textCenterY = ctaDrawY + ctaDrawH / 2;
-        const firstLineY = textCenterY - ((ctaLayout.lines.length - 1) * ctaLayout.lineHeight) / 2;
-        ctaLayout.lines.forEach((line, index) => {
-          ctx.fillText(line, ctaDrawX + ctaDrawW / 2, firstLineY + index * ctaLayout.lineHeight);
-        });
+        ctx.font = `700 ${ctaFontSize}px ${CANVAS_FONT_FAMILY}`;
+        ctx.fillText(ctaText, ctaDrawX + ctaDrawW / 2, ctaDrawY + ctaDrawH / 2);
       }
       ctx.textBaseline = 'alphabetic';
     }

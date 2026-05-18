@@ -4,22 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Promo Materials UIDemo</title>
-  <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260518-empty-language-copy" />
+  <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260518-cta-small-wrap-padding" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="assets/app.css?v=20260518-empty-language-copy" />
+  <link rel="stylesheet" href="assets/app.css?v=20260518-cta-small-wrap-padding" />
 
 
 </head>
 <body class="spec-ui-root">
   <div class="mobile-topbar">
     <button class="menu-button" id="menuButton" aria-label="打开导航"><span class="hamburger"></span></button>
-    <div class="brand" style="margin:0"><img class="brand-logo" src="assets/logo.png?v=20260518-empty-language-copy" alt="Promo Materials"></div>
+    <div class="brand" style="margin:0"><img class="brand-logo" src="assets/logo.png?v=20260518-cta-small-wrap-padding" alt="Promo Materials"></div>
     <button class="icon-button" aria-label="用户入口">PM</button>
   </div>
 
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260518-empty-language-copy" alt="Promo Materials"></div>
+      <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260518-cta-small-wrap-padding" alt="Promo Materials"></div>
       <nav class="nav" aria-label="主导航">
         <button class="nav-item active" type="button" data-view-target="generatorView" aria-label="促销材料">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
@@ -70,7 +70,7 @@
           <div class="field">
             <label class="field-label" for="titleInput">标题</label>
             <div class="input-wrap">
-              <input id="titleInput" maxlength="60" placeholder="请输入标题" value="" />
+              <input id="titleInput" maxlength="60" placeholder="请输入标题" value="Headline Text" />
               <span class="counter" id="titleCounter">13/60</span>
             </div>
           </div>
@@ -78,7 +78,7 @@
           <div class="field">
             <label class="field-label" for="subtitleInput">副标题</label>
             <div class="input-wrap">
-              <textarea id="subtitleInput" maxlength="80" placeholder="请输入副标题"></textarea>
+              <textarea id="subtitleInput" maxlength="80" placeholder="请输入副标题">More information and key features here.</textarea>
               <span class="counter" id="subtitleCounter">39/80</span>
             </div>
           </div>
@@ -86,7 +86,7 @@
           <div class="field">
             <label class="field-label" for="ctaInput">按钮文案</label>
             <div class="input-wrap">
-              <input id="ctaInput" maxlength="30" placeholder="请输入按钮文案" value="" />
+              <input id="ctaInput" maxlength="30" placeholder="请输入按钮文案" value="Button" />
               <span class="counter" id="ctaCounter">6/30</span>
             </div>
           </div>
@@ -202,12 +202,12 @@
             <div class="material-card empty" id="materialCard">
               <div class="poster-image-placeholder placeholder-surface placeholder-surface--checkerboard" id="posterImagePlaceholder" role="button" tabindex="0" aria-label="上传主图"><span>上传主图</span></div>
               <div class="kline-bg"></div>
-              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png?v=20260518-empty-language-copy" alt="SPEC MARKETS 浅色海报字标"></div>
+              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png?v=20260518-cta-small-wrap-padding" alt="SPEC MARKETS 浅色海报字标"></div>
               <div class="creative-copy">
-                <h1 id="previewTitle"></h1>
-                <p id="previewSubtitle"></p>
+                <h1 id="previewTitle">Headline Text</h1>
+                <p id="previewSubtitle">More information and key features here.</p>
               </div>
-              <div class="creative-cta" id="previewCta"></div>
+              <div class="creative-cta" id="previewCta">Button</div>
               <div class="poster-product-layer hidden" id="productFrame" role="button" tabindex="0" aria-label="调整主图位置和缩放">
                 <img class="poster-product-image" id="phoneHand" alt="上传图片图层">
               </div>
@@ -342,7 +342,7 @@
             </header>
             <div class="style-demo-canvas-area">
               <div class="style-demo-card" id="styleDemoCard">
-                <div class="style-demo-logo"><img id="styleDemoLogo" src="assets/logo-market-light.png?v=20260518-empty-language-copy" alt="SPEC MARKETS 浅色海报字标"></div>
+                <div class="style-demo-logo"><img id="styleDemoLogo" src="assets/logo-market-light.png?v=20260518-cta-small-wrap-padding" alt="SPEC MARKETS 浅色海报字标"></div>
                 <div class="style-demo-copy">
                   <h1>Headline Text</h1>
                   <p>More information and key features here.</p>
@@ -390,7 +390,7 @@
             </div>
             <div class="anchor-canvas" id="anchorCanvas" aria-label="框架视觉锚点编辑画布">
               <div class="anchor-preview-image placeholder-surface placeholder-surface--solid" id="anchorPreviewImage"></div>
-              <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png?v=20260518-empty-language-copy" alt="SPEC MARKETS"></div>
+              <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png?v=20260518-cta-small-wrap-padding" alt="SPEC MARKETS"></div>
               <div class="anchor-preview-title" id="anchorPreviewTitle">Headline Text</div>
               <div class="anchor-preview-subtitle" id="anchorPreviewSubtitle">More information and key features here.</div>
               <div class="anchor-preview-cta" id="anchorPreviewCta">Button</div>
@@ -496,13 +496,13 @@
 
   <script async src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/poster-core.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-store.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/poster-renderer.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-editor.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/poster-canvas.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/export-assets.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/rules-parser.js?v=20260518-empty-language-copy"></script>
+  <script src="assets/poster-core.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-store.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/poster-renderer.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-editor.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/poster-canvas.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/export-assets.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/rules-parser.js?v=20260518-cta-small-wrap-padding"></script>
   <!-- frame-layouts rule: every alignment parameter must be read from the Figma node below, not guessed from the local baseline align buttons. -->
   <script>
     window.SpecPromoFrameLayoutRules = {
@@ -512,33 +512,33 @@
       rule: 'When creating or updating assets/frame-layouts/*.js, fetch and apply alignment coordinates from this Figma node for each size.'
     };
   </script>
-  <script src="assets/frame-layouts/registry.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/120x600.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/320x50.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/320x100.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/720x90.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/728x90.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/160x600.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/300x250.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/300x600.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/320x480.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/800x800.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/628x1200.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/828x1200.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/970x250.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/980x250.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/990x250.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/1200x628.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/1200x1500.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/frame-layouts/1200x1200.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/config/defaults.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/config/layout-rules.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/config/translations.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/modules/dom-refs.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/modules/persistence.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/modules/app-state.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/modules/product-image.js?v=20260518-empty-language-copy"></script>
-  <script src="assets/app.js?v=20260518-empty-language-copy"></script>
+  <script src="assets/frame-layouts/registry.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/120x600.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/320x50.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/320x100.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/720x90.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/728x90.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/160x600.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/300x250.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/300x600.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/320x480.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/800x800.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/628x1200.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/828x1200.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/970x250.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/980x250.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/990x250.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/1200x628.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/1200x1500.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/frame-layouts/1200x1200.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/config/defaults.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/config/layout-rules.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/config/translations.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/modules/dom-refs.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/modules/persistence.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/modules/app-state.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/modules/product-image.js?v=20260518-cta-small-wrap-padding"></script>
+  <script src="assets/app.js?v=20260518-cta-small-wrap-padding"></script>
 
 
 </body>
