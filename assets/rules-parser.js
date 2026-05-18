@@ -423,6 +423,12 @@
     }
 
     async function parseSpreadsheetRules(file) {
+      try {
+        await window.SpecPromoDependencies?.ensureXlsx?.();
+      } catch (error) {
+        showToast('XLSX 解析库加载失败，请检查网络后刷新页面');
+        return [];
+      }
       if (!window.XLSX) {
         showToast('XLSX 解析库加载失败，请检查网络后刷新页面');
         return [];

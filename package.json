@@ -1,0 +1,13 @@
+{
+  "name": "spec-promo-materials",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static browser tool for creating SPEC promo material previews and exports.",
+  "scripts": {
+    "serve": "python3 -m http.server 4173 --bind 127.0.0.1",
+    "test:smoke": "playwright test tests/smoke.spec.js"
+  },
+  "devDependencies": {
+    "playwright": "1.59.1"
+  }
+}

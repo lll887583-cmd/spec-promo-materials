@@ -5,6 +5,7 @@ Use this map before editing so changes land in the shared source of truth instea
 ## Common Tasks
 
 - Change page markup or top-level controls: `index.html`.
+- Change ordered static asset loading or cache version: `assets/boot.js`.
 - Change main interaction wiring that has not been split yet: `assets/app.js`.
 - Change DOM lookup names or add a new required element reference: `assets/modules/dom-refs.js` plus `index.html`.
 - Change persistent storage behavior: `assets/modules/persistence.js`.
@@ -19,11 +20,14 @@ Use this map before editing so changes land in the shared source of truth instea
 - Change ZIP or folder export helpers: `assets/export-assets.js`.
 - Change browser persistence for template/frame data: `assets/frame-store.js`.
 - Change rule document parsing: `assets/rules-parser.js`.
+- Change lazy third-party dependency loading: `assets/modules/dependency-loader.js`.
+- Change help widget behavior: `assets/modules/help-popover.js`.
 - Change product UI styling: `assets/app.css`.
+- Change small extracted feature styles: `assets/styles/*.css`.
 - Change shared foundation styles: `assets/spec-ui-foundation.css`.
 
 ## Rules
 
 - Do not recreate deleted `test/` copies. The root app and `assets/` are the only active static app path.
 - Prefer config/layout files for template data changes before editing renderer code.
-- After editing any asset referenced from `index.html`, update its query version or run `scripts/bump-asset-version.py`.
+- After editing any asset referenced from `index.html`, update stylesheet query versions plus `assets/boot.js` `ASSET_VERSION`, or update `scripts/bump-asset-version.py` before using it.

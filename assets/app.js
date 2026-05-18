@@ -1130,7 +1130,10 @@
     }
 
     function schedulePosterTextFit() {
-      requestAnimationFrame(fitPosterTextBoxes);
+      requestAnimationFrame(() => {
+        fitPosterTextBoxes();
+        renderPosterEditOverlay();
+      });
     }
 
     function syncImagePlaceholderArea(anchors) {
@@ -1887,7 +1890,6 @@
     }
 
     function posterOverlayAnchor(key, anchor) {
-      if (key === 'title' || key === 'subtitle') return anchor;
       const bounds = posterVisibleBoundsForAnchor(key);
       const host = materialCard?.getBoundingClientRect();
       if (!bounds || !host || !bounds.width || !bounds.height) return anchor;
@@ -4133,7 +4135,14 @@
       return modal;
     }
 
-    function openUploadCropper(file, src) {
+    async function openUploadCropper(file, src) {
+      try {
+        await window.SpecPromoDependencies?.ensureCropper?.();
+      } catch (error) {
+        setUploadImage(file, src);
+        showToast('裁切工具加载失败，已使用原图预览');
+        return;
+      }
       if (!window.Cropper) {
         setUploadImage(file, src);
         showToast('裁切工具未加载，已使用原图预览');
@@ -6003,33 +6012,7 @@
       }
     });
 
-    function closeHelpPopover() {
-      const helpWidget = document.getElementById('helpWidget');
-      const helpButton = document.getElementById('helpButton');
-      helpWidget?.classList.remove('open');
-      helpButton?.setAttribute('aria-expanded', 'false');
-    }
-
-    function toggleHelpPopover() {
-      const helpWidget = document.getElementById('helpWidget');
-      const helpButton = document.getElementById('helpButton');
-      if (!helpWidget || !helpButton) return;
-      const isOpen = helpWidget.classList.toggle('open');
-      helpButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    }
-
-    document.getElementById('helpButton')?.addEventListener('click', event => {
-      event.stopPropagation();
-      toggleHelpPopover();
-    });
-
-    document.addEventListener('click', event => {
-      if (!event.target.closest('#helpWidget')) closeHelpPopover();
-    });
-
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') closeHelpPopover();
-    });
+    window.createSpecPromoHelpPopover?.({ doc: document });
 
     window.addEventListener('resize', hideMainImageMenus);
     window.addEventListener('scroll', hideMainImageMenus, true);
