@@ -1479,20 +1479,24 @@
       const ignored = new Set(ignoredKeys);
       const vertical = [
         { value: 0, kind: 'edge' },
+        { value: 50, kind: 'center' },
         { value: 100, kind: 'edge' }
       ];
       const horizontal = [
         { value: 0, kind: 'edge' },
+        { value: 50, kind: 'center' },
         { value: 100, kind: 'edge' }
       ];
       Object.entries(allAnchors || {}).forEach(([key, anchor]) => {
         if (ignored.has(key) || !anchor || anchor.hidden) return;
         vertical.push(
           { value: anchor.x, kind: 'edge' },
+          { value: anchor.x + anchor.w / 2, kind: 'center' },
           { value: anchor.x + anchor.w, kind: 'edge' }
         );
         horizontal.push(
           { value: anchor.y, kind: 'edge' },
+          { value: anchor.y + anchor.h / 2, kind: 'center' },
           { value: anchor.y + anchor.h, kind: 'edge' }
         );
       });
@@ -1525,10 +1529,12 @@
       const candidates = alignmentCandidates(allAnchors, movingKeys);
       const verticalMatch = closestGuide([
         { value: bounds.x },
+        { value: bounds.x + bounds.w / 2 },
         { value: bounds.x + bounds.w }
       ], candidates.vertical, thresholdX);
       const horizontalMatch = closestGuide([
         { value: bounds.y },
+        { value: bounds.y + bounds.h / 2 },
         { value: bounds.y + bounds.h }
       ], candidates.horizontal, thresholdY);
       return {
@@ -1934,7 +1940,9 @@
     }
 
     function updatePosterAlignToolbar() {
-      const canAlign = generated && selectedPosterAnchorKeys.size > 1;
+      const singleCopyAreaAnchorSelected = selectedPosterAnchorKeys.size === 1
+        && ['logo', 'title', 'subtitle', 'cta'].includes([...selectedPosterAnchorKeys][0]);
+      const canAlign = generated && (selectedPosterAnchorKeys.size > 1 || singleCopyAreaAnchorSelected);
       document.querySelectorAll('[data-poster-align-action]').forEach(button => {
         button.disabled = !generated || (button.dataset.posterAlignAction !== 'reset' && !canAlign);
       });
@@ -1943,18 +1951,25 @@
 
     const POSTER_CONTEXT_ALIGN_ACTIONS = [
       { action: 'left', label: '左对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5v13"/><path d="M8 6h8"/><path d="M8 10h6"/><path d="M8 14h9"/></svg>' },
-      { action: 'hcenter', label: '水平居中', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v13"/><path d="M6 6h8"/><path d="M7.5 10h5"/><path d="M5 14h10"/></svg>' },
+      { action: 'hcenter', label: '水平居中对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v13"/><path d="M6 6h8"/><path d="M7.5 10h5"/><path d="M5 14h10"/></svg>' },
       { action: 'right', label: '右对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3.5v13"/><path d="M4 6h8"/><path d="M6 10h6"/><path d="M3 14h9"/></svg>' },
-      { action: 'top', label: '顶对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4h13"/><path d="M6 8v8"/><path d="M10 8v6"/><path d="M14 8v9"/></svg>' },
-      { action: 'vcenter', label: '垂直居中', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10h13"/><path d="M6 6v8"/><path d="M10 7.5v5"/><path d="M14 5v10"/></svg>' },
-      { action: 'bottom', label: '底对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 16h13"/><path d="M6 4v8"/><path d="M10 6v6"/><path d="M14 3v9"/></svg>' },
+      { action: 'top', label: '顶部对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4h13"/><path d="M6 8v8"/><path d="M10 8v6"/><path d="M14 8v9"/></svg>' },
+      { action: 'vcenter', label: '垂直居中对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10h13"/><path d="M6 6v8"/><path d="M10 7.5v5"/><path d="M14 5v10"/></svg>' },
+      { action: 'bottom', label: '底部对齐', icon: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 16h13"/><path d="M6 4v8"/><path d="M10 6v6"/><path d="M14 3v9"/></svg>' },
       { action: 'reset', label: '恢复当前尺寸', icon: '' }
     ];
 
     const POSTER_CONTEXT_CTA_SIZE_ACTIONS = [
-      { action: 'cta-size-large', label: '大尺寸', hint: '当前间距' },
-      { action: 'cta-size-small', label: '小尺寸', hint: '间距减半' }
+      { action: 'cta-size-large', label: '大尺寸' },
+      { action: 'cta-size-small', label: '小尺寸' }
     ];
+
+    function posterContextAlignTitle() {
+      const alignableCount = [...selectedPosterAnchorKeys]
+        .filter(key => key !== 'image' && posterEditableAnchorKeys.includes(key))
+        .length;
+      return alignableCount > 1 ? '元素对齐' : '页面对齐';
+    }
 
     function ensurePosterContextMenu() {
       let menu = document.getElementById('posterContextMenu');
@@ -1963,19 +1978,36 @@
       menu.id = 'posterContextMenu';
       menu.className = 'poster-context-menu';
       menu.setAttribute('role', 'menu');
-      menu.innerHTML = POSTER_CONTEXT_ALIGN_ACTIONS.map(item => `
-        <button class="poster-context-action ${item.action === 'reset' ? 'poster-context-action--reset' : ''}" type="button" role="menuitem" data-poster-context-action="${item.action}">
-          ${item.icon}
-          <span>${item.label}</span>
+      menu.innerHTML = `
+        <div class="poster-context-row poster-context-row--submenu" data-poster-submenu-trigger="align" role="menuitem" tabindex="0">
+          <span class="poster-context-row-icon" aria-hidden="true">${POSTER_CONTEXT_ALIGN_ACTIONS[0].icon}</span>
+          <span class="poster-context-row-label" data-poster-context-align-title>页面对齐</span>
+          <span class="poster-context-row-arrow" aria-hidden="true">›</span>
+          <div class="poster-context-flyout poster-context-flyout--align" role="menu" aria-label="对齐选项">
+            ${POSTER_CONTEXT_ALIGN_ACTIONS.filter(item => item.action !== 'reset').map(item => `
+              <button class="poster-context-action" type="button" role="menuitem" data-poster-context-action="${item.action}">
+                ${item.icon}
+                <span>${item.label}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <button class="poster-context-row poster-context-row--button" type="button" role="menuitem" data-poster-context-action="reset">
+          <span class="poster-context-row-icon" aria-hidden="true"></span>
+          <span class="poster-context-row-label">恢复当前尺寸</span>
         </button>
-      `).join('') + `
-        <div class="poster-context-section-title">按钮尺寸</div>
-        ${POSTER_CONTEXT_CTA_SIZE_ACTIONS.map(item => `
-          <button class="poster-context-action poster-context-action--cta-size" type="button" role="menuitem" data-poster-context-action="${item.action}">
-            <span>${item.label}</span>
-            <small>${item.hint}</small>
-          </button>
-        `).join('')}
+        <div class="poster-context-row poster-context-row--submenu poster-context-row--cta-size" data-poster-submenu-trigger="cta-size" role="menuitem" tabindex="0">
+          <span class="poster-context-row-icon" aria-hidden="true"></span>
+          <span class="poster-context-row-label">按钮尺寸</span>
+          <span class="poster-context-row-arrow" aria-hidden="true">›</span>
+          <div class="poster-context-flyout poster-context-flyout--cta-size" role="menu" aria-label="按钮尺寸">
+            ${POSTER_CONTEXT_CTA_SIZE_ACTIONS.map(item => `
+              <button class="poster-context-action poster-context-action--cta-size" type="button" role="menuitem" data-poster-context-action="${item.action}">
+                <span>${item.label}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
       `;
       menu.addEventListener('click', event => {
         const button = event.target.closest('[data-poster-context-action]');
@@ -2011,6 +2043,7 @@
         .length;
       const singleCopyAnchorSelected = selectedPosterAnchorKeys.size === 1 && ['logo', 'title', 'subtitle', 'cta'].includes(activePosterAnchor);
       menu.classList.toggle('show-cta-size', activePosterAnchor === 'cta');
+      menu.querySelector('[data-poster-context-align-title]').textContent = posterContextAlignTitle();
       menu.querySelectorAll('[data-poster-context-action]').forEach(button => {
         const action = button.dataset.posterContextAction;
         const isCtaSizeAction = action?.startsWith('cta-size-');
@@ -2020,6 +2053,7 @@
       });
       menu.classList.add('open');
       const rect = menu.getBoundingClientRect();
+      menu.classList.toggle('open-left', event.clientX + rect.width + 370 > window.innerWidth);
       const left = Math.min(event.clientX, window.innerWidth - rect.width - 12);
       const top = Math.min(event.clientY, window.innerHeight - rect.height - 12);
       menu.style.left = `${Math.max(12, left)}px`;
@@ -2174,28 +2208,66 @@
       return true;
     }
 
-    function posterCopyFrameForAlignment(anchors) {
-      const stack = anchors?.contentStack;
-      if (['x', 'y', 'w', 'h'].every(key => Number.isFinite(Number(stack?.[key])))) {
-        return {
-          x: Number(stack.x),
-          y: Number(stack.y),
-          w: Number(stack.w),
-          h: Number(stack.h)
-        };
-      }
-      const copyAnchors = ['title', 'subtitle', 'cta'].map(key => anchors?.[key]).filter(anchor => anchor && !anchor.hidden);
+    function normalizedFrame(frame) {
+      if (!frame || !['x', 'y', 'w', 'h'].every(key => Number.isFinite(Number(frame[key])))) return null;
+      const x = clamp(Number(frame.x), 0, 100);
+      const y = clamp(Number(frame.y), 0, 100);
+      const w = clamp(Number(frame.w), 0, 100 - x);
+      const h = clamp(Number(frame.h), 0, 100 - y);
+      return w > 0 && h > 0 ? { x, y, w, h } : null;
+    }
+
+    function visibleCopyContentBounds(anchors) {
+      const copyAnchors = ['logo', 'title', 'subtitle', 'cta']
+        .map(key => anchors?.[key])
+        .filter(anchor => anchor && !anchor.hidden);
       if (!copyAnchors.length) return null;
       const left = Math.min(...copyAnchors.map(anchor => Number(anchor.x) || 0));
       const top = Math.min(...copyAnchors.map(anchor => Number(anchor.y) || 0));
       const right = Math.max(...copyAnchors.map(anchor => (Number(anchor.x) || 0) + (Number(anchor.w) || 0)));
       const bottom = Math.max(...copyAnchors.map(anchor => (Number(anchor.y) || 0) + (Number(anchor.h) || 0)));
-      return { x: left, y: top, w: right - left, h: bottom - top };
+      return normalizedFrame({ x: left, y: top, w: right - left, h: bottom - top });
+    }
+
+    function nonImageCopyAreaForAlignment(anchors) {
+      const image = normalizedFrame(anchors?.imageVisibleArea || anchors?.imageVisualArea || anchors?.image);
+      if (!image || anchors?.image?.hidden) return null;
+      const imageRight = image.x + image.w;
+      const imageBottom = image.y + image.h;
+      const imageCenterX = image.x + image.w / 2;
+      const imageCenterY = image.y + image.h / 2;
+      const spansMostHeight = image.h >= 70;
+      const spansMostWidth = image.w >= 70;
+
+      // copyArea means the full non-image side of the current size, not the
+      // smaller bounds currently occupied by title/subtitle/button/logo.
+      if (spansMostHeight) {
+        if (imageCenterX >= 50 && image.x > 0) return normalizedFrame({ x: 0, y: 0, w: image.x, h: 100 });
+        if (imageRight < 100) return normalizedFrame({ x: imageRight, y: 0, w: 100 - imageRight, h: 100 });
+      }
+
+      if (spansMostWidth) {
+        if (imageCenterY >= 50 && image.y > 0) return normalizedFrame({ x: 0, y: 0, w: 100, h: image.y });
+        if (imageBottom < 100) return normalizedFrame({ x: 0, y: imageBottom, w: 100, h: 100 - imageBottom });
+      }
+
+      return null;
+    }
+
+    function posterCopyFrameForAlignment(anchors) {
+      const explicitCopyArea = normalizedFrame(anchors?.copyArea);
+      if (explicitCopyArea) return explicitCopyArea;
+      const nonImageCopyArea = nonImageCopyAreaForAlignment(anchors);
+      if (nonImageCopyArea) return nonImageCopyArea;
+      const stack = anchors?.contentStack;
+      const contentStackFrame = normalizedFrame(stack);
+      if (contentStackFrame) return contentStackFrame;
+      return visibleCopyContentBounds(anchors);
     }
 
     function alignSinglePosterCopyAnchor(anchorKey, action, anchors) {
       const anchor = anchors?.[anchorKey];
-      const frame = posterCopyFrameForAlignment(anchors);
+      const frame = normalizedFrame({ x: 0, y: 0, w: 100, h: 100 });
       if (!anchor || !frame) return false;
       const next = { ...anchor };
       if (action === 'left') next.x = frame.x;
@@ -2206,7 +2278,7 @@
       if (action === 'bottom') next.y = frame.y + frame.h - anchor.h;
       pushPosterEditHistory();
       setPosterOverride(anchorKey, next);
-      showToast('已按当前尺寸文案区对齐选中元素');
+      showToast('已按当前尺寸画布对齐选中元素');
       return true;
     }
 
@@ -2667,6 +2739,34 @@
       list.splice(to, 0, item);
     }
 
+    function uniqueValidIndices(indices, list) {
+      return [...new Set(indices)]
+        .filter(index => Number.isInteger(index) && list[index]);
+    }
+
+    function remapIndexList(indices, mapIndex, list) {
+      return uniqueValidIndices((indices || []).map(mapIndex), list);
+    }
+
+    function remapPosterCopyOverrides(mapIndex) {
+      const next = {};
+      Object.entries(posterCopyOverrides).forEach(([key, value]) => {
+        const nextIndex = mapIndex(Number(key));
+        if (Number.isInteger(nextIndex) && languages[nextIndex]) next[nextIndex] = value;
+      });
+      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
+      Object.assign(posterCopyOverrides, next);
+    }
+
+    function syncLanguageCardsWithGenerated(indices = generatedLanguageIndices) {
+      const selectedIndices = generated ? indices : languages.map((_, index) => index);
+      const selectedSet = new Set(uniqueValidIndices(selectedIndices, languages));
+      document.querySelectorAll('.language-card').forEach(card => {
+        const index = Number(card.dataset.languageIndex);
+        card.classList.toggle('active', selectedSet.has(index));
+      });
+    }
+
     function reorderSizeSetting(from, to) {
       if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || !materialSizes[from] || !materialSizes[to]) return;
       const currentSizeId = materialSizes[currentSizeIndex]?.id;
@@ -2677,11 +2777,16 @@
 
     function reorderLanguageSetting(from, to) {
       if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || !languages[from] || !languages[to]) return;
-      const currentLanguage = languages[currentLanguageIndex];
+      const order = languages.map((_, index) => index);
       moveArrayItem(languages, from, to);
       moveArrayItem(localizedCopy, from, to);
-      currentLanguageIndex = Math.max(0, languages.indexOf(currentLanguage));
-      syncSettingsToGenerator('语言排序已同步到促销材料');
+      moveArrayItem(order, from, to);
+      const indexMap = new Map(order.map((oldIndex, newIndex) => [oldIndex, newIndex]));
+      const mapIndex = index => indexMap.has(index) ? indexMap.get(index) : -1;
+      currentLanguageIndex = Math.max(0, mapIndex(currentLanguageIndex));
+      generatedLanguageIndices = remapIndexList(generatedLanguageIndices, mapIndex, languages);
+      remapPosterCopyOverrides(mapIndex);
+      syncSettingsToGenerator('语言排序已同步到促销材料', { languageIndices: generatedLanguageIndices });
     }
 
     function renderGenerationRules() {
@@ -3172,15 +3277,20 @@
       }
     }
 
-    function syncSettingsToGenerator(message = '设置已同步到促销材料') {
-      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
+    function syncSettingsToGenerator(message = '设置已同步到促销材料', options = {}) {
       normalizeSizeLanguageState();
       currentSizeIndex = Math.min(currentSizeIndex, Math.max(0, materialSizes.length - 1));
       frameworkSizeIndex = Math.min(frameworkSizeIndex, Math.max(0, materialSizes.length - 1));
       currentLanguageIndex = Math.min(currentLanguageIndex, Math.max(0, languages.length - 1));
       alignUngeneratedPreviewWithTemplateManager();
       generatedSizeIndices = generated && materialSizes.length ? materialSizes.map((_, index) => index) : (materialSizes.length ? [currentSizeIndex] : []);
-      generatedLanguageIndices = generated && languages.length ? languages.map((_, index) => index) : (languages.length ? [currentLanguageIndex] : []);
+      const preferredLanguageIndices = Array.isArray(options.languageIndices) ? options.languageIndices : generatedLanguageIndices;
+      generatedLanguageIndices = generated && languages.length
+        ? (uniqueValidIndices(preferredLanguageIndices, languages).length ? uniqueValidIndices(preferredLanguageIndices, languages) : [currentLanguageIndex])
+        : (languages.length ? [currentLanguageIndex] : []);
+      if (generatedLanguageIndices.length && !generatedLanguageIndices.includes(currentLanguageIndex)) {
+        currentLanguageIndex = generatedLanguageIndices[0];
+      }
       generatedAssets = generatedSizeIndices.flatMap(sizeIndex =>
         generatedLanguageIndices.map(languageIndex => ({
           sizeIndex,
@@ -3190,8 +3300,11 @@
       );
       saveSizeLanguageState();
       renderSelectors();
+      syncLanguageCardsWithGenerated(generatedLanguageIndices);
+      renderLanguagePreview(generatedLanguageIndices);
       applySizePreview(currentSizeIndex);
       applyLanguagePreview(currentLanguageIndex);
+      refreshOpenPosterEditModal(generatedLanguageIndices);
       updateGeneratedMeta();
       updateUploadState();
       clearPosterEditHistory();
@@ -3250,11 +3363,13 @@
         showToast('请输入语言名称');
         return false;
       }
+      const nextIndex = languages.length;
       languages.push([cn, en]);
       localizedCopy.push(defaultLocalizedCopy());
+      generatedLanguageIndices = uniqueValidIndices([...generatedLanguageIndices, nextIndex], languages);
       if (cnInput) cnInput.value = '';
       if (nativeInput) nativeInput.value = '';
-      syncSettingsToGenerator('语言已新增并同步到促销材料');
+      syncSettingsToGenerator('语言已新增并同步到促销材料', { languageIndices: generatedLanguageIndices });
       return true;
     }
 
@@ -3268,7 +3383,7 @@
         return;
       }
       languages[index] = [cn, en];
-      syncSettingsToGenerator('语言已更新并同步到促销材料');
+      syncSettingsToGenerator('语言已更新并同步到促销材料', { languageIndices: generatedLanguageIndices });
     }
 
     function deleteLanguageSetting(row) {
@@ -3280,7 +3395,14 @@
       }
       languages.splice(index, 1);
       localizedCopy.splice(index, 1);
-      syncSettingsToGenerator('语言已删除并同步到促销材料');
+      const mapIndex = oldIndex => {
+        if (oldIndex === index) return -1;
+        return oldIndex > index ? oldIndex - 1 : oldIndex;
+      };
+      currentLanguageIndex = Math.max(0, mapIndex(currentLanguageIndex));
+      generatedLanguageIndices = remapIndexList(generatedLanguageIndices, mapIndex, languages);
+      remapPosterCopyOverrides(mapIndex);
+      syncSettingsToGenerator('语言已删除并同步到促销材料', { languageIndices: generatedLanguageIndices });
     }
 
     function getSourceCopy() {
@@ -4193,6 +4315,11 @@
         modal.addEventListener('click', event => {
           if (event.target === modal || event.target.closest('[data-edit-action="cancel"]')) closeEditPosterModal();
           if (event.target.closest('[data-edit-action="submit"]')) submitPosterEdit();
+          if (event.target.closest('[data-edit-action="clear-copy"]')) {
+            event.stopPropagation();
+            clearPosterCopySettings();
+            return;
+          }
           const removeButton = event.target.closest('[data-remove-copy-language]');
           if (removeButton) {
             event.stopPropagation();
@@ -4296,13 +4423,13 @@
             <em data-copy-status>${complete ? '<i>✓</i>已填写' : ''}</em>
           </div>
           <label>标题
-            <input data-copy-field="title" maxlength="${COPY_LIMITS.title}" placeholder="请输入内容" value="${escapeHtml(editorCopy.title)}">
+            <input data-copy-field="title" maxlength="${COPY_LIMITS.title}" placeholder="请输入内容" value="${escapeHtml(editorCopy.title)}" autocomplete="off">
           </label>
           <label>副标题
-            <textarea data-copy-field="subtitle" maxlength="${COPY_LIMITS.subtitle}" placeholder="请输入内容">${escapeHtml(editorCopy.subtitle)}</textarea>
+            <textarea data-copy-field="subtitle" maxlength="${COPY_LIMITS.subtitle}" placeholder="请输入内容" autocomplete="off">${escapeHtml(editorCopy.subtitle)}</textarea>
           </label>
           <label>按钮文案
-            <input data-copy-field="cta" maxlength="${COPY_LIMITS.cta}" placeholder="请输入内容" value="${escapeHtml(editorCopy.cta)}">
+            <input data-copy-field="cta" maxlength="${COPY_LIMITS.cta}" placeholder="请输入内容" value="${escapeHtml(editorCopy.cta)}" autocomplete="off">
           </label>
         </section>
       `;
@@ -4371,11 +4498,51 @@
             ${posterEditLanguageFormHtml(selectedIndices)}
           </div>
           <div class="confirm-actions drawer-actions">
+            <button class="modal-btn clear-copy-btn" type="button" data-edit-action="clear-copy" title="清除所有已填写文案" aria-label="清除所有已填写文案">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+                <path d="M22 21H7"/>
+                <path d="m5 11 9 9"/>
+              </svg>
+            </button>
             <button class="modal-btn" type="button" data-edit-action="cancel">取消</button>
             <button class="modal-btn primary" type="button" data-edit-action="submit">保存设置</button>
           </div>
         </div>
       `;
+    }
+
+    function refreshOpenPosterEditModal(selectedIndices = selectedPosterCopyLanguageIndices()) {
+      const modal = document.getElementById('editPosterModal');
+      if (!modal?.classList.contains('open')) return;
+      syncPosterCopyFromModal();
+      renderPosterEditModalContent(modal, normalizedPosterCopyLanguageSelection(selectedIndices));
+      syncPosterCopyStatus();
+    }
+
+    function emptyPosterCopy() {
+      return { title: '', subtitle: '', cta: '' };
+    }
+
+    function clearPosterCopySettings() {
+      const modal = document.getElementById('editPosterModal');
+      if (!modal) return;
+      localizedCopy = languages.map(() => emptyPosterCopy());
+      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
+      modal.querySelectorAll('[data-copy-field]').forEach(field => {
+        field.value = '';
+        field.defaultValue = '';
+        field.setAttribute('value', '');
+      });
+      titleInput.value = '';
+      subtitleInput.value = '';
+      ctaInput.value = '';
+      updateCounters();
+      syncPosterCopyStatus();
+      renderLanguagePreview(generatedLanguageIndices);
+      applyLanguagePreview(currentLanguageIndex);
+      saveTemplateState();
+      showToast('已清除所有多语言文案填写');
     }
 
     function syncPosterCopyFromModal() {
@@ -5186,7 +5353,7 @@
         }
       });
 
-      window.addEventListener('pointerup', () => {
+      window.addEventListener('pointerup', event => {
         if (!dragState) return;
         const completedDrag = dragState;
         dragState = null;
@@ -5198,9 +5365,9 @@
         if (
           completedDrag.mode === 'move'
           && !completedDrag.moved
-          && ['title', 'subtitle', 'cta'].includes(completedDrag.anchorKey)
+          && ['logo', 'title', 'subtitle', 'cta'].includes(completedDrag.anchorKey)
         ) {
-          openInlineCopyEditor('poster', completedDrag.anchorKey);
+          // Single click only selects the element; right click opens the Canva-style menu.
           return;
         }
         showToast('当前尺寸手动编辑已应用到预览和下载');
