@@ -2889,8 +2889,9 @@
       background: transparent;
       color: #0F1015;
       display: grid;
-      grid-template-columns: 28px 1fr 18px;
+      grid-template-columns: 28px minmax(max-content, 1fr) 18px;
       align-items: center;
+      justify-items: start;
       gap: 10px;
       text-align: left;
       font-size: 14px;
@@ -2900,11 +2901,11 @@
     }
 
     .poster-context-row--button {
-      grid-template-columns: 28px 1fr;
+      grid-template-columns: minmax(max-content, 1fr);
     }
 
     .poster-context-row--no-icon {
-      grid-template-columns: 1fr 18px;
+      grid-template-columns: minmax(max-content, 1fr) 18px;
     }
 
     .poster-context-row-icon {
@@ -2928,6 +2929,7 @@
     }
 
     .poster-context-row-arrow {
+      justify-self: end;
       color: #0F1015;
       font-size: 32px;
       font-weight: 400;

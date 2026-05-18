@@ -2017,11 +2017,9 @@
           </div>
         </div>
         <button class="poster-context-row poster-context-row--button" type="button" role="menuitem" data-poster-context-action="reset">
-          <span class="poster-context-row-icon" aria-hidden="true"></span>
           <span class="poster-context-row-label">恢复当前尺寸</span>
         </button>
-        <div class="poster-context-row poster-context-row--submenu poster-context-row--cta-size" data-poster-submenu-trigger="cta-size" role="menuitem" tabindex="0">
-          <span class="poster-context-row-icon" aria-hidden="true"></span>
+        <div class="poster-context-row poster-context-row--submenu poster-context-row--no-icon poster-context-row--cta-size" data-poster-submenu-trigger="cta-size" role="menuitem" tabindex="0">
           <span class="poster-context-row-label">按钮尺寸</span>
           <span class="poster-context-row-arrow" aria-hidden="true">›</span>
           <div class="poster-context-flyout poster-context-flyout--cta-size" role="menu" aria-label="按钮尺寸">
