@@ -1,58 +1,72 @@
 # SPEC Promo Materials
 
-A static browser tool for creating promo material previews and exports.
+SPEC Promo Materials is a static browser tool for creating and exporting SPEC promotional posters and banner creatives. It runs from plain HTML/CSS/JavaScript, stores work in the browser, and does not require a backend or build step.
+
+## What It Does
+
+- Generates promo materials from code-defined templates for 18 creative sizes.
+- Supports multi-language copy generation for 9 languages.
+- Lets users edit title, subtitle, CTA text, style preset, background, colors, and logo variant.
+- Supports product-image upload with cover-fit, drag/pan, zoom, and per-size positioning adjustments.
+- Provides frame/template management for exact layout anchors and element geometry.
+- Exports a single creative or all generated assets from the browser.
 
 ## Preview Links
 
-- Local preview: http://127.0.0.1:5500/index.html
-- GitHub Pages preview: https://lll887583-cmd.github.io/spec-promo-materials/
-
-## Current Direction
-
-The project is being narrowed to a simple Figma-template mapping tool:
-
-- Recreate 18 Figma size templates in code.
-- Keep template layout/positioning separate from visual styles.
-- Let style presets adjust colors, logo variants, and small visual details.
-- Preserve the existing UI/UX while replacing or extending the template data model.
-
-## Runtime Files
-
-- `index.html` - the app shell and controls.
-- `assets/app.css` - UI and editor styling.
-- `assets/app.js` - page interactions and state wiring that has not been split yet.
-- `assets/modules/dom-refs.js` - centralized DOM reference map.
-- `assets/modules/persistence.js` - IndexedDB, legacy localStorage, and optional server persistence helpers.
-- `assets/modules/app-state.js` - documented state groups for future refactors.
-- `assets/poster-core.js` - template/style primitives.
-- `assets/poster-renderer.js` - preview rendering.
-- `assets/poster-canvas.js` - canvas/export helper logic.
-- `assets/frame-store.js` - browser-side frame/template persistence.
-- `assets/frame-editor.js` - template/frame editor helpers.
-- `assets/export-assets.js` - export helpers.
-- `assets/rules-parser.js` - rule document parsing helpers.
-- `assets/*.png` - logo and brand assets used by the UI.
-- `docs/where-to-change.md` - task-to-file maintenance map.
-- `docs/state-model.md` - runtime state and persistence ownership notes.
-- `scripts/bump-asset-version.py` - helper for updating `index.html` asset query versions.
+- Local preview: `http://127.0.0.1:4173/index.html`
+- GitHub Pages preview: `https://lll887583-cmd.github.io/spec-promo-materials/`
 
 ## Local Use
 
-Use VS Code Live Server for the local workflow:
+Use the included launcher from this folder:
 
-1. Open this folder in VS Code.
-2. Start Live Server from `index.html`.
-3. Keep Chrome open at `http://127.0.0.1:5500/index.html`.
-4. Save local file changes and refresh if Live Server does not auto-refresh.
+```bash
+./start.command
+```
 
-Do not use the deleted `test` branch workflow. Publish to GitHub Pages only when explicitly requested.
+The launcher starts a Python static server on `127.0.0.1:4173` when needed, opens `http://127.0.0.1:4173/index.html`, and writes logs to `/tmp/spec-promo-materials-4173.log`.
 
-## Deprecated Copies
+VS Code Live Server can also be used for quick checks, but the maintained local preview command is `./start.command`.
 
-The old `test/` duplicate app folder has been removed. Keep all future edits in the root app files and `assets/` so preview and publish paths stay consistent.
+## Project Structure
+
+- `index.html` - app shell, navigation, controls, preview/editor panels, and asset includes.
+- `assets/app.css` - main app styling, responsive layout, controls, panels, and preview/editor UI.
+- `assets/spec-ui-foundation.css` - shared SPEC UI foundation styles.
+- `assets/app.js` - main browser interaction wiring and generation/editor state that has not been split out.
+- `assets/config/defaults.js` - default sizes, languages, copy, template/style presets, and constants.
+- `assets/config/layout-rules.js` - fallback layout generation rules.
+- `assets/config/translations.js` - default translation/copy map.
+- `assets/frame-layouts/` - exact per-size frame layout files and layout registry.
+- `assets/modules/dom-refs.js` - central DOM element references.
+- `assets/modules/persistence.js` - IndexedDB, legacy localStorage, and optional `/api` persistence helpers.
+- `assets/modules/app-state.js` - documented state grouping for maintainers.
+- `assets/modules/product-image.js` - product image upload, geometry, drag/pan, zoom, and adjustment behavior.
+- `assets/poster-core.js` - shared template, layout, style, and measurement helpers.
+- `assets/poster-renderer.js` - on-screen DOM poster rendering.
+- `assets/poster-canvas.js` - canvas/PNG export rendering.
+- `assets/frame-store.js` - browser-side frame/template persistence helpers.
+- `assets/frame-editor.js` - template/frame editor helpers.
+- `assets/export-assets.js` - download/export helpers.
+- `assets/rules-parser.js` - rule document parsing utilities.
+- `assets/*.png` - logo and brand assets.
+- `docs/where-to-change.md` - map of common tasks to source files.
+- `docs/state-model.md` - runtime state and persistence ownership notes.
+- `scripts/bump-asset-version.py` - helper for updating asset query versions in `index.html`.
+- `start.command` - local preview launcher.
 
 ## Maintenance Notes
 
-- Check `docs/where-to-change.md` before editing if you are unsure where a change belongs.
-- Check `docs/state-model.md` before adding or persisting runtime state.
-- After editing assets referenced by `index.html`, update the cache query manually or run `scripts/bump-asset-version.py <version>`.
+- Keep future edits in this folder; do not recreate deleted duplicate app folders.
+- Use `docs/where-to-change.md` to decide where a change belongs before editing.
+- Use `docs/state-model.md` before adding or persisting runtime state.
+- Keep preview rendering and canvas export rendering consistent, especially for layout, text wrapping, CTA sizing, and image positioning.
+- After editing assets referenced by `index.html`, update the cache-busting query version manually or run:
+
+```bash
+python3 scripts/bump-asset-version.py <version>
+```
+
+## Publishing
+
+Do not publish automatically. When publishing is explicitly requested, check local Git status first, then sync the static site to both `main` and `gh-pages` without force-pushing or overwriting unconfirmed remote history.

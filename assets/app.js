@@ -767,8 +767,12 @@
       return frameStore.clear();
     }
 
+    function emptyPosterCopy() {
+      return { title: '', subtitle: '', cta: '' };
+    }
+
     function cloneDefaultCopy(index = 0) {
-      return { ...(DEFAULT_LOCALIZED_COPY[index] || DEFAULT_LOCALIZED_COPY[0]) };
+      return { ...(DEFAULT_LOCALIZED_COPY[index] || DEFAULT_LOCALIZED_COPY[0] || emptyPosterCopy()) };
     }
 
     function normalizeCopyText(value) {
@@ -783,11 +787,15 @@
         && copy?.subtitle === LEGACY_TRADING_LOCALIZED_COPY[index].subtitle
         && copy?.cta === LEGACY_TRADING_LOCALIZED_COPY[index].cta;
       if (legacyEnglishCopy || legacyTradingCopy) return fallback;
-      return {
+      const normalized = {
         title: normalizeCopyText(copy?.title || fallback.title || ''),
         subtitle: normalizeCopyText(copy?.subtitle || fallback.subtitle || ''),
         cta: normalizeCopyText(copy?.cta || fallback.cta || '')
       };
+      const isOldPlaceholderCopy = ['title', 'subtitle', 'cta'].every(key =>
+        isInitialCopyPlaceholderValue(normalized[key], index, key)
+      );
+      return isOldPlaceholderCopy ? fallback : normalized;
     }
 
 
@@ -1887,7 +1895,6 @@
     }
 
     function posterOverlayAnchor(key, anchor) {
-      if (key === 'title' || key === 'subtitle') return anchor;
       const bounds = posterVisibleBoundsForAnchor(key);
       const host = materialCard?.getBoundingClientRect();
       if (!bounds || !host || !bounds.width || !bounds.height) return anchor;
@@ -1904,6 +1911,41 @@
         y: (topPx / Math.max(1, host.height)) * 100,
         w: Math.max(1, widthPct),
         h: Math.max(1, heightPct)
+      };
+    }
+
+    function posterVisualMoveBounds(anchorKey, anchor) {
+      if (!['title', 'subtitle', 'cta'].includes(anchorKey) || !anchor) return null;
+      const overlayAnchor = posterOverlayAnchor(anchorKey, anchor);
+      if (!overlayAnchor) return null;
+      const offsetX = Number(overlayAnchor.x) - Number(anchor.x);
+      const offsetY = Number(overlayAnchor.y) - Number(anchor.y);
+      const visualW = Number(overlayAnchor.w);
+      const visualH = Number(overlayAnchor.h);
+      if (![offsetX, offsetY, visualW, visualH].every(Number.isFinite)) return null;
+      return {
+        minX: -offsetX,
+        maxX: 100 - visualW - offsetX,
+        minY: -offsetY,
+        maxY: 100 - visualH - offsetY
+      };
+    }
+
+    function visibleAnchorPercentForInlineEditor(scope, key, anchor) {
+      if (scope !== 'poster') return anchor;
+      const host = materialCard?.getBoundingClientRect();
+      const bounds = posterVisibleBoundsForAnchor(key);
+      if (!host || !bounds || !bounds.width || !bounds.height) return anchor;
+      const leftPx = clamp(bounds.left - host.left, 0, host.width);
+      const topPx = clamp(bounds.top - host.top, 0, host.height);
+      const rightPx = clamp(bounds.left - host.left + bounds.width, 0, host.width);
+      const bottomPx = clamp(bounds.top - host.top + bounds.height, 0, host.height);
+      return {
+        ...anchor,
+        x: (leftPx / Math.max(1, host.width)) * 100,
+        y: (topPx / Math.max(1, host.height)) * 100,
+        w: Math.max(1, ((rightPx - leftPx) / Math.max(1, host.width)) * 100),
+        h: Math.max(1, ((bottomPx - topPx) / Math.max(1, host.height)) * 100)
       };
     }
 
@@ -2062,10 +2104,15 @@
 
     function normalizedPosterAnchor(anchorKey, nextAnchor, baseAnchor, size = materialSizes[currentSizeIndex]) {
       const minSize = anchorKey === 'logo' || anchorKey === 'trust' ? 4 : 5;
+      const moveBounds = nextAnchor.__visualMoveBounds;
+      const minX = Number.isFinite(Number(moveBounds?.minX)) ? Number(moveBounds.minX) : 0;
+      const maxX = Number.isFinite(Number(moveBounds?.maxX)) ? Number(moveBounds.maxX) : 100 - minSize;
+      const minY = Number.isFinite(Number(moveBounds?.minY)) ? Number(moveBounds.minY) : 0;
+      const maxY = Number.isFinite(Number(moveBounds?.maxY)) ? Number(moveBounds.maxY) : 100 - minSize;
       const normalized = {
         ...(baseAnchor || {}),
-        x: clamp(nextAnchor.x, 0, 100 - minSize),
-        y: clamp(nextAnchor.y, 0, 100 - minSize),
+        x: clamp(nextAnchor.x, minX, maxX),
+        y: clamp(nextAnchor.y, minY, maxY),
         w: clamp(nextAnchor.w, minSize, 100),
         h: clamp(nextAnchor.h, minSize, 100)
       };
@@ -2079,8 +2126,8 @@
         if (Number.isFinite(Number(nextAnchor.lineHeight))) normalized.lineHeight = Math.max(0.5, Number(nextAnchor.lineHeight));
         if (typeof nextAnchor.autoWidth === 'boolean') normalized.autoWidth = nextAnchor.autoWidth;
       }
-      normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
-      normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
+      normalized.x = clamp(normalized.x, minX, Number.isFinite(Number(moveBounds?.maxX)) ? Number(moveBounds.maxX) : 100 - normalized.w);
+      normalized.y = clamp(normalized.y, minY, Number.isFinite(Number(moveBounds?.maxY)) ? Number(moveBounds.maxY) : 100 - normalized.h);
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size) : normalized;
     }
 
@@ -2244,7 +2291,12 @@
       pushPosterEditHistory();
       setPosterOverrides(anchorKeys, anchorKey => {
         const base = anchors[anchorKey];
-        return { ...base, x: base.x + delta.dx, y: base.y + delta.dy };
+        return {
+          ...base,
+          x: base.x + delta.dx,
+          y: base.y + delta.dy,
+          __visualMoveBounds: posterVisualMoveBounds(anchorKey, base)
+        };
       });
       return true;
     }
@@ -2760,9 +2812,9 @@
 
     function defaultLocalizedCopy() {
       return {
-        title: titleInput.value || localizedCopy[0]?.title || 'Headline Text',
-        subtitle: subtitleInput.value || localizedCopy[0]?.subtitle || 'More information and key features here.',
-        cta: ctaInput.value || localizedCopy[0]?.cta || 'Button'
+        title: titleInput.value || localizedCopy[0]?.title || '',
+        subtitle: subtitleInput.value || localizedCopy[0]?.subtitle || '',
+        cta: ctaInput.value || localizedCopy[0]?.cta || ''
       };
     }
 
@@ -3448,9 +3500,9 @@
 
     function getSourceCopy() {
       return {
-        title: titleInput.value.trim() || localizedCopy[0]?.title || 'Headline Text',
-        subtitle: subtitleInput.value.trim() || localizedCopy[0]?.subtitle || 'More information and key features here.',
-        cta: ctaInput.value.trim() || localizedCopy[0]?.cta || 'Button'
+        title: titleInput.value.trim() || localizedCopy[0]?.title || '',
+        subtitle: subtitleInput.value.trim() || localizedCopy[0]?.subtitle || '',
+        cta: ctaInput.value.trim() || localizedCopy[0]?.cta || ''
       };
     }
 
@@ -3590,15 +3642,16 @@
       const anchors = scope === 'template' ? anchorEditorPreviewAnchors() : effectivePosterAnchorsForSize();
       const anchor = anchors[key];
       if (!host || !anchor) return;
+      const editorAnchor = visibleAnchorPercentForInlineEditor(scope, key, anchor);
       closeInlineCopyEditor();
       const editor = document.createElement('div');
       editor.className = 'inline-copy-editor';
       editor.dataset.inlineCopyEditor = scope;
       editor.dataset.inlineCopyKey = key;
-      editor.style.left = formatPct(anchor.x);
-      editor.style.top = formatPct(anchor.y);
-      editor.style.width = formatPct(anchor.w);
-      editor.style.height = formatPct(anchor.h);
+      editor.style.left = formatPct(editorAnchor.x);
+      editor.style.top = formatPct(editorAnchor.y);
+      editor.style.width = formatPct(editorAnchor.w);
+      editor.style.height = formatPct(editorAnchor.h);
       const canEditFontSize = scope === 'template' && key === 'cta';
       const editorHint = canEditFontSize ? '拖动边框调整折行，+ / - 调整字号' : '拖动边框调整折行';
       editor.innerHTML = `${canEditFontSize ? fontSizeToolbarHtml(key) : ''}<textarea maxlength="${COPY_LIMITS[key] || COPY_LIMITS.subtitle}"></textarea><label>${editorHint}</label>`;
@@ -4561,10 +4614,6 @@
       syncPosterCopyStatus();
     }
 
-    function emptyPosterCopy() {
-      return { title: '', subtitle: '', cta: '' };
-    }
-
     function clearPosterCopySettings() {
       const modal = document.getElementById('editPosterModal');
       if (!modal) return;
@@ -4973,9 +5022,9 @@
       generationToken += 1;
       isGenerating = false;
       normalizeTemplateState();
-      titleInput.value = localizedCopy[0]?.title || 'Headline Text';
-      subtitleInput.value = localizedCopy[0]?.subtitle || 'More information and key features here.';
-      ctaInput.value = localizedCopy[0]?.cta || 'Button';
+      titleInput.value = localizedCopy[0]?.title || '';
+      subtitleInput.value = localizedCopy[0]?.subtitle || '';
+      ctaInput.value = localizedCopy[0]?.cta || '';
       hasImage = false;
       uploadedImageSrc = '';
       uploadedImageName = '未上传图片';
@@ -5382,7 +5431,12 @@
         } else {
           const nextAnchors = Object.fromEntries(dragState.anchorKeys.map(anchorKey => {
             const base = dragState.anchors[anchorKey];
-            return [anchorKey, { ...base, x: base.x + delta.dx, y: base.y + delta.dy }];
+            return [anchorKey, {
+              ...base,
+              x: base.x + delta.dx,
+              y: base.y + delta.dy,
+              __visualMoveBounds: posterVisualMoveBounds(anchorKey, base)
+            }];
           }));
           const movingBounds = anchorBounds(nextAnchors, dragState.anchorKeys);
           const alignment = getAlignmentForBounds(materialCard, movingBounds, dragState.allAnchors, dragState.anchorKeys);
