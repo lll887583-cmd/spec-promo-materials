@@ -2004,8 +2004,7 @@
       menu.className = 'poster-context-menu';
       menu.setAttribute('role', 'menu');
       menu.innerHTML = `
-        <div class="poster-context-row poster-context-row--submenu" data-poster-submenu-trigger="align" role="menuitem" tabindex="0">
-          <span class="poster-context-row-icon" aria-hidden="true">${POSTER_CONTEXT_ALIGN_ACTIONS[0].icon}</span>
+        <div class="poster-context-row poster-context-row--submenu poster-context-row--no-icon" data-poster-submenu-trigger="align" role="menuitem" tabindex="0">
           <span class="poster-context-row-label" data-poster-context-align-title>页面对齐</span>
           <span class="poster-context-row-arrow" aria-hidden="true">›</span>
           <div class="poster-context-flyout poster-context-flyout--align" role="menu" aria-label="对齐选项">

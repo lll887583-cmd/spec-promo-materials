@@ -2863,7 +2863,9 @@
       position: fixed;
       z-index: 1000;
       display: none;
-      width: min(260px, calc(100vw - 24px));
+      width: max-content;
+      min-width: 0;
+      max-width: calc(100vw - 24px);
       padding: 8px;
       border: 1px solid rgba(224, 229, 239, .96);
       border-radius: 16px;
@@ -2879,6 +2881,7 @@
     .poster-context-row {
       position: relative;
       width: 100%;
+      min-width: max-content;
       min-height: 50px;
       padding: 0 12px;
       border: 0;
@@ -2898,6 +2901,10 @@
 
     .poster-context-row--button {
       grid-template-columns: 28px 1fr;
+    }
+
+    .poster-context-row--no-icon {
+      grid-template-columns: 1fr 18px;
     }
 
     .poster-context-row-icon {
