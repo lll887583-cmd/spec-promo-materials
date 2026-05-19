@@ -325,9 +325,9 @@
       renderTemplateOptions();
       if (sizeChoiceLabel) sizeChoiceLabel.textContent = `尺寸选择（${materialSizes.length} 个）`;
       if (languageChoiceLabel) languageChoiceLabel.textContent = `语言选择（${languages.length} 种）`;
-      if (sizePreviewTitle) sizePreviewTitle.textContent = `尺寸预览（4类 / ${materialSizes.length}个）`;
+      if (sizePreviewTitle) sizePreviewTitle.textContent = `尺寸预览（3类 / 5组 / ${materialSizes.length}个）`;
       if (bottomSizePreviewTitle) bottomSizePreviewTitle.textContent = `尺寸预览（${materialSizes.length}个）`;
-      if (frameworkSizePreviewTitle) frameworkSizePreviewTitle.textContent = `尺寸预览（4类 / ${materialSizes.length}个）`;
+      if (frameworkSizePreviewTitle) frameworkSizePreviewTitle.textContent = `尺寸预览（3类 / 5组 / ${materialSizes.length}个）`;
       if (languagePreviewTitle) languagePreviewTitle.textContent = `语言预览（${languages.length}种）`;
       if (bottomLanguagePreviewTitle) bottomLanguagePreviewTitle.textContent = `语言预览（${languages.length}种）`;
       sizeChecks.innerHTML = materialSizes.map((size, index) => `
@@ -487,6 +487,8 @@
       getGenerated: () => generated,
       getDownloadButton: () => downloadButton,
       getAssets: () => downloadAssets(),
+      getDefaultFolderName: defaultDownloadFolderName,
+      getAssetExportSortKey: assetExportSortKey,
       renderPngAsset,
       showToast
     });
@@ -2662,17 +2664,17 @@
       'ad_628x1200',
       'ad_828x1200',
       'ad_1200x1500',
-      'ad_300x250',
-      'square_800x800',
-      'ad_1200x1200',
       'ad_320x50',
       'ad_720x90',
       'ad_728x90',
+      'ad_300x250',
       'ad_320x100',
       'ad_970x250',
       'ad_980x250',
       'ad_990x250',
-      'landscape_1200x628'
+      'landscape_1200x628',
+      'square_800x800',
+      'ad_1200x1200'
     ];
     const MATERIAL_SIZE_DISPLAY_RANK = new Map(MATERIAL_SIZE_DISPLAY_ORDER.map((id, index) => [id, index]));
     const MATERIAL_SIZE_CATEGORY_DEFS = [
@@ -2682,19 +2684,51 @@
         sizeIds: ['ad_120x600', 'ad_160x600', 'ad_300x600', 'ad_320x480', 'ad_628x1200', 'ad_828x1200', 'ad_1200x1500']
       },
       {
-        id: 'square',
-        label: '方版',
-        sizeIds: ['square_800x800', 'ad_1200x1200']
-      },
-      {
         id: 'smallBanner',
-        label: '小横幅',
+        label: '小横版',
         sizeIds: ['ad_320x50', 'ad_720x90', 'ad_728x90']
       },
       {
         id: 'landscape',
         label: '横版',
         sizeIds: ['ad_300x250', 'ad_320x100', 'ad_970x250', 'ad_980x250', 'ad_990x250', 'landscape_1200x628']
+      },
+      {
+        id: 'square',
+        label: '方版',
+        sizeIds: ['square_800x800', 'ad_1200x1200']
+      }
+    ];
+    const MATERIAL_SIZE_PREVIEW_GROUP_DEFS = [
+      {
+        id: 'smallVertical',
+        label: '小竖版',
+        fallbackCategoryId: 'vertical',
+        sizeIds: ['ad_120x600', 'ad_160x600']
+      },
+      {
+        id: 'largeVertical',
+        label: '大竖版',
+        fallbackCategoryId: 'vertical',
+        sizeIds: ['ad_300x600', 'ad_320x480', 'ad_628x1200', 'ad_828x1200', 'ad_1200x1500']
+      },
+      {
+        id: 'smallLandscape',
+        label: '小横版',
+        fallbackCategoryId: 'smallBanner',
+        sizeIds: ['ad_320x50', 'ad_720x90', 'ad_728x90']
+      },
+      {
+        id: 'largeLandscape',
+        label: '大横版',
+        fallbackCategoryId: 'landscape',
+        sizeIds: ['ad_300x250', 'ad_320x100', 'ad_970x250', 'ad_980x250', 'ad_990x250', 'landscape_1200x628']
+      },
+      {
+        id: 'square',
+        label: '方版',
+        fallbackCategoryId: 'square',
+        sizeIds: ['square_800x800', 'ad_1200x1200']
       }
     ];
     const MATERIAL_SIZE_CATEGORY_BY_ID = new Map(
@@ -2728,14 +2762,57 @@
       return 'landscape';
     }
 
+    function materialSizePreviewGroupIndex(size) {
+      const explicitIndex = MATERIAL_SIZE_PREVIEW_GROUP_DEFS.findIndex(group => group.sizeIds.includes(size?.id));
+      if (explicitIndex >= 0) return explicitIndex;
+      const categoryId = materialSizeCategoryId(size);
+      const fallbackIndex = MATERIAL_SIZE_PREVIEW_GROUP_DEFS.findIndex(group => group.fallbackCategoryId === categoryId);
+      return fallbackIndex >= 0 ? fallbackIndex : MATERIAL_SIZE_PREVIEW_GROUP_DEFS.length - 1;
+    }
+
+    function paddedExportRank(value, fallback = 999999) {
+      const number = Number.isFinite(Number(value)) ? Number(value) : fallback;
+      return String(Math.max(0, number)).padStart(6, '0');
+    }
+
+    function assetExportSortKey(asset = {}) {
+      const size = materialSizes[asset.sizeIndex] || materialSizes[0] || {};
+      const groupIndex = materialSizePreviewGroupIndex(size);
+      const group = MATERIAL_SIZE_PREVIEW_GROUP_DEFS[groupIndex];
+      const sizeRankInGroup = group?.sizeIds.indexOf(size.id) ?? -1;
+      const displayRank = MATERIAL_SIZE_DISPLAY_RANK.has(size.id) ? MATERIAL_SIZE_DISPLAY_RANK.get(size.id) : Number.POSITIVE_INFINITY;
+      return [
+        paddedExportRank(asset.languageIndex),
+        paddedExportRank(groupIndex),
+        paddedExportRank(sizeRankInGroup >= 0 ? sizeRankInGroup : displayRank),
+        paddedExportRank(displayRank),
+        paddedExportRank(asset.sizeIndex)
+      ].join('-');
+    }
+
+    function materialSizeExportRank(size, sizeIndex = 0) {
+      const groupIndex = materialSizePreviewGroupIndex(size);
+      const group = MATERIAL_SIZE_PREVIEW_GROUP_DEFS[groupIndex];
+      const sizeRankInGroup = group?.sizeIds.indexOf(size?.id) ?? -1;
+      const displayRank = MATERIAL_SIZE_DISPLAY_RANK.has(size?.id) ? MATERIAL_SIZE_DISPLAY_RANK.get(size.id) : Number.POSITIVE_INFINITY;
+      return MATERIAL_SIZE_PREVIEW_GROUP_DEFS.slice(0, groupIndex).reduce((sum, item) => sum + item.sizeIds.length, 0)
+        + (sizeRankInGroup >= 0 ? sizeRankInGroup : Number.isFinite(displayRank) ? displayRank : sizeIndex)
+        + 1;
+    }
+
+
     function groupedSizePreviewEntries(indices = []) {
-      const groups = MATERIAL_SIZE_CATEGORY_DEFS.map(category => ({ ...category, entries: [] }));
-      const groupById = new Map(groups.map(group => [group.id, group]));
+      const groups = MATERIAL_SIZE_PREVIEW_GROUP_DEFS.map(group => ({ ...group, entries: [] }));
+      const groupBySizeId = new Map(
+        groups.flatMap(group => group.sizeIds.map(sizeId => [sizeId, group]))
+      );
+      const fallbackGroupByCategoryId = new Map(groups.map(group => [group.fallbackCategoryId, group]));
       indices.forEach(index => {
         const size = materialSizes[index];
         if (!size) return;
-        const categoryId = materialSizeCategoryId(size);
-        const group = groupById.get(categoryId) || groupById.get('landscape');
+        const group = groupBySizeId.get(size.id)
+          || fallbackGroupByCategoryId.get(materialSizeCategoryId(size))
+          || groups[groups.length - 1];
         group.entries.push({ index, size });
       });
       return groups.filter(group => group.entries.length);
@@ -3937,6 +4014,7 @@
       return titleInput.value.trim()
         && subtitleInput.value.trim()
         && ctaInput.value.trim()
+        && hasImage
         && selectedSizeIndices().length > 0
         && selectedLanguageIndices().length > 0;
     }
@@ -3961,7 +4039,7 @@
       }
       renderPosterEditOverlay();
       generateButton.disabled = !appInitialized || !isGenerationReady();
-      downloadButton.disabled = !generated;
+      downloadButton.disabled = !generated || !hasImage;
       if (styleSwitchButton) styleSwitchButton.disabled = !generated;
       editPosterButton.disabled = !generated;
       if (regenerateButton) regenerateButton.disabled = !generated;
@@ -3986,7 +4064,7 @@
     function setGeneratingState(next) {
       isGenerating = next;
       generateButton.disabled = next || !appInitialized || !isGenerationReady();
-      downloadButton.disabled = next || !generated;
+      downloadButton.disabled = next || !generated || !hasImage;
       if (styleSwitchButton) styleSwitchButton.disabled = next || !generated;
       if (next) closeDownloadMenu();
       editPosterButton.disabled = next || !generated;
@@ -4736,8 +4814,20 @@
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '') || `lang-${languageIndex}`;
-      return `promo-material-${size.id}-${language}.png`;
+      const sizeOrder = String(materialSizeExportRank(size, sizeIndex)).padStart(2, '0');
+      return `promo-material-${sizeOrder}-${size.id}-${language}.png`;
     }
+
+    function defaultDownloadFolderName(date = new Date()) {
+      const two = value => String(value).padStart(2, '0');
+      const year = two(date.getFullYear() % 100);
+      const month = two(date.getMonth() + 1);
+      const day = two(date.getDate());
+      const hour = two(date.getHours());
+      const minute = two(date.getMinutes());
+      return `promo-materials-${year}.${month}.${day}-${hour}:${minute}`;
+    }
+
 
     function ruleSizeIndex(rule = {}) {
       if (!rule.width || !rule.height) return currentSizeIndex;
@@ -5873,8 +5963,8 @@
     }
 
     function toggleDownloadMenu() {
-      if (!generated || downloadButton.disabled) {
-        showToast('请先生成素材后再下载');
+      if (!generated || !hasImage || downloadButton.disabled) {
+        showToast('请先上传主图并生成素材后再下载');
         return;
       }
       const isOpen = downloadMenu?.classList.toggle('open');
@@ -5882,8 +5972,8 @@
     }
 
     async function downloadSingleAsset() {
-      if (!generated) {
-        showToast('请先生成素材后再下载');
+      if (!generated || !hasImage) {
+        showToast('请先上传主图并生成素材后再下载');
         return;
       }
       downloadButton.disabled = true;
@@ -5893,7 +5983,7 @@
         console.warn('Single asset export failed', error);
         showToast('素材导出失败，请重试');
       } finally {
-        downloadButton.disabled = !generated;
+        downloadButton.disabled = !generated || !hasImage;
       }
     }
 
@@ -5960,7 +6050,7 @@
               </select>
             </label>
             <label class="download-field">文件夹名称
-              <input id="downloadFolderName" value="${escapeHtml(DEFAULT_DOWNLOAD_FOLDER_NAME)}" maxlength="80" spellcheck="false">
+              <input id="downloadFolderName" value="${escapeHtml(defaultDownloadFolderName())}" maxlength="80" spellcheck="false">
             </label>
           </div>
           <p class="download-note">导出内容全部为 PNG。推荐使用“浏览器下载 ZIP”，兼容性最好；“保存到指定位置”为实验功能，失败时会自动改用浏览器 ZIP 下载。</p>
@@ -5975,8 +6065,8 @@
 
     function openDownloadModal() {
       closeDownloadMenu();
-      if (!generated) {
-        showToast('请先生成素材后再下载');
+      if (!generated || !hasImage) {
+        showToast('请先上传主图并生成素材后再下载');
         return;
       }
       const assets = downloadAssets();

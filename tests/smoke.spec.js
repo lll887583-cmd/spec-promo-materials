@@ -9,6 +9,8 @@ test('loads the promo materials workspace', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '预览区' })).toBeVisible();
   await expect(page.locator('#materialCard')).toBeVisible();
   await expect(page.locator('#downloadButton')).toBeVisible();
+  await expect(page.locator('#downloadButton')).toBeDisabled();
+  await expect(page.locator('#generateButton')).toBeDisabled();
   await expect(page.locator('#helpButton')).toBeVisible();
 
   await page.locator('#styleSwitchButton').click();

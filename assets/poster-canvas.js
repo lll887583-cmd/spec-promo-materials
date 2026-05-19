@@ -143,7 +143,11 @@
           const imageGap = Math.max(6, height * 0.035);
           const nextTop = Math.max(imageRect.y, ctaDrawY + ctaRect.h + imageGap);
           if (nextTop > imageRect.y + 1) {
-            const visibleBottom = Math.min(imageRect.y + imageRect.h, height - bottomPadding);
+            const imageReachesCanvasBottom = imageRect.y + imageRect.h >= height - 1;
+            const visualReachesCanvasBottom = imageVisualRect.y + imageVisualRect.h >= height - 1;
+            const imageBottomLimit = imageReachesCanvasBottom ? height : height - bottomPadding;
+            const visualBottomLimit = visualReachesCanvasBottom ? height : height - bottomPadding;
+            const visibleBottom = Math.min(imageRect.y + imageRect.h, imageBottomLimit);
             imageRect = {
               ...imageRect,
               y: nextTop,
@@ -153,7 +157,7 @@
             imageVisualRect = {
               ...imageVisualRect,
               y: visualTop,
-              h: Math.max(height * 0.12, Math.min(imageVisualRect.y + imageVisualRect.h, height - bottomPadding) - visualTop)
+              h: Math.max(height * 0.12, Math.min(imageVisualRect.y + imageVisualRect.h, visualBottomLimit) - visualTop)
             };
           }
         }

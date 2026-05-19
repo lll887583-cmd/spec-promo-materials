@@ -2,14 +2,14 @@
   'use strict';
 
   function createAssetExporter(options = {}) {
-    const { defaultFolderName, getLanguages, getGenerated, getDownloadButton, getAssets, renderPngAsset, showToast } = options;
+    const { defaultFolderName, getDefaultFolderName, getLanguages, getGenerated, getDownloadButton, getAssets, getAssetExportSortKey, renderPngAsset, showToast } = options;
 
     function sanitizeFolderName(name) {
       return String(name || '')
         .trim()
-        .replace(/[\\/:*?"<>|]+/g, '-')
+        .replace(/[\\/*?"<>|]+/g, '-')
         .replace(/\s+/g, ' ')
-        .slice(0, 80) || defaultFolderName;
+        .slice(0, 80) || (typeof getDefaultFolderName === 'function' ? getDefaultFolderName() : defaultFolderName);
     }
 
     function sanitizeZipPathSegment(name, fallback) {
@@ -174,9 +174,15 @@
       if (total > 1) await new Promise(resolve => setTimeout(resolve, index === total - 1 ? 0 : 120));
     }
 
+    function sortedAssetsForExport(assets) {
+      const sortKey = typeof getAssetExportSortKey === 'function' ? getAssetExportSortKey : null;
+      if (!sortKey) return [...assets];
+      return [...assets].sort((a, b) => String(sortKey(a)).localeCompare(String(sortKey(b)), 'en'));
+    }
+
     async function renderZipEntries(assets, safeFolderName, folderHandle = null) {
       const entries = [];
-      for (const asset of assets) {
+      for (const asset of sortedAssetsForExport(assets)) {
         const rendered = await renderPngAsset(asset);
         const relativePath = exportAssetRelativePath(asset, rendered.fileName);
         entries.push({ ...rendered, path: folderHandle ? relativePath : `${safeFolderName}/${relativePath}` });
