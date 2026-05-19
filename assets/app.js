@@ -1221,13 +1221,7 @@
       ctaInput.value = localizedCopy[0]?.cta || '';
       renderSelectors();
       applySavedSelectionState(draft);
-      generatedAssets = generatedSizeIndices.flatMap(sizeIndex =>
-        generatedLanguageIndices.map(languageIndex => ({
-          sizeIndex,
-          languageIndex,
-          fileName: buildAssetFileName(sizeIndex, languageIndex)
-        }))
-      );
+      rebuildGeneratedAssets();
       renderUploadPreview();
       renderSizePreview(generatedSizeIndices);
       renderLanguagePreview(generatedLanguageIndices);
@@ -3636,13 +3630,7 @@
       if (generatedLanguageIndices.length && !generatedLanguageIndices.includes(currentLanguageIndex)) {
         currentLanguageIndex = generatedLanguageIndices[0];
       }
-      generatedAssets = generatedSizeIndices.flatMap(sizeIndex =>
-        generatedLanguageIndices.map(languageIndex => ({
-          sizeIndex,
-          languageIndex,
-          fileName: buildAssetFileName(sizeIndex, languageIndex)
-        }))
-      );
+      rebuildGeneratedAssets();
       saveSizeLanguageState();
       renderSelectors();
       syncLanguageCardsWithGenerated(generatedLanguageIndices);
@@ -4110,7 +4098,7 @@
     }
 
     function generatedAssetCount() {
-      return generatedAssets.length || (generatedSizeIndices.length * generatedLanguageIndices.length);
+      return downloadAssets().length;
     }
 
     function updatePager() {
@@ -4994,13 +4982,7 @@
       });
       generatedLanguageIndices = selectedLanguages;
       if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0] || 0;
-      generatedAssets = generatedSizeIndices.flatMap(sizeIndex =>
-        generatedLanguageIndices.map(languageIndex => ({
-          sizeIndex,
-          languageIndex,
-          fileName: buildAssetFileName(sizeIndex, languageIndex)
-        }))
-      );
+      rebuildGeneratedAssets();
       titleInput.value = localizedCopy[0]?.title || '';
       subtitleInput.value = localizedCopy[0]?.subtitle || '';
       ctaInput.value = localizedCopy[0]?.cta || '';
@@ -5091,11 +5073,36 @@
       return [...new Set(assets.map(asset => asset[key]).filter(index => Number.isInteger(index)))];
     }
 
+    function buildGeneratedAssetsFromCurrentState() {
+      return generatedSizeIndices.flatMap(sizeIndex =>
+        generatedLanguageIndices.map(languageIndex => ({
+          sizeIndex,
+          languageIndex,
+          fileName: buildAssetFileName(sizeIndex, languageIndex)
+        }))
+      );
+    }
+
+    function rebuildGeneratedAssets() {
+      const ruleAssets = generatedAssets.filter(asset => asset?.rule);
+      generatedAssets = ruleAssets.length ? ruleAssets : buildGeneratedAssetsFromCurrentState();
+      return generatedAssets;
+    }
+
+    function exactGeneratedAsset(sizeIndex = currentSizeIndex, languageIndex = currentLanguageIndex) {
+      return generatedAssets.find(asset => asset.sizeIndex === sizeIndex && asset.languageIndex === languageIndex) || null;
+    }
+
+    function assetFromCurrentState(sizeIndex = currentSizeIndex, languageIndex = currentLanguageIndex) {
+      return {
+        sizeIndex,
+        languageIndex,
+        fileName: buildAssetFileName(sizeIndex, languageIndex)
+      };
+    }
+
     function currentPreviewAsset(sizeIndex = currentSizeIndex, languageIndex = currentLanguageIndex) {
-      return generatedAssets.find(asset => asset.sizeIndex === sizeIndex && asset.languageIndex === languageIndex)
-        || generatedAssets.find(asset => asset.sizeIndex === sizeIndex)
-        || generatedAssets.find(asset => asset.languageIndex === languageIndex)
-        || null;
+      return exactGeneratedAsset(sizeIndex, languageIndex) || assetFromCurrentState(sizeIndex, languageIndex);
     }
 
     function copyForAsset(asset = currentPreviewAsset()) {
@@ -5125,16 +5132,6 @@
       showToast('生成失败，已恢复预览界面，请重试');
     }
 
-    function buildDefaultGeneratedAssets() {
-      return generatedSizeIndices.flatMap(sizeIndex =>
-        generatedLanguageIndices.map(languageIndex => ({
-          sizeIndex,
-          languageIndex,
-          fileName: buildAssetFileName(sizeIndex, languageIndex)
-        }))
-      );
-    }
-
     function initializeGeneratedPreview() {
       normalizeSizeLanguageState();
       loadStyleMapping(stylePresets[0]?.id || 'style-1');
@@ -5142,7 +5139,7 @@
       activeGeneratorPanel = 'results';
       generatedSizeIndices = materialSizes.map((_, index) => index);
       generatedLanguageIndices = languages.map((_, index) => index);
-      generatedAssets = buildDefaultGeneratedAssets();
+      rebuildGeneratedAssets();
       currentSizeIndex = generatedSizeIndices[0] || defaultMaterialPreviewSizeIndex();
       if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0] || 0;
       renderSizePreview(generatedSizeIndices);
@@ -5230,13 +5227,7 @@
               generated = true;
               generatedSizeIndices = nextSizeIndices;
               generatedLanguageIndices = nextLanguageIndices;
-              generatedAssets = ruleAssets.length ? ruleAssets : generatedSizeIndices.flatMap(sizeIndex =>
-                generatedLanguageIndices.map(languageIndex => ({
-                  sizeIndex,
-                  languageIndex,
-                  fileName: buildAssetFileName(sizeIndex, languageIndex)
-                }))
-              );
+              generatedAssets = ruleAssets.length ? ruleAssets : buildGeneratedAssetsFromCurrentState();
               // 生成完成后从结果列表的第一个尺寸开始预览，而不是继续停留在模板预览尺寸。
               if (generatedSizeIndices.length) currentSizeIndex = generatedSizeIndices[0];
               if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0];
@@ -6149,25 +6140,13 @@
     }
 
     function downloadAssets() {
-      return generatedAssets.length
-        ? generatedAssets
-        : generatedSizeIndices.flatMap(sizeIndex =>
-          generatedLanguageIndices.map(languageIndex => ({
-            sizeIndex,
-            languageIndex,
-            fileName: buildAssetFileName(sizeIndex, languageIndex)
-          }))
-        );
+      const ruleAssets = generatedAssets.filter(asset => asset?.rule);
+      return ruleAssets.length ? [...ruleAssets] : buildGeneratedAssetsFromCurrentState();
     }
 
     function currentDownloadAsset() {
-      const asset = currentPreviewAsset();
-      if (asset) return asset;
-      return {
-        sizeIndex: currentSizeIndex,
-        languageIndex: currentLanguageIndex,
-        fileName: buildAssetFileName(currentSizeIndex, currentLanguageIndex)
-      };
+      return exactGeneratedAsset(currentSizeIndex, currentLanguageIndex)
+        || assetFromCurrentState(currentSizeIndex, currentLanguageIndex);
     }
 
     function closeDownloadMenu() {
