@@ -42,6 +42,7 @@
 
     const TEMPLATE_STORAGE_KEY = 'spec-promo-template-state-v1';
     const SIZE_LANGUAGE_STORAGE_KEY = 'spec-promo-size-language-state-v1';
+    const WORKSPACE_DRAFT_STORAGE_KEY = 'spec-promo-workspace-draft-v1';
     const APP_DATABASE_NAME = 'spec-promo-materials-database-v1';
     const APP_DATABASE_VERSION = 1;
     const APP_STATE_STORE = 'state';
@@ -51,6 +52,7 @@
     const DEFAULT_DOWNLOAD_FOLDER_NAME = 'spec-promo-materials';
     const SERVER_DATABASE_API = '/api';
     const SERVER_DATABASE_TIMEOUT = 1600;
+    const RESTORE_LEGACY_LOCALIZED_COPY = false;
 
     function defaultTemplates() {
       return [
@@ -1043,7 +1045,7 @@
         }
         if (Array.isArray(saved.materialSizes)) materialSizes = saved.materialSizes;
         if (Array.isArray(saved.languages)) languages = saved.languages;
-        if (Array.isArray(saved.localizedCopy)) localizedCopy = saved.localizedCopy;
+        if (RESTORE_LEGACY_LOCALIZED_COPY && Array.isArray(saved.localizedCopy)) localizedCopy = saved.localizedCopy;
         normalizeSizeLanguageState();
         await saveSizeLanguageState();
       } catch (error) {
@@ -1052,6 +1054,206 @@
         languages = JSON.parse(JSON.stringify(DEFAULT_LANGUAGES));
         localizedCopy = JSON.parse(JSON.stringify(DEFAULT_LOCALIZED_COPY));
       }
+    }
+
+    function removeLegacyJsonState(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.warn('Legacy local state failed to clear', error);
+      }
+    }
+
+    async function deleteStateRecord(key) {
+      try {
+        await appDatabaseTransaction(APP_STATE_STORE, 'readwrite', store => store.delete(key));
+      } catch (error) {
+        console.warn('Local state record failed to clear', error);
+      }
+    }
+
+    function currentWorkspaceDraftSnapshot() {
+      normalizeSizeLanguageState();
+      normalizeTemplateState();
+      const selectedSizes = selectedSizeIndices();
+      const selectedLanguages = selectedLanguageIndices();
+      return {
+        version: 1,
+        updatedAt: Date.now(),
+        materialSizes: cloneState(materialSizes),
+        languages: cloneState(languages),
+        localizedCopy: cloneState(localizedCopy),
+        selectedSizeIds: selectedSizes.map(index => materialSizes[index]?.id).filter(Boolean),
+        selectedLanguageKeys: selectedLanguages.map(index => languages[index]?.[1] || languages[index]?.[0]).filter(Boolean),
+        generatedSizeIds: generatedSizeIndices.map(index => materialSizes[index]?.id).filter(Boolean),
+        generatedLanguageKeys: generatedLanguageIndices.map(index => languages[index]?.[1] || languages[index]?.[0]).filter(Boolean),
+        currentSizeId: materialSizes[currentSizeIndex]?.id || '',
+        currentLanguageKey: languages[currentLanguageIndex]?.[1] || languages[currentLanguageIndex]?.[0] || '',
+        frameworkSizeId: materialSizes[frameworkSizeIndex]?.id || '',
+        generated,
+        activeGeneratorPanel,
+        hasImage,
+        uploadedImageSrc,
+        uploadedImageName,
+        selectedLogoBrand,
+        selectedLogoVariant,
+        selectedTemplate,
+        selectedStyle,
+        templates: cloneState(templates),
+        stylePresets: cloneState(stylePresets),
+        templateAnchorMaps: cloneState(templateAnchorMaps),
+        styleMaps: cloneState(styleMaps),
+        posterAnchorOverrides: cloneState(posterAnchorOverrides),
+        posterCopyOverrides: cloneState(posterCopyOverrides),
+        productImageAdjustments: cloneState(productImageAdjustments)
+      };
+    }
+
+    async function saveWorkspaceDraft() {
+      const snapshot = currentWorkspaceDraftSnapshot();
+      let saved = false;
+      try {
+        await persistStateRecord(WORKSPACE_DRAFT_STORAGE_KEY, snapshot);
+        saved = true;
+      } catch (error) {
+        console.warn('Workspace draft failed to persist to IndexedDB', error);
+      }
+      try {
+        localStorage.setItem(WORKSPACE_DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
+        saved = true;
+      } catch (error) {
+        console.warn('Workspace draft localStorage fallback failed', error);
+      }
+      return saved;
+    }
+
+    async function loadWorkspaceDraft() {
+      const dbState = await loadStateRecord(WORKSPACE_DRAFT_STORAGE_KEY);
+      const legacyState = loadLegacyJsonState(WORKSPACE_DRAFT_STORAGE_KEY);
+      const saved = newestState(dbState, legacyState);
+      return saved?.version === 1 ? saved : null;
+    }
+
+    function languageIndexFromKey(key) {
+      const normalized = String(key || '').trim().toLowerCase();
+      if (!normalized) return -1;
+      return languages.findIndex(([cn, en]) => [cn, en].some(item => String(item || '').trim().toLowerCase() === normalized));
+    }
+
+    function sizeIndexFromId(id) {
+      const key = String(id || '').trim();
+      return key ? materialSizes.findIndex(size => size.id === key) : -1;
+    }
+
+    function indicesFromSavedSizeIds(ids, fallback = []) {
+      const indices = (Array.isArray(ids) ? ids : []).map(sizeIndexFromId).filter(index => index >= 0);
+      return uniqueValidIndices(indices.length ? indices : fallback, materialSizes);
+    }
+
+    function indicesFromSavedLanguageKeys(keys, fallback = []) {
+      const indices = (Array.isArray(keys) ? keys : []).map(languageIndexFromKey).filter(index => index >= 0);
+      return uniqueValidIndices(indices.length ? indices : fallback, languages);
+    }
+
+    function applySavedSelectionState(draft) {
+      const selectedSizeSet = new Set(indicesFromSavedSizeIds(draft.selectedSizeIds, materialSizes.map((_, index) => index)));
+      document.querySelectorAll('#sizeChecks input').forEach(input => {
+        const index = Number(input.dataset.sizeIndex);
+        input.checked = selectedSizeSet.has(index);
+      });
+      const selectedLanguageSet = new Set(indicesFromSavedLanguageKeys(draft.selectedLanguageKeys, languages.map((_, index) => index)));
+      document.querySelectorAll('.language-card').forEach(card => {
+        const index = Number(card.dataset.languageIndex);
+        card.classList.toggle('active', selectedLanguageSet.has(index));
+      });
+    }
+
+    function applyWorkspaceDraft(draft) {
+      if (!draft || draft.version !== 1) return false;
+      if (Array.isArray(draft.materialSizes)) materialSizes = cloneState(draft.materialSizes);
+      if (Array.isArray(draft.languages)) languages = cloneState(draft.languages);
+      if (Array.isArray(draft.localizedCopy)) localizedCopy = cloneState(draft.localizedCopy);
+      if (Array.isArray(draft.templates)) templates = cloneState(draft.templates);
+      if (Array.isArray(draft.stylePresets)) stylePresets = cloneState(draft.stylePresets);
+      if (draft.templateAnchorMaps && typeof draft.templateAnchorMaps === 'object') templateAnchorMaps = cloneAnchors(draft.templateAnchorMaps);
+      if (draft.styleMaps && typeof draft.styleMaps === 'object') styleMaps = cloneStyles(draft.styleMaps);
+      selectedTemplate = draft.selectedTemplate || selectedTemplate;
+      selectedStyle = draft.selectedStyle || selectedStyle;
+      normalizeSizeLanguageState();
+      normalizeTemplateState();
+
+      selectedTemplate = templates.some(template => template.id === draft.selectedTemplate) ? draft.selectedTemplate : selectedTemplate;
+      selectedStyle = stylePresets.some(style => style.id === draft.selectedStyle) ? draft.selectedStyle : selectedStyle;
+      templateAnchors = cloneAnchors(templateAnchorMaps[selectedTemplate]);
+      draftTemplateAnchors = cloneAnchors(templateAnchors);
+      templateStyles = cloneStyles(styleMaps[selectedStyle]);
+      draftTemplateStyles = cloneStyles(templateStyles);
+
+      currentSizeIndex = Math.max(0, sizeIndexFromId(draft.currentSizeId));
+      if (!materialSizes[currentSizeIndex]) currentSizeIndex = templatePreviewSizeIndex();
+      frameworkSizeIndex = Math.max(0, sizeIndexFromId(draft.frameworkSizeId));
+      if (!materialSizes[frameworkSizeIndex]) frameworkSizeIndex = currentSizeIndex;
+      currentLanguageIndex = Math.max(0, languageIndexFromKey(draft.currentLanguageKey));
+      if (!languages[currentLanguageIndex]) currentLanguageIndex = 0;
+      generated = draft.generated !== false;
+      activeGeneratorPanel = draft.activeGeneratorPanel === 'settings' ? 'settings' : 'results';
+      generatedSizeIndices = indicesFromSavedSizeIds(draft.generatedSizeIds, materialSizes.map((_, index) => index));
+      generatedLanguageIndices = indicesFromSavedLanguageKeys(draft.generatedLanguageKeys, languages.map((_, index) => index));
+      if (!generatedSizeIndices.length) generatedSizeIndices = materialSizes.map((_, index) => index);
+      if (!generatedLanguageIndices.length) generatedLanguageIndices = languages.map((_, index) => index);
+
+      hasImage = Boolean(draft.hasImage && draft.uploadedImageSrc);
+      uploadedImageSrc = hasImage ? String(draft.uploadedImageSrc || '') : '';
+      uploadedImageName = hasImage ? String(draft.uploadedImageName || '已上传图片') : '未上传图片';
+      selectedLogoBrand = draft.selectedLogoBrand || selectedLogoBrand;
+      selectedLogoVariant = draft.selectedLogoVariant || selectedLogoVariant;
+      posterAnchorOverrides = cloneState(draft.posterAnchorOverrides || {});
+      productImageAdjustments = cloneState(draft.productImageAdjustments || {});
+      Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
+      Object.assign(posterCopyOverrides, cloneState(draft.posterCopyOverrides || {}));
+      clearPosterEditHistory();
+
+      titleInput.value = localizedCopy[0]?.title || '';
+      subtitleInput.value = localizedCopy[0]?.subtitle || '';
+      ctaInput.value = localizedCopy[0]?.cta || '';
+      renderSelectors();
+      applySavedSelectionState(draft);
+      generatedAssets = generatedSizeIndices.flatMap(sizeIndex =>
+        generatedLanguageIndices.map(languageIndex => ({
+          sizeIndex,
+          languageIndex,
+          fileName: buildAssetFileName(sizeIndex, languageIndex)
+        }))
+      );
+      renderUploadPreview();
+      renderSizePreview(generatedSizeIndices);
+      renderLanguagePreview(generatedLanguageIndices);
+      syncLanguageCardsWithGenerated(generatedLanguageIndices);
+      applyTemplateAnchors();
+      applySizePreview(currentSizeIndex);
+      applyLanguagePreview(currentLanguageIndex);
+      updateCounters();
+      updateGeneratedMeta();
+      updateUploadState();
+      return true;
+    }
+
+    async function restoreWorkspaceDraft() {
+      try {
+        const draft = await loadWorkspaceDraft();
+        return applyWorkspaceDraft(draft);
+      } catch (error) {
+        console.warn('Workspace draft failed to restore', error);
+        return false;
+      }
+    }
+
+    async function clearWorkspaceDraftStorage() {
+      removeLegacyJsonState(WORKSPACE_DRAFT_STORAGE_KEY);
+      removeLegacyJsonState(SIZE_LANGUAGE_STORAGE_KEY);
+      await deleteStateRecord(WORKSPACE_DRAFT_STORAGE_KEY);
+      await deleteStateRecord(SIZE_LANGUAGE_STORAGE_KEY);
+      await clearTemplateState();
     }
 
     function logoAssetTheme(variant = 'black') {
@@ -4646,7 +4848,7 @@
             ${posterEditLanguageFormHtml(selectedIndices)}
           </div>
           <div class="confirm-actions drawer-actions">
-            <button class="modal-btn clear-copy-btn" type="button" data-edit-action="clear-copy" title="清除所有已填写文案" aria-label="清除所有已填写文案">
+            <button class="modal-btn clear-copy-btn" type="button" data-edit-action="clear-copy" title="清除全部本机草稿并恢复初始化" aria-label="清除全部本机草稿并恢复初始化">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
                 <path d="M22 21H7"/>
@@ -4654,7 +4856,7 @@
               </svg>
             </button>
             <button class="modal-btn" type="button" data-edit-action="cancel">取消</button>
-            <button class="modal-btn primary" type="button" data-edit-action="submit">保存设置</button>
+            <button class="modal-btn primary" type="button" data-edit-action="submit">保存全部设置</button>
           </div>
         </div>
       `;
@@ -4672,25 +4874,31 @@
       return { title: '', subtitle: '', cta: '' };
     }
 
-    function clearPosterCopySettings() {
+    async function clearPosterCopySettings() {
       const modal = document.getElementById('editPosterModal');
       if (!modal) return;
-      localizedCopy = languages.map(() => emptyPosterCopy());
+      const confirmed = window.confirm('确定清除本机保存的全部配置吗？这将恢复默认尺寸、语言、文案、主图、样式和预览区调整。此操作只影响当前浏览器，无法撤销。');
+      if (!confirmed) return;
+      await clearWorkspaceDraftStorage();
+      materialSizes = JSON.parse(JSON.stringify(DEFAULT_MATERIAL_SIZES));
+      languages = JSON.parse(JSON.stringify(DEFAULT_LANGUAGES));
+      localizedCopy = JSON.parse(JSON.stringify(DEFAULT_LOCALIZED_COPY));
       Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
-      modal.querySelectorAll('[data-copy-field]').forEach(field => {
-        field.value = '';
-        field.defaultValue = '';
-        field.setAttribute('value', '');
-      });
-      titleInput.value = '';
-      subtitleInput.value = '';
-      ctaInput.value = '';
+      rulesDocuments.forEach(doc => URL.revokeObjectURL(doc.url));
+      rulesDocuments = [];
+      spreadsheetGenerationRules = [];
+      rulesPreviewIndex = 0;
+      rulesReplaceIndex = null;
+      await persistRulesDocuments();
+      resetDemo();
+      renderSelectors();
+      syncLanguageCardsWithGenerated(generatedLanguageIndices);
       updateCounters();
-      syncPosterCopyStatus();
+      updateRulesDocumentState();
       renderLanguagePreview(generatedLanguageIndices);
       applyLanguagePreview(currentLanguageIndex);
-      saveTemplateState();
-      showToast('已清除所有多语言文案填写');
+      closeEditPosterModal();
+      showToast('已清除本机保存配置并恢复初始化');
     }
 
     function syncPosterCopyFromModal() {
@@ -4766,7 +4974,7 @@
       modal.querySelector('[data-copy-field="title"]')?.focus();
     }
 
-    function submitPosterEdit() {
+    async function submitPosterEdit() {
       const modal = document.getElementById('editPosterModal');
       if (!modal) return;
       pushPosterEditHistory();
@@ -4799,7 +5007,8 @@
       updateGeneratedMeta();
       updateUploadState();
       closeEditPosterModal();
-      showToast('多语言设置已同步到预览和下载素材');
+      if (await saveWorkspaceDraft()) showToast('已保存全部设置，下次打开会恢复当前草稿');
+      else showToast('多语言设置已同步，但本机草稿保存失败');
     }
 
     function setTrustVisible() {
@@ -5629,6 +5838,7 @@
       updateGeneratedMeta();
       appInitialized = true;
       initializeGeneratedPreview();
+      await restoreWorkspaceDraft();
       if (pendingGenerationAfterInit) {
         pendingGenerationAfterInit = false;
         runGeneration();
