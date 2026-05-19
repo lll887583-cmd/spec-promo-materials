@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const ASSET_VERSION = '20260519-live-download-assets';
+  const ASSET_VERSION = '20260519-sync-export';
   const withVersion = path => `${path}?v=${ASSET_VERSION}`;
 
   const coreScripts = [

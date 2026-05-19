@@ -6149,14 +6149,50 @@
         || assetFromCurrentState(currentSizeIndex, currentLanguageIndex);
     }
 
+    function syncExportStateBeforeDownload() {
+      normalizeSizeLanguageState();
+      generatedSizeIndices = uniqueValidIndices(generatedSizeIndices, materialSizes);
+      generatedLanguageIndices = uniqueValidIndices(generatedLanguageIndices, languages);
+      if (!generatedSizeIndices.length) generatedSizeIndices = uniqueValidIndices(selectedSizeIndices(), materialSizes);
+      if (!generatedLanguageIndices.length) generatedLanguageIndices = uniqueValidIndices(selectedLanguageIndices(), languages);
+      if (!generatedSizeIndices.length && materialSizes[currentSizeIndex]) generatedSizeIndices = [currentSizeIndex];
+      if (!generatedLanguageIndices.length && languages[currentLanguageIndex]) generatedLanguageIndices = [currentLanguageIndex];
+      currentSizeIndex = generatedSizeIndices.includes(currentSizeIndex) ? currentSizeIndex : (generatedSizeIndices[0] || defaultMaterialPreviewSizeIndex());
+      currentLanguageIndex = generatedLanguageIndices.includes(currentLanguageIndex) ? currentLanguageIndex : (generatedLanguageIndices[0] || 0);
+      rebuildGeneratedAssets();
+      renderSizePreview(generatedSizeIndices);
+      renderLanguagePreview(generatedLanguageIndices);
+      applySizePreview(currentSizeIndex);
+      applyLanguagePreview(currentLanguageIndex);
+      updateGeneratedMeta();
+      updateUploadState();
+    }
+
+    function validateExportState(assets = []) {
+      if (!generated) return '请先生成素材后再下载';
+      if (!hasImage || !uploadedImageSrc) return '请先上传主图并生成素材后再下载';
+      if (!assets.length) return '暂无可下载素材';
+      const invalidAsset = assets.find(asset => !materialSizes[asset.sizeIndex] || !languages[asset.languageIndex]);
+      if (invalidAsset) return '素材状态已过期，请重新生成后下载';
+      return '';
+    }
+
+    function prepareExportAssets(all = false) {
+      syncExportStateBeforeDownload();
+      const assets = all ? downloadAssets() : [currentDownloadAsset()];
+      const error = validateExportState(assets);
+      return { assets, error };
+    }
+
     function closeDownloadMenu() {
       downloadMenu?.classList.remove('open');
       downloadButton?.setAttribute('aria-expanded', 'false');
     }
 
     function toggleDownloadMenu() {
-      if (!generated || !hasImage || downloadButton.disabled) {
-        showToast('请先上传主图并生成素材后再下载');
+      const { error } = prepareExportAssets(false);
+      if (error || downloadButton.disabled) {
+        showToast(error || '请先上传主图并生成素材后再下载');
         return;
       }
       const isOpen = downloadMenu?.classList.toggle('open');
@@ -6164,13 +6200,14 @@
     }
 
     async function downloadSingleAsset() {
-      if (!generated || !hasImage) {
-        showToast('请先上传主图并生成素材后再下载');
+      const { assets, error } = prepareExportAssets(false);
+      if (error) {
+        showToast(error);
         return;
       }
       downloadButton.disabled = true;
       try {
-        await downloadPngAsset(currentDownloadAsset(), 0, 1);
+        await downloadPngAsset(assets[0], 0, 1);
       } catch (error) {
         console.warn('Single asset export failed', error);
         showToast('素材导出失败，请重试');
@@ -6220,6 +6257,11 @@
           if (action === 'submit') {
             const folderName = modal.querySelector('#downloadFolderName')?.value;
             const method = modal.querySelector('#downloadMethod')?.value || 'zip';
+            const { error } = prepareExportAssets(true);
+            if (error) {
+              showToast(error);
+              return;
+            }
             closeDownloadModal();
             exportAssetsWithOptions({ folderName, method });
           }
@@ -6257,13 +6299,9 @@
 
     function openDownloadModal() {
       closeDownloadMenu();
-      if (!generated || !hasImage) {
-        showToast('请先上传主图并生成素材后再下载');
-        return;
-      }
-      const assets = downloadAssets();
-      if (!assets.length) {
-        showToast('暂无可下载素材');
+      const { error } = prepareExportAssets(true);
+      if (error) {
+        showToast(error);
         return;
       }
       const modal = ensureDownloadModal();
