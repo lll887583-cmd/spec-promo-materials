@@ -31,9 +31,13 @@
       return index >= 0 ? index : 0;
     }
 
+    function defaultMaterialPreviewSizeIndex() {
+      return materialSizes.length ? 0 : templatePreviewSizeIndex();
+    }
+
     function alignUngeneratedPreviewWithTemplateManager() {
       if (generated || !materialSizes.length) return;
-      currentSizeIndex = templatePreviewSizeIndex();
+      currentSizeIndex = defaultMaterialPreviewSizeIndex();
       generatedSizeIndices = [currentSizeIndex];
     }
 
@@ -251,7 +255,7 @@
     let generated = false;
     let toastTimer = null;
     let generatedLanguageIndices = [0];
-    let generatedSizeIndices = [templatePreviewSizeIndex()];
+    let generatedSizeIndices = [defaultMaterialPreviewSizeIndex()];
     let activeGeneratorPanel = 'results';
     let isGenerating = false;
     let appInitialized = false;
@@ -261,7 +265,7 @@
 
     // Selection state
     let currentLanguageIndex = 0;
-    let currentSizeIndex = templatePreviewSizeIndex();
+    let currentSizeIndex = defaultMaterialPreviewSizeIndex();
     let frameworkSizeIndex = templatePreviewSizeIndex();
     let selectedLogoBrand = 'market';
     let selectedLogoVariant = 'black';
@@ -1189,10 +1193,8 @@
       templateStyles = cloneStyles(styleMaps[selectedStyle]);
       draftTemplateStyles = cloneStyles(templateStyles);
 
-      currentSizeIndex = Math.max(0, sizeIndexFromId(draft.currentSizeId));
-      if (!materialSizes[currentSizeIndex]) currentSizeIndex = templatePreviewSizeIndex();
       frameworkSizeIndex = Math.max(0, sizeIndexFromId(draft.frameworkSizeId));
-      if (!materialSizes[frameworkSizeIndex]) frameworkSizeIndex = currentSizeIndex;
+      if (!materialSizes[frameworkSizeIndex]) frameworkSizeIndex = templatePreviewSizeIndex();
       currentLanguageIndex = Math.max(0, languageIndexFromKey(draft.currentLanguageKey));
       if (!languages[currentLanguageIndex]) currentLanguageIndex = 0;
       generated = draft.generated !== false;
@@ -1201,6 +1203,7 @@
       generatedLanguageIndices = indicesFromSavedLanguageKeys(draft.generatedLanguageKeys, languages.map((_, index) => index));
       if (!generatedSizeIndices.length) generatedSizeIndices = materialSizes.map((_, index) => index);
       if (!generatedLanguageIndices.length) generatedLanguageIndices = languages.map((_, index) => index);
+      currentSizeIndex = generatedSizeIndices[0] || defaultMaterialPreviewSizeIndex();
 
       hasImage = Boolean(draft.hasImage && draft.uploadedImageSrc);
       uploadedImageSrc = hasImage ? String(draft.uploadedImageSrc || '') : '';
@@ -5140,7 +5143,7 @@
       generatedSizeIndices = materialSizes.map((_, index) => index);
       generatedLanguageIndices = languages.map((_, index) => index);
       generatedAssets = buildDefaultGeneratedAssets();
-      if (!generatedSizeIndices.includes(currentSizeIndex)) currentSizeIndex = generatedSizeIndices[0] || 0;
+      currentSizeIndex = generatedSizeIndices[0] || defaultMaterialPreviewSizeIndex();
       if (!generatedLanguageIndices.includes(currentLanguageIndex)) currentLanguageIndex = generatedLanguageIndices[0] || 0;
       renderSizePreview(generatedSizeIndices);
       renderLanguagePreview(generatedLanguageIndices);

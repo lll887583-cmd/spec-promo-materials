@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const ASSET_VERSION = '20260519-workspace-draft';
+  const ASSET_VERSION = '20260519-default-first-size';
   const withVersion = path => `${path}?v=${ASSET_VERSION}`;
 
   const coreScripts = [
