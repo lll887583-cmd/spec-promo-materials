@@ -1356,6 +1356,22 @@
 
     .toast.visible { display: block; }
 
+    .loading-placeholder {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      background: rgba(248, 250, 252, .72);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+
     .checkbox-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));

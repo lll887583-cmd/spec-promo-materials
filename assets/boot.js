@@ -1,10 +1,10 @@
 (function () {
   'use strict';
 
-  const ASSET_VERSION = '20260518-cta-small-wrap-padding';
+  const ASSET_VERSION = '20260519-parallel-boot';
   const withVersion = path => `${path}?v=${ASSET_VERSION}`;
 
-  const scripts = [
+  const coreScripts = [
     'assets/poster-core.js',
     'assets/frame-store.js',
     'assets/poster-renderer.js',
@@ -12,8 +12,10 @@
     'assets/poster-canvas.js',
     'assets/export-assets.js',
     'assets/modules/dependency-loader.js',
-    'assets/rules-parser.js',
-    'assets/frame-layouts/registry.js',
+    'assets/rules-parser.js'
+  ];
+
+  const frameLayoutScripts = [
     'assets/frame-layouts/120x600.js',
     'assets/frame-layouts/320x50.js',
     'assets/frame-layouts/320x100.js',
@@ -31,7 +33,10 @@
     'assets/frame-layouts/990x250.js',
     'assets/frame-layouts/1200x628.js',
     'assets/frame-layouts/1200x1500.js',
-    'assets/frame-layouts/1200x1200.js',
+    'assets/frame-layouts/1200x1200.js'
+  ];
+
+  const configAndModuleScripts = [
     'assets/config/defaults.js',
     'assets/config/layout-rules.js',
     'assets/config/translations.js',
@@ -39,8 +44,7 @@
     'assets/modules/persistence.js',
     'assets/modules/app-state.js',
     'assets/modules/product-image.js',
-    'assets/modules/help-popover.js',
-    'assets/app.js'
+    'assets/modules/help-popover.js'
   ];
 
   window.SpecPromoAssetVersion = ASSET_VERSION;
@@ -62,7 +66,11 @@
   }
 
   async function boot() {
-    for (const script of scripts) await loadScript(script);
+    for (const script of coreScripts) await loadScript(script);
+    await loadScript('assets/frame-layouts/registry.js');
+    await Promise.all(frameLayoutScripts.map(loadScript));
+    await Promise.all(configAndModuleScripts.map(loadScript));
+    await loadScript('assets/app.js');
   }
 
   boot().catch(error => {
