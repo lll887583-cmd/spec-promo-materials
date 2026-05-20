@@ -4,23 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Promo Materials UIDemo</title>
-  <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260520-pixel-export" />
-  <link rel="stylesheet" href="assets/app.css?v=20260520-pixel-export" />
-  <link rel="stylesheet" href="assets/styles/mobile-topbar.css?v=20260520-pixel-export" />
-  <link rel="stylesheet" href="assets/styles/help-widget.css?v=20260520-pixel-export" />
+  <link rel="stylesheet" href="assets/spec-ui-foundation.css?v=20260520-ui-language-switch" />
+  <link rel="stylesheet" href="assets/app.css?v=20260520-ui-language-switch" />
+  <link rel="stylesheet" href="assets/styles/mobile-topbar.css?v=20260520-ui-language-switch" />
+  <link rel="stylesheet" href="assets/styles/help-widget.css?v=20260520-ui-language-switch" />
 
 
 </head>
 <body class="spec-ui-root">
   <div class="mobile-topbar">
     <button class="menu-button" id="menuButton" aria-label="打开导航"><span class="hamburger"></span></button>
-    <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260520-pixel-export" alt="Promo Materials"></div>
+    <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260520-ui-language-switch" alt="Promo Materials"></div>
     <button class="icon-button" aria-label="用户入口">PM</button>
   </div>
 
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260520-pixel-export" alt="Promo Materials"></div>
+      <div class="brand"><img class="brand-logo" src="assets/logo.png?v=20260520-ui-language-switch" alt="Promo Materials"></div>
       <nav class="nav" aria-label="主导航">
         <button class="nav-item active" type="button" data-view-target="generatorView" aria-label="促销材料">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
@@ -41,6 +41,10 @@
           <span class="nav-text">语言设置</span>
         </button>
       </nav>
+      <div class="ui-language-bar" id="uiLanguageSwitch" role="group" aria-label="界面语言切换">
+        <button class="ui-language-option" type="button" data-ui-language="en" aria-pressed="false">EN</button>
+        <button class="ui-language-option" type="button" data-ui-language="zh" aria-pressed="true">中</button>
+      </div>
       <div class="collapse-bar">
         <button class="sidebar-collapse-button" id="sidebarCollapseButton" type="button" aria-label="折叠侧边栏" title="折叠侧边栏" aria-expanded="true">
           <svg class="collapse-icon collapse-icon-collapse" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>
@@ -211,7 +215,7 @@
             <div class="material-card empty" id="materialCard">
               <div class="poster-image-placeholder placeholder-surface placeholder-surface--checkerboard" id="posterImagePlaceholder" role="button" tabindex="0" aria-label="上传主图"><span>上传主图</span></div>
               <div class="kline-bg"></div>
-              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png?v=20260520-pixel-export" alt="SPEC MARKETS 浅色海报字标"></div>
+              <div class="creative-logo" id="creativeLogo"><img id="creativeLogoImage" src="assets/logo-market-light.png?v=20260520-ui-language-switch" alt="SPEC MARKETS 浅色海报字标"></div>
               <div class="creative-copy">
                 <h1 id="previewTitle">Headline Text</h1>
                 <p id="previewSubtitle">More information and key features here.</p>
@@ -242,21 +246,12 @@
       </section>
 
       <section class="settings-view style-settings-view view-section hidden" id="styleSettingsView" aria-label="样式设置">
-        <div class="manager-card">
-          <div class="panel-head">
-            <div>
-              <h1 class="manager-title">样式设置</h1>
-              <p class="manager-desc">集中管理海报样式、Logo 明暗和颜色配置；基础设置中仅保留样式切换，方便运营快速生成。</p>
-            </div>
-          </div>
-        </div>
-
         <div class="style-settings-layout">
           <section class="panel style-settings-panel" aria-label="样式配置区">
             <div class="style-settings-scroll">
               <div class="manager-card style-settings-card">
                 <div class="section-head">
-                  <div class="label-row"><span>样式选择</span><span class="muted">当前样式会同步到基础设置和生成结果</span></div>
+                  <div class="label-row"><span>样式选择</span></div>
                   <div class="template-actions style-actions" aria-label="样式操作">
                     <button class="add-template-btn" id="addStyleButton" type="button">新增样式</button>
                     <button class="delete-template-btn" id="deleteStyleButton" type="button">删除样式</button>
@@ -351,7 +346,7 @@
             </header>
             <div class="style-demo-canvas-area">
               <div class="style-demo-card" id="styleDemoCard">
-                <div class="style-demo-logo"><img id="styleDemoLogo" src="assets/logo-market-light.png?v=20260520-pixel-export" alt="SPEC MARKETS 浅色海报字标"></div>
+                <div class="style-demo-logo"><img id="styleDemoLogo" src="assets/logo-market-light.png?v=20260520-ui-language-switch" alt="SPEC MARKETS 浅色海报字标"></div>
                 <div class="style-demo-copy">
                   <h1>Headline Text</h1>
                   <p>More information and key features here.</p>
@@ -401,7 +396,7 @@
             </div>
             <div class="anchor-canvas" id="anchorCanvas" aria-label="框架视觉锚点编辑画布">
               <div class="anchor-preview-image placeholder-surface placeholder-surface--solid" id="anchorPreviewImage"></div>
-              <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png?v=20260520-pixel-export" alt="SPEC MARKETS"></div>
+              <div class="anchor-preview-logo" id="anchorPreviewLogo"><img src="assets/logo-market-light.png?v=20260520-ui-language-switch" alt="SPEC MARKETS"></div>
               <div class="anchor-preview-title" id="anchorPreviewTitle">Headline Text</div>
               <div class="anchor-preview-subtitle" id="anchorPreviewSubtitle">More information and key features here.</div>
               <div class="anchor-preview-cta" id="anchorPreviewCta">Button</div>
@@ -423,15 +418,6 @@
 
 
       <section class="settings-view view-section hidden" id="sizeLanguageSettingsView" aria-label="语言设置">
-        <div class="manager-card">
-          <div class="panel-head">
-            <div>
-              <h1 class="manager-title">语言设置</h1>
-              <p class="manager-desc">维护促销材料可选语言；新增、保存、删除和排序会同步到促销材料页面的语言选择、多语言设置、预览和下载顺序。</p>
-            </div>
-          </div>
-        </div>
-
         <div class="settings-grid">
           <div class="manager-card">
             <div class="section-head">
@@ -440,7 +426,7 @@
             </div>
             <div class="settings-table-wrap">
               <table class="settings-table">
-                <thead><tr><th class="drag-cell">排序</th><th>中文名称</th><th>本地名称</th><th>操作</th></tr></thead>
+                <thead><tr><th class="drag-cell">排序</th><th>本地名称</th><th>操作</th></tr></thead>
                 <tbody id="languageSettingsBody"></tbody>
               </table>
             </div>
@@ -483,7 +469,7 @@
     <div class="help-popover" id="helpPopover" role="dialog" aria-modal="false" aria-labelledby="helpPopoverTitle">
       <div class="help-popover-title" id="helpPopoverTitle">使用说明</div>
       <div class="help-steps">
-        <p>第1步：点击【多语言设置】输入想要产出促销材料的对应文案</p>
+        <p>第1步：点击【多语言设置】输入多国语言的标题/副标题/按钮文案</p>
         <p>第2步：点击【上传主图】</p>
         <p>第3步：检查并调整多语言/多尺寸的摆放效果</p>
         <p>第4步：点击【下载】-全部</p>
@@ -505,7 +491,7 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/boot.js?v=20260520-pixel-export"></script>
+  <script src="assets/boot.js?v=20260520-ui-language-switch"></script>
 
 </body>
 </html>

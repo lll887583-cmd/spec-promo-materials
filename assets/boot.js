@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const ASSET_VERSION = '20260520-pixel-export';
+  const ASSET_VERSION = '20260520-ui-language-switch';
   const withVersion = path => `${path}?v=${ASSET_VERSION}`;
 
   const coreScripts = [

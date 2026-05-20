@@ -53,6 +53,7 @@
     'statusDock',
     'statusMeta',
     'sidebar',
+    'uiLanguageSwitch',
     'sidebarCollapseButton',
     'downloadMenu',
     'downloadButton',

@@ -176,6 +176,7 @@
       statusMeta,
       sidebar,
       appShell,
+      uiLanguageSwitch,
       sidebarCollapseButton,
       downloadMenu,
       downloadButton,
@@ -302,8 +303,311 @@
     let templateClickTimer = null;
     let templateStateSaveTimer = null;
     let templateRenameTarget = null;
+    let activeExportController = null;
+    let exportProgressCloseTimer = null;
     let productImageAdjustments = {};
     const posterCopyOverrides = {};
+    const UI_LANGUAGE_STORAGE_KEY = 'spec-promo-ui-language-v1';
+    const UI_TEXT_EN = {
+      '促销材料': 'Promo Materials',
+      '样式设置': 'Style Settings',
+      '语言设置': 'Language Settings',
+      '折叠侧边栏': 'Collapse sidebar',
+      '展开侧边栏': 'Expand sidebar',
+      '界面语言切换': 'UI language switch',
+      '主导航': 'Main navigation',
+      '促销材料操作区': 'Promo material controls',
+      '基础设置': 'Basic Settings',
+      '重置': 'Reset',
+      '样式选择': 'Style Selection',
+      '如需新增、删除或改颜色，请到侧边栏“样式设置”': 'To add, delete, or edit colors, use "Style Settings" in the sidebar',
+      '标题': 'Title',
+      '副标题': 'Subtitle',
+      '按钮文案': 'Button Text',
+      '请输入标题': 'Enter title',
+      '请输入副标题': 'Enter subtitle',
+      '请输入按钮文案': 'Enter button text',
+      '上传主图': 'Upload Main Image',
+      '图片预览': 'Image preview',
+      '移除图片': 'Remove image',
+      '未上传图片': 'No image uploaded',
+      '查看': 'View',
+      '删除': 'Delete',
+      '重新上传': 'Re-upload',
+      '支持 JPG / PNG，最大 2MB，可拖拽上传': 'Supports JPG / PNG up to 2MB. Drag and drop supported.',
+      '全选': 'Select All',
+      '加载素材配置中...': 'Loading material settings...',
+      '加载语言配置中...': 'Loading language settings...',
+      '生成': 'Generate',
+      '素材预览筛选': 'Material preview filters',
+      '素材预览': 'Material Preview',
+      '手动编辑': 'Manual Edit',
+      '生成结果基础对齐工具': 'Generated result alignment tools',
+      '左对齐': 'Align Left',
+      '水平居中': 'Center Horizontally',
+      '右对齐': 'Align Right',
+      '顶对齐': 'Align Top',
+      '垂直居中': 'Center Vertically',
+      '底对齐': 'Align Bottom',
+      '恢复当前尺寸': 'Restore Current Size',
+      '小竖版': 'Small Vertical',
+      '大竖版': 'Large Vertical',
+      '小横版': 'Small Banner',
+      '大横版': 'Large Banner',
+      '方版': 'Square',
+      '竖版': 'Vertical',
+      '横版': 'Landscape',
+      '返回上一步': 'Undo',
+      '返回上一步（Command+Z）': 'Undo (Command+Z)',
+      '返回上一步，快捷键 Command+Z': 'Undo, shortcut Command+Z',
+      '编辑区': 'Editor',
+      '设计预览': 'Design Preview',
+      '多语言设置': 'Multilingual Settings',
+      '切换样式': 'Switch Style',
+      '下载': 'Download',
+      '下载选项': 'Download options',
+      '单张': 'Single',
+      '全部': 'All',
+      '调整主图位置和缩放': 'Adjust main image position and zoom',
+      '上传图片图层': 'Uploaded image layer',
+      '生成结果手动编辑图层': 'Generated result manual edit layer',
+      '主图': 'Main Image',
+      '按钮': 'Button',
+      '上传图片后将生成右侧商品图层': 'Upload an image to generate the product layer on the right',
+      '正在批量生成素材': 'Generating materials in batch',
+      '系统将按尺寸、语言和模板规则生成可下载素材。': 'The system will generate downloadable materials by size, language, and template rules.',
+      '集中管理海报样式、Logo 明暗和颜色配置；基础设置中仅保留样式切换，方便运营快速生成。': 'Manage poster styles, logo tone, and colors in one place. Basic Settings keeps only quick style switching for faster operations.',
+      '当前样式会同步到基础设置和生成结果': 'Current style syncs to Basic Settings and generated results',
+      '新增样式': 'Add Style',
+      '删除样式': 'Delete Style',
+      '样式设置选择': 'Style setting selection',
+      'Logo 切换': 'Logo Switch',
+      'Logo 明暗版本切换': 'Logo light/dark switch',
+      '暗版': 'Dark',
+      '亮版': 'Light',
+      '颜色配置': 'Color Settings',
+      '背景类型': 'Background Type',
+      '纯色': 'Solid',
+      '渐变': 'Gradient',
+      '背景纯色': 'Solid Background',
+      '背景渐变起点': 'Gradient Start',
+      '背景渐变终点': 'Gradient End',
+      '背景渐变角度': 'Gradient Angle',
+      '文案纯色': 'Text Color',
+      '按钮背景纯色': 'Button Background',
+      '按钮文案纯色': 'Button Text Color',
+      '样式预览区': 'Style preview area',
+      '样式预览': 'Style Preview',
+      '框架管理': 'Frame Manager',
+      '框架设置': 'Frame Settings',
+      '基础对齐': 'Base Alignment',
+      '基础对齐工具': 'Base alignment tools',
+      '预览区': 'Preview Area',
+      '恢复默认锚点': 'Restore Default Anchors',
+      '提交框架映射': 'Submit Frame Mapping',
+      '框架视觉锚点编辑画布': 'Frame visual anchor editing canvas',
+      '渐变角度拨杆': 'Gradient angle control',
+      '拖动渐变起点': 'Drag gradient start',
+      '拖动渐变终点': 'Drag gradient end',
+      '调整按钮字号': 'Adjust button font size',
+      '增大按钮字号': 'Increase button font size',
+      '减小按钮字号': 'Decrease button font size',
+      '维护促销材料可选语言；新增、保存、删除和排序会同步到促销材料页面的语言选择、多语言设置、预览和下载顺序。': 'Maintain available promo material languages. Add, save, delete, and reorder sync to language selection, multilingual settings, previews, and download order.',
+      '新增': 'Add',
+      '排序': 'Sort',
+      '本地名称': 'Local Name',
+      '操作': 'Actions',
+      '保存': 'Save',
+      '生成规则': 'Generation Rules',
+      '上传生成规则文档后，系统会解析 MD、Word、PDF、XLSX 中的结构化规则并用于促销材料。': 'After uploading generation rule documents, the system parses structured rules from MD, Word, PDF, and XLSX files for promo materials.',
+      '未上传': 'Not uploaded',
+      '上传生成规则文档': 'Upload Generation Rule Documents',
+      '支持 MD / Word / PDF / XLSX 等格式，可多选或拖拽批量上传。': 'Supports MD / Word / PDF / XLSX. Select multiple files or drag and drop for batch upload.',
+      '未上传生成规则文档。支持 Markdown、Word、PDF、XLSX 等文件。': 'No generation rule documents uploaded. Markdown, Word, PDF, XLSX, and other files are supported.',
+      '生成任务': 'Generation Task',
+      '已完成': 'Completed',
+      '打开使用说明': 'Open instructions',
+      '使用说明': 'Instructions',
+      '第1步：点击【多语言设置】输入多国语言的标题/副标题/按钮文案': 'Step 1: Click "Multilingual Settings" to enter title/subtitle/button copy for each language',
+      '第2步：点击【上传主图】': 'Step 2: Click "Upload Main Image"',
+      '第3步：检查并调整多语言/多尺寸的摆放效果': 'Step 3: Check and adjust multilingual and multi-size layouts',
+      '第4步：点击【下载】-全部': 'Step 4: Click "Download" - All',
+      '仅更新 Logo 明暗、背景、文案和按钮颜色，不改变 18 个海报的版式。': 'Only updates logo tone, background, text, and button colors without changing the 18 poster layouts.',
+      '关闭样式选择': 'Close style selector',
+      '新增尺寸': 'Add Size',
+      '名称': 'Name',
+      '宽度': 'Width',
+      '高度': 'Height',
+      '新增语言': 'Add Language',
+      '取消': 'Cancel',
+      '下载全部素材': 'Download All Materials',
+      '下载方式': 'Download Method',
+      '浏览器下载 ZIP（推荐）': 'Browser ZIP download (Recommended)',
+      '保存到指定位置': 'Save to chosen location',
+      '本地文件夹下载': 'Local folder download',
+      '当前浏览器不支持': 'Not supported by current browser',
+      '实验': 'Experimental',
+      '文件夹名称': 'Folder Name',
+      '导出内容全部为 PNG。推荐使用“浏览器下载 ZIP”，兼容性最好；“保存到指定位置”为实验功能，失败时会自动改用浏览器 ZIP 下载。': 'All exports are PNG. "Browser ZIP download" is recommended for best compatibility. "Save to chosen location" is experimental and falls back to browser ZIP if it fails.',
+      '开始下载': 'Start Download',
+      '本次产出语言': 'Output Languages',
+      '已选': 'Selected',
+      '种语言': 'languages',
+      '选择本次要预览和产出的语言，未选择的语言不会生成素材。': 'Select the languages to preview and export this time. Unselected languages will not be generated.',
+      '关闭多语言设置': 'Close multilingual settings',
+      '已填写': 'Completed'
+    };
+    let uiLanguage = (() => {
+      try {
+        return localStorage.getItem(UI_LANGUAGE_STORAGE_KEY) === 'en' ? 'en' : 'zh';
+      } catch (error) {
+        return 'zh';
+      }
+    })();
+    let applyingUiLanguage = false;
+    let uiLanguageFrame = 0;
+
+    function uiText(zhText) {
+      if (uiLanguage !== 'en') return zhText;
+      return translateUiText(zhText);
+    }
+
+    function translateUiText(value) {
+      const text = String(value ?? '');
+      const trimmed = text.trim();
+      if (!trimmed) return text;
+      const leading = text.match(/^\s*/)?.[0] || '';
+      const trailing = text.match(/\s*$/)?.[0] || '';
+      let translated = UI_TEXT_EN[trimmed];
+      const countPatterns = [
+        [/^尺寸选择（(\d+) 个）$/, 'Size Selection ($1)'],
+        [/^语言选择（(\d+) 种）$/, 'Language Selection ($1)'],
+        [/^尺寸预览（3类 \/ 5组 \/ (\d+)个）$/, 'Size Preview (3 Categories / 5 Groups / $1)'],
+        [/^尺寸预览（(\d+)个）$/, 'Size Preview ($1)'],
+        [/^语言预览（(\d+)种）$/, 'Language Preview ($1)'],
+        [/^(\d+) 个$/, '$1 items'],
+        [/^(\d+) 种$/, '$1 languages'],
+        [/^(\d+) 个尺寸 × (\d+) 种语言，共 (\d+) 张素材已准备下载。$/, '$1 sizes x $2 languages, $3 materials are ready to download.'],
+        [/^已按生成规则准备 (\d+) 张素材。$/, '$1 materials are ready from generation rules.'],
+        [/^(\d+) × (\d+) · 预览 (\d+)%$/, '$1 x $2 · Preview $3%'],
+        [/^框架 (\\d+)$/, 'Frame $1'],
+        [/^样式 (\\d+)$/, 'Style $1'],
+        [/^小竖版 (\d+)$/, 'Small Vertical $1'],
+        [/^大竖版 (\d+)$/, 'Large Vertical $1'],
+        [/^小横版 (\d+)$/, 'Small Banner $1'],
+        [/^大横版 (\d+)$/, 'Large Banner $1'],
+        [/^方版 (\d+)$/, 'Square $1'],
+        [/^竖版 (\d+)$/, 'Vertical $1'],
+        [/^横版 (\d+)$/, 'Landscape $1']
+      ];
+      if (!translated) {
+        for (const [pattern, replacement] of countPatterns) {
+          if (pattern.test(trimmed)) {
+            translated = trimmed.replace(pattern, replacement);
+            break;
+          }
+        }
+      }
+      return translated ? `${leading}${translated}${trailing}` : text;
+    }
+
+    function shouldSkipUiLanguageNode(node) {
+      const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+      return !element || Boolean(element.closest([
+        'script',
+        'style',
+        'noscript',
+        '.material-card',
+        '.style-demo-card',
+        '.anchor-preview-title',
+        '.anchor-preview-subtitle',
+        '.anchor-preview-cta',
+        '.language-card',
+        '.language-pill'
+      ].join(',')));
+    }
+
+    function translateUiTextNode(node) {
+      if (shouldSkipUiLanguageNode(node)) return;
+      if (uiLanguage === 'zh') {
+        if (node.__specUiZhText != null) node.nodeValue = node.__specUiZhText;
+        return;
+      }
+      if (node.__specUiZhText == null || node.nodeValue !== translateUiText(node.__specUiZhText)) {
+        node.__specUiZhText = node.nodeValue;
+      }
+      node.nodeValue = translateUiText(node.__specUiZhText);
+    }
+
+    function translateUiAttributes(element) {
+      if (shouldSkipUiLanguageNode(element)) return;
+      ['aria-label', 'title', 'placeholder', 'data-label'].forEach(attr => {
+        if (!element.hasAttribute?.(attr)) return;
+        const storeAttr = `data-spec-ui-zh-${attr.replace(/[^a-z0-9]/gi, '-')}`;
+        if (uiLanguage === 'zh') {
+          if (element.hasAttribute(storeAttr)) element.setAttribute(attr, element.getAttribute(storeAttr));
+          return;
+        }
+        if (!element.hasAttribute(storeAttr)) element.setAttribute(storeAttr, element.getAttribute(attr));
+        element.setAttribute(attr, translateUiText(element.getAttribute(storeAttr)));
+      });
+    }
+
+    function applyUiLanguage(root = document) {
+      applyingUiLanguage = true;
+      try {
+        document.documentElement.lang = uiLanguage === 'en' ? 'en' : 'zh-CN';
+        document.documentElement.classList.toggle('ui-lang-en', uiLanguage === 'en');
+        uiLanguageSwitch?.querySelectorAll('[data-ui-language]').forEach(button => {
+          const active = button.dataset.uiLanguage === uiLanguage;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode: node => shouldSkipUiLanguageNode(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+        });
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(translateUiTextNode);
+        const attributeRoot = root.nodeType === Node.ELEMENT_NODE ? root : document;
+        if (attributeRoot.matches?.('*')) translateUiAttributes(attributeRoot);
+        attributeRoot.querySelectorAll?.('[aria-label], [title], [placeholder], [data-label]').forEach(translateUiAttributes);
+      } finally {
+        applyingUiLanguage = false;
+      }
+    }
+
+    function scheduleApplyUiLanguage(root = document) {
+      if (uiLanguageFrame) cancelAnimationFrame(uiLanguageFrame);
+      uiLanguageFrame = requestAnimationFrame(() => {
+        uiLanguageFrame = 0;
+        applyUiLanguage(root);
+      });
+    }
+
+    function setUiLanguage(nextLanguage) {
+      uiLanguage = nextLanguage === 'en' ? 'en' : 'zh';
+      try {
+        localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, uiLanguage);
+      } catch (error) {}
+      setSidebarCollapsed(appShell?.classList.contains('sidebar-collapsed'));
+      applyUiLanguage();
+    }
+
+    function initUiLanguageControls() {
+      uiLanguageSwitch?.addEventListener('click', event => {
+        const button = event.target.closest('[data-ui-language]');
+        if (!button) return;
+        setUiLanguage(button.dataset.uiLanguage);
+      });
+      const observer = new MutationObserver(mutations => {
+        if (applyingUiLanguage || uiLanguage !== 'en') return;
+        const root = mutations.find(mutation => mutation.target?.nodeType === Node.ELEMENT_NODE)?.target || document;
+        scheduleApplyUiLanguage(root);
+      });
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      applyUiLanguage();
+    }
 
     function syncOptionCollapseState() {
       sizeOptionsExpanded = true;
@@ -326,6 +630,11 @@
       frameworkSizePreviewRow?.classList.remove('is-collapsed');
     }
 
+    function languageLocalName(language = []) {
+      const [cn = '', local = ''] = language;
+      return local || cn;
+    }
+
     function renderSelectors() {
       normalizeSizeLanguageState();
       renderTemplateOptions();
@@ -340,8 +649,8 @@
         <label class="check-item"><input type="checkbox" checked data-size-index="${index}"> ${size.label}</label>
       `).join('');
 
-      languageChecks.innerHTML = languages.map(([cn, en], index) => `
-        <button class="language-card active" type="button" data-language-index="${index}">${cn}<span>${en}</span></button>
+      languageChecks.innerHTML = languages.map((language, index) => `
+        <button class="language-card active" type="button" data-language-index="${index}">${escapeHtml(languageLocalName(language))}</button>
       `).join('');
 
       syncOptionCollapseState();
@@ -495,6 +804,7 @@
       getAssets: () => downloadAssets(),
       getDefaultFolderName: defaultDownloadFolderName,
       getAssetExportSortKey: assetExportSortKey,
+      getRenderConcurrency: () => 1,
       renderPngAsset,
       showToast
     });
@@ -1660,7 +1970,7 @@
             )
           );
           resized.fontScale = posterCore.clamp((Number(base.fontScale) || 1) * scale, 0.05, 8);
-        } else if (key === 'cta' && (side === 'e' || side === 'w')) {
+        } else if (key === 'cta') {
           resized.autoWidth = false;
         }
       }
@@ -2390,6 +2700,7 @@
         ...current,
         padX: nextPadX,
         padY: nextPadY,
+        autoWidth: false,
         h: preset === 'small'
           ? fittedHeight
           : Math.max(Number(base.h) || current.h, fittedHeight)
@@ -3114,11 +3425,23 @@
     function remapPosterCopyOverrides(mapIndex) {
       const next = {};
       Object.entries(posterCopyOverrides).forEach(([key, value]) => {
+        const scopedMatch = String(key).match(/^(.*::language::)(\d+)$/);
+        if (scopedMatch) {
+          const nextIndex = mapIndex(Number(scopedMatch[2]));
+          if (Number.isInteger(nextIndex) && languages[nextIndex]) next[`${scopedMatch[1]}${nextIndex}`] = value;
+          return;
+        }
         const nextIndex = mapIndex(Number(key));
-        if (Number.isInteger(nextIndex) && languages[nextIndex]) next[nextIndex] = value;
+        if (Number.isInteger(nextIndex) && languages[nextIndex]) next[String(nextIndex)] = value;
       });
       Object.keys(posterCopyOverrides).forEach(key => delete posterCopyOverrides[key]);
       Object.assign(posterCopyOverrides, next);
+    }
+
+    function deletePosterCopyOverridesForLanguage(languageIndex) {
+      Object.keys(posterCopyOverrides).forEach(key => {
+        if (key === String(languageIndex) || key.endsWith(`::language::${languageIndex}`)) delete posterCopyOverrides[key];
+      });
     }
 
     function syncLanguageCardsWithGenerated(indices = generatedLanguageIndices) {
@@ -3629,14 +3952,16 @@
         `).join('');
       }
       if (languageSettingsBody) {
-        languageSettingsBody.innerHTML = languages.map(([cn, en], index) => `
+        languageSettingsBody.innerHTML = languages.map(([cn, en], index) => {
+          const displayName = en || cn;
+          return `
           <tr data-language-setting-index="${index}" data-settings-row="language">
-            <td class="drag-cell"><button class="drag-handle" type="button" draggable="true" data-drag-type="language" data-drag-index="${index}" aria-label="拖拽排序 ${escapeHtml(cn)}">☰</button></td>
-            <td><input class="settings-input" data-language-field="cn" value="${escapeHtml(cn)}"></td>
+            <td class="drag-cell"><button class="drag-handle" type="button" draggable="true" data-drag-type="language" data-drag-index="${index}" aria-label="拖拽排序 ${escapeHtml(displayName)}">☰</button></td>
             <td><input class="settings-input" data-language-field="en" value="${escapeHtml(en)}"></td>
             <td><div class="settings-actions"><button class="settings-action" type="button" data-language-setting-action="save">保存</button><button class="settings-action danger" type="button" data-language-setting-action="delete">删除</button></div></td>
           </tr>
-        `).join('');
+        `;
+        }).join('');
       }
     }
 
@@ -3712,19 +4037,17 @@
     }
 
     function addLanguageSetting() {
-      const cnInput = document.getElementById('newLanguageCn');
       const nativeInput = document.getElementById('newLanguageNative');
-      const cn = String(cnInput?.value || '').trim();
       const en = String(nativeInput?.value || '').trim();
-      if (!cn || !en) {
+      if (!en) {
         showToast('请输入语言名称');
         return false;
       }
       const nextIndex = languages.length;
-      languages.push([cn, en]);
+      // Keep the legacy [displayName, nativeName] tuple shape for downstream selectors and saved drafts.
+      languages.push([en, en]);
       localizedCopy.push(defaultLocalizedCopy());
       generatedLanguageIndices = uniqueValidIndices([...generatedLanguageIndices, nextIndex], languages);
-      if (cnInput) cnInput.value = '';
       if (nativeInput) nativeInput.value = '';
       syncSettingsToGenerator('语言已新增并同步到促销材料', { languageIndices: generatedLanguageIndices });
       return true;
@@ -3733,13 +4056,13 @@
     function saveLanguageSetting(row) {
       const index = Number(row?.dataset.languageSettingIndex);
       if (!Number.isInteger(index) || !languages[index]) return;
-      const cn = String(row.querySelector('[data-language-field="cn"]')?.value || '').trim();
       const en = String(row.querySelector('[data-language-field="en"]')?.value || '').trim();
-      if (!cn || !en) {
+      if (!en) {
         showToast('请输入语言名称');
         return;
       }
-      languages[index] = [cn, en];
+      const [cn = ''] = languages[index];
+      languages[index] = [cn || en, en];
       syncSettingsToGenerator('语言已更新并同步到促销材料', { languageIndices: generatedLanguageIndices });
     }
 
@@ -3771,8 +4094,7 @@
     }
 
     function getLanguageCopy(languageIndex) {
-      const copy = posterCopyOverrides[languageIndex]
-        || (languageIndex === 0 ? getSourceCopy() : localizedCopy[languageIndex] || getSourceCopy());
+      const copy = languageIndex === 0 ? getSourceCopy() : localizedCopy[languageIndex] || getSourceCopy();
       return normalizeCopy(copy, languageIndex);
     }
 
@@ -3861,13 +4183,8 @@
         ...copyForAsset(asset),
         [key]: cleanValue
       };
-      posterCopyOverrides[targetLanguageIndex] = nextCopy;
-      if (targetLanguageIndex === 0) {
-        titleInput.value = nextCopy.title;
-        subtitleInput.value = nextCopy.subtitle;
-        ctaInput.value = nextCopy.cta;
-        updateCounters();
-      }
+      const size = materialSizes[asset?.sizeIndex ?? currentSizeIndex] || materialSizes[currentSizeIndex] || materialSizes[0];
+      posterCopyOverrides[posterLanguageOverrideKey(size, targetLanguageIndex)] = nextCopy;
       if (key === 'title') previewTitle.textContent = cleanValue;
       else if (key === 'subtitle') renderMultilineText(previewSubtitle, cleanValue);
       else if (key === 'cta') previewCta.textContent = cleanValue;
@@ -4096,12 +4413,12 @@
 
     function renderLanguagePreview(indices = generatedLanguageIndices) {
       const html = indices.map(index => {
-        const [cn, en] = languages[index] || languages[0];
+        const name = languageLocalName(languages[index] || languages[0]);
         const complete = isPosterCopyComplete(languageEditorCopy(index));
         return `
           <button class="language-pill ${index === currentLanguageIndex ? 'active' : ''} ${complete ? 'is-complete' : ''}" type="button" data-language-preview-index="${index}">
             ${complete ? '<i class="language-complete-dot" aria-label="已填写"></i>' : ''}
-            ${cn}<span>${en}</span>
+            ${escapeHtml(name)}
           </button>
         `;
       }).join('');
@@ -4217,12 +4534,14 @@
 
     function bindCopyPlaceholderBehavior(input) {
       if (!input) return;
-      const originalPlaceholder = input.getAttribute('placeholder') || '';
+      const originalPlaceholder = input.getAttribute('data-spec-ui-zh-placeholder') || input.getAttribute('placeholder') || '';
       input.addEventListener('focus', () => {
-        input.setAttribute('placeholder', originalPlaceholder);
+        input.setAttribute('data-spec-ui-zh-placeholder', originalPlaceholder);
+        input.setAttribute('placeholder', uiText(originalPlaceholder));
       });
       input.addEventListener('blur', () => {
-        input.setAttribute('placeholder', originalPlaceholder);
+        input.setAttribute('data-spec-ui-zh-placeholder', originalPlaceholder);
+        input.setAttribute('placeholder', uiText(originalPlaceholder));
         updateCounters();
       });
     }
@@ -4272,7 +4591,7 @@
     function showToast(message) {
       const toast = document.getElementById('toast');
       if (!toast) return;
-      toast.textContent = message;
+      toast.textContent = uiText(message);
       toast.classList.add('visible');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
@@ -4775,15 +5094,14 @@
     }
 
     function posterCopyCardHtml(index) {
-      const [cn = '', en = ''] = languages[index] || [];
+      const name = languageLocalName(languages[index] || []);
       const editorCopy = languageEditorCopy(index);
       const complete = isPosterCopyComplete(editorCopy);
       return `
         <section class="language-copy-card ${complete ? 'is-complete' : ''}" data-copy-language-index="${index}">
           <div class="language-copy-head">
             <div>
-              <strong>${escapeHtml(cn)}</strong>
-              <span>${escapeHtml(en)}</span>
+              <strong>${escapeHtml(name)}</strong>
             </div>
             <em data-copy-status>${complete ? '<i>✓</i>已填写' : ''}</em>
           </div>
@@ -4802,28 +5120,35 @@
 
     function posterLanguageSelectHtml(selectedIndices) {
       const selectedSet = new Set(selectedIndices);
+      const selectedCountLabel = uiLanguage === 'en'
+        ? `${selectedIndices.length} ${uiText('种语言')} ${uiText('已选')}`
+        : `已选 ${selectedIndices.length} 种语言`;
       const chips = selectedIndices.map(index => {
-        const [cn = '', en = ''] = languages[index] || [];
+        const name = languageLocalName(languages[index] || []);
         const removable = selectedIndices.length > 1;
         return `
           <span class="copy-language-chip" data-selected-copy-language="${index}">
-            ${escapeHtml(cn)}
-            <button type="button" ${removable ? '' : 'disabled'} data-remove-copy-language="${index}" aria-label="移除 ${escapeHtml(cn)}">×</button>
+            ${escapeHtml(name)}
+            <button type="button" ${removable ? '' : 'disabled'} data-remove-copy-language="${index}" aria-label="移除 ${escapeHtml(name)}">×</button>
           </span>
         `;
       }).join('');
-      const options = languages.map(([cn, en], index) => {
+      const options = languages.map((language, index) => {
+        const name = languageLocalName(language);
         const selected = selectedSet.has(index);
         return `
           <button class="copy-language-option${selected ? ' is-selected' : ''}" type="button" data-add-copy-language="${index}" ${selected ? 'disabled' : ''}>
-            <span>${escapeHtml(cn)} <small>${escapeHtml(en)}</small></span>
+            <span>${escapeHtml(name)}</span>
             <em>${selected ? '已选择' : '添加'}</em>
           </button>
         `;
       }).join('');
       return `
         <div class="copy-language-select-wrap">
-          <div class="copy-language-label">本次产出语言</div>
+          <div class="copy-language-label-row">
+            <div class="copy-language-label">本次产出语言</div>
+            <div class="copy-language-count">${escapeHtml(selectedCountLabel)}</div>
+          </div>
           <div class="copy-language-select" role="button" tabindex="0" data-language-selector-toggle aria-expanded="false">
             <span class="copy-language-chip-list">${chips}</span>
             <span class="copy-language-arrow">▾</span>
@@ -4998,7 +5323,7 @@
         const index = Number(card.dataset.copyLanguageIndex);
         if (!Number.isInteger(index) || !languages[index]) return;
         localizedCopy[index] = posterEditorCopyFromCard(card);
-        delete posterCopyOverrides[index];
+        deletePosterCopyOverridesForLanguage(index);
       });
       document.querySelectorAll('.language-card').forEach(card => {
         const index = Number(card.dataset.languageIndex);
@@ -5131,7 +5456,9 @@
 
     function copyForAsset(asset = currentPreviewAsset()) {
       if (!asset) return getLanguageCopy(currentLanguageIndex);
-      const copy = posterCopyOverrides[asset.languageIndex]
+      const size = materialSizes[asset.sizeIndex] || materialSizes[currentSizeIndex] || materialSizes[0];
+      const scopedKey = posterLanguageOverrideKey(size, asset.languageIndex);
+      const copy = posterCopyOverrides[scopedKey]
         || { ...getLanguageCopy(asset.languageIndex), ...(asset.rule?.copy || {}) };
       return normalizeCopy(copy, asset.languageIndex);
     }
@@ -5832,8 +6159,11 @@
     function setSidebarCollapsed(collapsed) {
       appShell.classList.toggle('sidebar-collapsed', collapsed);
       sidebarCollapseButton.setAttribute('aria-expanded', String(!collapsed));
-      sidebarCollapseButton.setAttribute('aria-label', collapsed ? '展开侧边栏' : '折叠侧边栏');
-      sidebarCollapseButton.title = collapsed ? '展开侧边栏' : '折叠侧边栏';
+      const label = collapsed ? '展开侧边栏' : '折叠侧边栏';
+      sidebarCollapseButton.setAttribute('data-spec-ui-zh-aria-label', label);
+      sidebarCollapseButton.setAttribute('data-spec-ui-zh-title', label);
+      sidebarCollapseButton.setAttribute('aria-label', uiText(label));
+      sidebarCollapseButton.title = uiText(label);
       requestAnimationFrame(() => {
         fitMaterialPreview();
         fitAnchorCanvasPreview();
@@ -5863,6 +6193,7 @@
       }
     }
 
+    initUiLanguageControls();
     initializePersistentApp();
 
     [titleInput, subtitleInput, ctaInput].forEach(input => {
@@ -6066,7 +6397,6 @@
         <div class="confirm-dialog poster-edit-dialog" role="dialog" aria-modal="true" aria-label="新增语言">
           <div class="confirm-title">新增语言</div>
           <div class="poster-edit-form">
-            <div class="poster-edit-field"><label for="newLanguageCn">中文名称</label><input id="newLanguageCn" class="settings-input" placeholder="例如 马来语"></div>
             <div class="poster-edit-field"><label for="newLanguageNative">本地名称</label><input id="newLanguageNative" class="settings-input" placeholder="例如 Melayu"></div>
           </div>
           <div class="confirm-actions">
@@ -6259,8 +6589,17 @@
       return '';
     }
 
+    function syncActiveFormControlsBeforeDownload() {
+      const activeElement = document.activeElement;
+      if (activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName)) {
+        activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+        activeElement.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
     function prepareExportAssets(all = false) {
-      syncExportStateBeforeDownload();
+      if (all) syncExportStateBeforeDownload();
+      else syncActiveFormControlsBeforeDownload();
       const assets = all ? downloadAssets() : [currentDownloadAsset()];
       const error = validateExportState(assets);
       return { assets, error };
@@ -6272,7 +6611,7 @@
     }
 
     function toggleDownloadMenu() {
-      const { error } = prepareExportAssets(false);
+      const error = validateExportState([currentDownloadAsset()]);
       if (error || downloadButton.disabled) {
         showToast(error || '请先上传主图并生成素材后再下载');
         return;
@@ -6302,7 +6641,15 @@
       return assetExporter.sanitizeFolderName(name);
     }
 
-    async function renderPngAsset(asset) {
+    function applyExportPreviewSize(size) {
+      materialCard.style.aspectRatio = `${size.width} / ${size.height}`;
+      materialCard.style.setProperty('--preview-w', `${Math.max(1, Math.round(size.width))}px`);
+      materialCard.style.setProperty('--preview-h', `${Math.max(1, Math.round(size.height))}px`);
+      updatePreviewZoomControls(size, 1);
+      updateProductImageFrame();
+    }
+
+    async function renderCanvasPngAsset(asset) {
       const size = materialSizes[asset.sizeIndex] || materialSizes[0];
       const canvas = document.createElement('canvas');
       await drawPosterToCanvas(canvas, size, asset._exportSnapshot?.copy || copyForAsset(asset), asset.languageIndex, asset);
@@ -6314,17 +6661,357 @@
       };
     }
 
+    function setExportAnchorVars(card, prefix, anchor = {}) {
+      card.style.setProperty(`--${prefix}-x`, formatPct(anchor.x || 0));
+      card.style.setProperty(`--${prefix}-y`, formatPct(anchor.y || 0));
+      card.style.setProperty(`--${prefix}-w`, formatPct(anchor.w || 0));
+      card.style.setProperty(`--${prefix}-h`, formatPct(anchor.h || 0));
+    }
+
+    function setExportAnchorVisibility(card, anchors = {}) {
+      ['image', 'logo', 'title', 'subtitle', 'cta'].forEach(key => {
+        card.classList.toggle(`hide-poster-${key}`, Boolean(anchors[key]?.hidden));
+      });
+    }
+
+    function setExportFontVars(card, anchors = {}, size = materialSizes[currentSizeIndex]) {
+      const textScale = posterTextScale(size);
+      const sizeHeight = Math.max(1, Number(size?.height) || 1);
+      const fontPercentForPreview = (anchor, fallbackPercent) => {
+        const fontPx = Number(anchor?.fontPx);
+        const fontScale = Number(anchor?.fontScale);
+        if (Number.isFinite(fontPx) && fontPx > 0) {
+          return (fontPx * (Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1) / sizeHeight) * 100;
+        }
+        return Number(anchor?.font) || fallbackPercent;
+      };
+      const stableFonts = categoryPreviewFontPercents(size, anchors);
+      const hasExplicitFont = anchor => (Number.isFinite(Number(anchor?.fontPx)) && Number(anchor.fontPx) > 0) || (Number.isFinite(Number(anchor?.font)) && Number(anchor.font) > 0);
+      const titleFont = hasExplicitFont(anchors.title) ? fontPercentForPreview(anchors.title, Math.max(1, anchors.title.h * 0.58 * textScale)) : (Number(stableFonts?.title) || Math.max(1, anchors.title.h * 0.58 * textScale));
+      const subtitleFont = hasExplicitFont(anchors.subtitle) ? fontPercentForPreview(anchors.subtitle, Math.max(1, anchors.subtitle.h * 0.30 * textScale)) : (Number(stableFonts?.subtitle) || Math.max(1, anchors.subtitle.h * 0.30 * textScale));
+      const ctaFont = hasExplicitFont(anchors.cta) ? fontPercentForPreview(anchors.cta, Math.max(1, anchors.cta.h * 0.38)) : (Number(stableFonts?.cta) || Math.max(1, anchors.cta.h * 0.38));
+      card.style.setProperty('--title-font', `max(1px, ${titleFont}cqh)`);
+      card.style.setProperty('--subtitle-font', `max(1px, ${subtitleFont}cqh)`);
+      card.style.setProperty('--cta-font', `max(1px, ${ctaFont}cqh)`);
+      if (Number.isFinite(Number(anchors.cta.padX))) card.style.setProperty('--cta-pad-x', `${Number(anchors.cta.padX)}cqw`);
+      else card.style.removeProperty('--cta-pad-x');
+      if (Number.isFinite(Number(anchors.cta.padY))) card.style.setProperty('--cta-pad-y', `${Number(anchors.cta.padY)}cqh`);
+      else card.style.removeProperty('--cta-pad-y');
+      card.style.setProperty('--cta-line-height', Number.isFinite(Number(anchors.cta.lineHeight)) ? String(Number(anchors.cta.lineHeight)) : '1.4');
+      card.style.setProperty('--title-line-height', Number.isFinite(Number(anchors.title.lineHeight)) ? String(Number(anchors.title.lineHeight)) : '1.4');
+      card.style.setProperty('--subtitle-line-height', Number.isFinite(Number(anchors.subtitle.lineHeight)) ? String(Number(anchors.subtitle.lineHeight)) : '1.4');
+    }
+
+    function exportPreviewCanvasForSize(size = materialSizes[currentSizeIndex]) {
+      const dimensions = realSizePreviewCanvas(size);
+      return {
+        width: Math.max(1, Math.round(dimensions.width)),
+        height: Math.max(1, Math.round(dimensions.height)),
+        scale: Math.max(0.01, Number(dimensions.scale) || 1)
+      };
+    }
+
+    function applyExportCardLayout(card, size, anchors = {}, styles = {}) {
+      const exportPreview = exportPreviewCanvasForSize(size);
+      setExportAnchorVars(card, 'image', anchors.image);
+      setExportAnchorVars(card, 'text', anchors.text);
+      setExportAnchorVars(card, 'title', anchors.title);
+      setExportAnchorVars(card, 'subtitle', anchors.subtitle);
+      setExportAnchorVars(card, 'cta', anchors.cta);
+      setExportAnchorVars(card, 'logo', anchors.logo);
+      setExportAnchorVars(card, 'trust', anchors.trust);
+      setExportAnchorVisibility(card, anchors);
+      card.style.setProperty('--text-align', anchors.title?.align || anchors.subtitle?.align || anchors.text?.align || 'left');
+      card.style.setProperty('--title-align', anchors.title?.align || anchors.text?.align || 'left');
+      card.style.setProperty('--subtitle-align', anchors.subtitle?.align || anchors.text?.align || 'left');
+      card.style.setProperty('--title-v-justify', anchors.title?.vAlign === 'center' ? 'center' : 'flex-start');
+      setExportFontVars(card, anchors, size);
+      const backgroundArea = styles.backgroundArea || {};
+      const hasBackgroundArea = ['x', 'y', 'w', 'h'].every(key => Number.isFinite(Number(backgroundArea[key])));
+      card.style.setProperty('--poster-bg', templateBackgroundCss(styles));
+      card.style.setProperty('--poster-bg-area-x', `${hasBackgroundArea ? Number(backgroundArea.x) : 0}%`);
+      card.style.setProperty('--poster-bg-area-y', `${hasBackgroundArea ? Number(backgroundArea.y) : 0}%`);
+      card.style.setProperty('--poster-bg-area-w', `${hasBackgroundArea ? Number(backgroundArea.w) : 100}%`);
+      card.style.setProperty('--poster-bg-area-h', `${hasBackgroundArea ? Number(backgroundArea.h) : 100}%`);
+      card.style.setProperty('--copy-color', styles.textColor);
+      card.style.setProperty('--cta-bg', styles.buttonColor || FIGMA_BUTTON_FILL_COLOR);
+      card.style.setProperty('--cta-fg', styles.buttonTextColor || FIGMA_BUTTON_TEXT_COLOR);
+      card.style.aspectRatio = `${size.width} / ${size.height}`;
+      card.style.setProperty('--preview-w', `${exportPreview.width}px`);
+      card.style.setProperty('--preview-h', `${exportPreview.height}px`);
+    }
+
+    function applyExportRuntimeLayout(card, size, anchors = {}) {
+      const exportRenderer = window.createPosterRenderer?.({
+        posterCore,
+        formatPct,
+        materialCard: card,
+        previewTitle: card.querySelector('#previewTitle'),
+        previewSubtitle: card.querySelector('#previewSubtitle'),
+        previewCta: card.querySelector('#previewCta'),
+        getPreviewFontPercents: exportSize => categoryPreviewFontPercents(exportSize)
+      });
+      if (!exportRenderer) return;
+      exportRenderer.applyLayoutVariables(anchors, size);
+      exportRenderer.fitPosterTextBoxes();
+    }
+
+    function exportRect(anchor, width, height) {
+      return {
+        x: ((Number(anchor?.x) || 0) / 100) * width,
+        y: ((Number(anchor?.y) || 0) / 100) * height,
+        w: ((Number(anchor?.w) || 0) / 100) * width,
+        h: ((Number(anchor?.h) || 0) / 100) * height
+      };
+    }
+
+    async function applyExportProductImage(card, size, anchors = {}, uploadedSrc = '', adjustment = defaultProductAdjustment()) {
+      const frame = card.querySelector('#productFrame');
+      const image = card.querySelector('#phoneHand');
+      if (!frame || !image || !uploadedSrc) return;
+      const exportPreview = exportPreviewCanvasForSize(size);
+      frame.classList.remove('hidden', 'is-selected', 'is-dragging');
+      image.src = uploadedSrc;
+      const loadedImage = await loadCanvasImage(uploadedSrc);
+      const frameRect = exportRect(anchors.image, exportPreview.width, exportPreview.height);
+      const visualRect = exportRect(posterRenderer.imageVisualAnchor(anchors), exportPreview.width, exportPreview.height);
+      const visualW = Math.max(1, visualRect.w);
+      const visualH = Math.max(1, visualRect.h);
+      const frameToVisualX = visualRect.x - frameRect.x;
+      const frameToVisualY = visualRect.y - frameRect.y;
+      const imageRatio = loadedImage.naturalWidth / loadedImage.naturalHeight;
+      const frameRatio = visualW / visualH;
+      let baseW = visualW;
+      let baseH = visualH;
+      if (imageRatio > frameRatio) baseW = visualH * imageRatio;
+      else baseH = visualW / imageRatio;
+      const scale = Number(adjustment?.scale) || 1;
+      const drawW = baseW * scale;
+      const drawH = baseH * scale;
+      image.style.width = `${drawW}px`;
+      image.style.height = `${drawH}px`;
+      image.style.left = `${frameToVisualX + (visualW - drawW) / 2 + (Number(adjustment?.x) || 0) * visualW}px`;
+      image.style.top = `${frameToVisualY + (visualH - drawH) / 2 + (Number(adjustment?.y) || 0) * visualH}px`;
+    }
+
+    function resetExportRuntimeTextStyles(card) {
+      const transientTextProps = [
+        'left', 'top', 'width', 'height', 'display', 'overflow', 'white-space',
+        'font-size', 'line-height', 'max-height', 'transform',
+        '-webkit-line-clamp', '-webkit-box-orient'
+      ];
+      [card.querySelector('#previewTitle'), card.querySelector('#previewSubtitle')].forEach(element => {
+        transientTextProps.forEach(prop => element?.style.removeProperty(prop));
+      });
+      const cta = card.querySelector('#previewCta');
+      [
+        'left', 'top', 'width', 'height', 'font-size', 'transform',
+        'padding-left', 'padding-right', 'max-width', 'overflow',
+        'text-overflow', 'white-space'
+      ].forEach(prop => cta?.style.removeProperty(prop));
+    }
+
+    function ensureDomExportHost() {
+      let host = document.getElementById('domExportHost');
+      if (host) return host;
+      host = document.createElement('div');
+      host.id = 'domExportHost';
+      host.setAttribute('aria-hidden', 'true');
+      host.style.position = 'fixed';
+      host.style.left = '-100000px';
+      host.style.top = '0';
+      host.style.pointerEvents = 'none';
+      host.style.zIndex = '-1';
+      document.body.appendChild(host);
+      return host;
+    }
+
+    async function buildExportCard(asset, size, snapshot = asset?._exportSnapshot || exportSnapshotForAsset(asset)) {
+      const card = materialCard.cloneNode(true);
+      card.id = `materialCardExport-${Date.now()}`;
+      card.classList.add('generated', 'is-dom-exporting');
+      card.classList.remove('empty', 'needs-manual-adjust');
+      card.dataset.adjustmentState = '';
+      card.dataset.adjustmentReason = '';
+      card.querySelector('#posterEditOverlay')?.remove();
+      card.querySelector('.inline-copy-editor')?.remove();
+      const title = card.querySelector('#previewTitle');
+      const subtitle = card.querySelector('#previewSubtitle');
+      const cta = card.querySelector('#previewCta');
+      if (title) title.textContent = snapshot.copy?.title || '';
+      if (subtitle) renderMultilineText(subtitle, snapshot.copy?.subtitle || '');
+      if (cta) cta.textContent = snapshot.copy?.cta || '';
+      resetExportRuntimeTextStyles(card);
+      const logo = card.querySelector('#creativeLogoImage');
+      if (logo) logo.src = snapshot.logoSrc || logo.src;
+      const placeholder = card.querySelector('#posterImagePlaceholder');
+      placeholder?.classList.add('hidden');
+      applyExportCardLayout(card, size, snapshot.anchors, snapshot.styles);
+      if (!snapshot.uploadedImageSrc || snapshot.anchors?.image?.hidden) {
+        card.querySelector('#productFrame')?.classList.add('hidden');
+      } else {
+        await applyExportProductImage(card, size, snapshot.anchors, snapshot.uploadedImageSrc, snapshot.productAdjustment);
+      }
+      return card;
+    }
+
+    async function renderDomPngAsset(asset, options = {}) {
+      const size = materialSizes[asset.sizeIndex] || materialSizes[0];
+      const snapshot = asset?._exportSnapshot || exportSnapshotForAsset(asset);
+      const exportPreview = exportPreviewCanvasForSize(size);
+      const exportScale = Math.max(size.width / exportPreview.width, size.height / exportPreview.height);
+      const html2canvas = await window.SpecPromoDependencies?.ensureHtml2Canvas?.();
+      if (typeof html2canvas !== 'function') throw new Error('html2canvas unavailable');
+      if (options.signal?.aborted) throw new DOMException('Export canceled', 'AbortError');
+      const host = ensureDomExportHost();
+      const card = await buildExportCard(asset, size, snapshot);
+      host.appendChild(card);
+
+      try {
+        await nextAnimationFrame();
+        applyExportRuntimeLayout(card, size, snapshot.anchors);
+        if (snapshot.uploadedImageSrc && !snapshot.anchors?.image?.hidden) {
+          await applyExportProductImage(card, size, snapshot.anchors, snapshot.uploadedImageSrc, snapshot.productAdjustment);
+        }
+        await nextAnimationFrame();
+        if (document.fonts?.ready) await document.fonts.ready.catch(() => {});
+        if (options.signal?.aborted) throw new DOMException('Export canceled', 'AbortError');
+        const canvas = await html2canvas(card, {
+          backgroundColor: null,
+          useCORS: true,
+          allowTaint: false,
+          scale: exportScale,
+          width: exportPreview.width,
+          height: exportPreview.height,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: Math.max(document.documentElement.clientWidth, exportPreview.width),
+          windowHeight: Math.max(document.documentElement.clientHeight, exportPreview.height)
+        });
+        if (options.signal?.aborted) throw new DOMException('Export canceled', 'AbortError');
+        let outputCanvas = canvas;
+        if (canvas.width !== size.width || canvas.height !== size.height) {
+          outputCanvas = document.createElement('canvas');
+          outputCanvas.width = size.width;
+          outputCanvas.height = size.height;
+          outputCanvas.getContext('2d').drawImage(canvas, 0, 0, size.width, size.height);
+        }
+        const blob = await canvasToBlob(outputCanvas, 'image/png');
+        if (!blob) throw new Error('dom export failed');
+        return {
+          blob,
+          fileName: asset.fileName || buildAssetFileName(asset.sizeIndex, asset.languageIndex)
+        };
+      } finally {
+        card.remove();
+      }
+    }
+
+    async function renderPngAsset(asset, options = {}) {
+      return renderDomPngAsset(asset, options);
+    }
+
     async function downloadPngAsset(asset, index, total) {
       return assetExporter.downloadPngAsset(asset, index, total);
     }
 
     async function exportAssetsWithOptions(options) {
+      if (activeExportController) {
+        showToast('已有下载任务正在进行');
+        return;
+      }
       const all = await prepareExportAssetsWithSnapshots(true);
       if (all.error) {
         showToast(all.error);
         return;
       }
-      return assetExporter.exportAssetsWithOptions({ ...options, assets: all.assets });
+      activeExportController = new AbortController();
+      openExportProgressModal(all.assets.length);
+      showToast('全部下载将在后台渲染，不会切换当前编辑区');
+      try {
+        const result = await assetExporter.exportAssetsWithOptions({
+          ...options,
+          assets: all.assets,
+          signal: activeExportController.signal,
+          onProgress: (completed, total) => updateExportProgressModal(completed, total)
+        });
+        updateExportProgressModal(all.assets.length, all.assets.length, '导出完成，正在触发下载...');
+        clearTimeout(exportProgressCloseTimer);
+        exportProgressCloseTimer = setTimeout(closeExportProgressModal, 700);
+        return result;
+      } catch (error) {
+        console.warn('Batch asset export failed', error);
+        closeExportProgressModal();
+        if (error?.name === 'AbortError') {
+          showToast('已取消下载，未生成新文件');
+        } else {
+          showToast('素材导出失败，请重试');
+        }
+      } finally {
+        activeExportController = null;
+      }
+    }
+
+    function ensureExportProgressModal() {
+      let modal = document.getElementById('exportProgressModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'exportProgressModal';
+        modal.className = 'confirm-modal export-progress-modal';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', event => {
+          const action = event.target.closest('[data-export-progress-action]')?.dataset.exportProgressAction;
+          if (action === 'cancel') cancelActiveExport();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && modal.classList.contains('open')) cancelActiveExport();
+        });
+        modal.innerHTML = `
+          <div class="confirm-dialog export-progress-dialog" role="dialog" aria-modal="true" aria-label="正在下载全部素材">
+            <div class="confirm-title">正在下载全部素材</div>
+            <p class="export-progress-message" id="exportProgressMessage">正在准备后台渲染...</p>
+            <div class="export-progress-track" aria-hidden="true">
+              <div class="export-progress-fill" id="exportProgressFill"></div>
+            </div>
+            <div class="export-progress-meta" id="exportProgressMeta">0 / 0</div>
+            <div class="confirm-actions">
+              <button class="modal-btn danger" type="button" data-export-progress-action="cancel">取消下载</button>
+            </div>
+          </div>
+        `;
+      }
+      return modal;
+    }
+
+    function openExportProgressModal(total) {
+      clearTimeout(exportProgressCloseTimer);
+      const modal = ensureExportProgressModal();
+      modal.classList.add('open');
+      updateExportProgressModal(0, total, '正在准备后台渲染，不会切换当前编辑区...');
+    }
+
+    function updateExportProgressModal(completed, total, message = '') {
+      const modal = ensureExportProgressModal();
+      const safeTotal = Math.max(1, Number(total) || 1);
+      const safeCompleted = Math.max(0, Math.min(safeTotal, Number(completed) || 0));
+      const percent = Math.round((safeCompleted / safeTotal) * 100);
+      const fill = modal.querySelector('#exportProgressFill');
+      const meta = modal.querySelector('#exportProgressMeta');
+      const text = modal.querySelector('#exportProgressMessage');
+      if (fill) fill.style.width = `${percent}%`;
+      if (meta) meta.textContent = `${safeCompleted} / ${safeTotal}`;
+      if (text) text.textContent = message || `正在后台渲染 PNG：${safeCompleted} / ${safeTotal}`;
+    }
+
+    function closeExportProgressModal() {
+      clearTimeout(exportProgressCloseTimer);
+      document.getElementById('exportProgressModal')?.classList.remove('open');
+    }
+
+    function cancelActiveExport() {
+      if (!activeExportController) return;
+      activeExportController.abort();
+      updateExportProgressModal(0, 1, '正在取消下载任务...');
     }
 
     function closeDownloadModal() {

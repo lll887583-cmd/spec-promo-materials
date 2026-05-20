@@ -2,7 +2,7 @@
   'use strict';
 
   function createAssetExporter(options = {}) {
-    const { defaultFolderName, getDefaultFolderName, getLanguages, getGenerated, getDownloadButton, getAssets, getAssetExportSortKey, renderPngAsset, showToast } = options;
+    const { defaultFolderName, getDefaultFolderName, getLanguages, getGenerated, getDownloadButton, getAssets, getAssetExportSortKey, getRenderConcurrency, renderPngAsset, showToast } = options;
 
     function sanitizeFolderName(name) {
       return String(name || '')
@@ -64,7 +64,7 @@
       return { bytes: new Uint8Array(buffer), view: new DataView(buffer) };
     }
 
-    async function createZipBlob(entries) {
+    async function createZipBlob(entries, signal = null) {
       const encoder = new TextEncoder();
       const utf8FileNameFlag = 0x0800;
       const localParts = [];
@@ -72,7 +72,9 @@
       let offset = 0;
       const { time, day } = zipDateTime();
       for (const entry of entries) {
+        throwIfAborted(signal);
         const data = new Uint8Array(await entry.blob.arrayBuffer());
+        throwIfAborted(signal);
         const nameBytes = encoder.encode(entry.path);
         const crc = zipCrc32(data);
         const local = zipHeader(30 + nameBytes.length);
@@ -113,6 +115,7 @@
       end.view.setUint16(10, entries.length, true);
       end.view.setUint32(12, centralSize, true);
       end.view.setUint32(16, offset, true);
+      throwIfAborted(signal);
       return new Blob([...localParts, ...centralParts, end.bytes], { type: 'application/zip' });
     }
 
@@ -174,25 +177,44 @@
       if (total > 1) await new Promise(resolve => setTimeout(resolve, index === total - 1 ? 0 : 120));
     }
 
+    function abortError() {
+      try {
+        return new DOMException('Export canceled', 'AbortError');
+      } catch (error) {
+        const next = new Error('Export canceled');
+        next.name = 'AbortError';
+        return next;
+      }
+    }
+
+    function throwIfAborted(signal) {
+      if (signal?.aborted) throw abortError();
+    }
+
     function sortedAssetsForExport(assets) {
       const sortKey = typeof getAssetExportSortKey === 'function' ? getAssetExportSortKey : null;
       if (!sortKey) return [...assets];
       return [...assets].sort((a, b) => String(sortKey(a)).localeCompare(String(sortKey(b)), 'en'));
     }
 
-    async function renderZipEntries(assets, safeFolderName, folderHandle = null, onProgress = null) {
+    async function renderZipEntries(assets, safeFolderName, folderHandle = null, onProgress = null, signal = null) {
       const sortedAssets = sortedAssetsForExport(assets);
       const entries = new Array(sortedAssets.length);
-      const concurrency = Math.min(4, Math.max(1, Number(navigator.hardwareConcurrency || 4) > 4 ? 3 : 2));
+      const preferredConcurrency = typeof getRenderConcurrency === 'function' ? Number(getRenderConcurrency()) : NaN;
+      const concurrency = Number.isFinite(preferredConcurrency) && preferredConcurrency > 0
+        ? Math.max(1, Math.floor(preferredConcurrency))
+        : Math.min(4, Math.max(1, Number(navigator.hardwareConcurrency || 4) > 4 ? 3 : 2));
       let nextIndex = 0;
       let completed = 0;
 
       async function renderNext() {
         while (nextIndex < sortedAssets.length) {
+          throwIfAborted(signal);
           const index = nextIndex;
           nextIndex += 1;
           const asset = sortedAssets[index];
-          const rendered = await renderPngAsset(asset);
+          const rendered = await renderPngAsset(asset, { signal });
+          throwIfAborted(signal);
           const relativePath = exportAssetRelativePath(asset, rendered.fileName);
           entries[index] = { ...rendered, path: folderHandle ? relativePath : `${safeFolderName}/${relativePath}` };
           completed += 1;
@@ -223,17 +245,19 @@
       showToast(`${messagePrefix}已打包 ${entries.length} 张 PNG 素材`);
     }
 
-    async function saveAssetsAsZip(assets, safeFolderName, fileHandle) {
-      const entries = await renderZipEntries(assets, safeFolderName, null, progressToast('正在渲染 PNG：'));
+    async function saveAssetsAsZip(assets, safeFolderName, fileHandle, signal = null, onProgress = null) {
+      const entries = await renderZipEntries(assets, safeFolderName, null, onProgress || progressToast('正在渲染 PNG：'), signal);
+      throwIfAborted(signal);
       showToast('正在写入 ZIP 文件...');
-      const zipBlob = await createZipBlob(entries);
+      const zipBlob = await createZipBlob(entries, signal);
+      throwIfAborted(signal);
       const fileName = `${safeFolderName}.zip`;
       await saveBlobToHandle(zipBlob, fileHandle);
       showToast(`已保存 ZIP 文件：${fileName}（${entries.length} 张 PNG）`);
     }
 
     async function exportAssetsWithOptions(options = {}) {
-      const { folderName, method, assets: providedAssets } = options;
+      const { folderName, method, assets: providedAssets, signal = null, onProgress = null } = options;
       const assets = Array.isArray(providedAssets) ? providedAssets : getAssets();
       if (!assets.length) {
         showToast('暂无可下载素材');
@@ -246,42 +270,47 @@
       downloadButton.disabled = true;
       let zipFileHandle = null;
       try {
+        throwIfAborted(signal);
         if (saveZip) {
           zipFileHandle = await pickZipFileHandle(`${safeFolderName}.zip`);
-          await saveAssetsAsZip(assets, safeFolderName, zipFileHandle);
-          return;
+          await saveAssetsAsZip(assets, safeFolderName, zipFileHandle, signal, onProgress);
+          return true;
         }
         const folderHandle = saveToFolder ? await pickDownloadFolderHandle(safeFolderName) : null;
         if (folderHandle) {
-          const entries = await renderZipEntries(assets, safeFolderName, folderHandle, progressToast('正在渲染 PNG：'));
+          const entries = await renderZipEntries(assets, safeFolderName, folderHandle, onProgress || progressToast('正在渲染 PNG：'), signal);
+          throwIfAborted(signal);
           await saveAssetsToFolder(entries, folderHandle);
           showToast(`已保存 ${entries.length} 张 PNG 到 ${safeFolderName}`);
+          return true;
         } else {
           const fallbackText = (method === 'folder' || method === 'savezip') ? '当前浏览器不支持直接保存，已改为浏览器 ZIP 下载。' : '';
-          await downloadAssetsAsZip(assets, safeFolderName, fallbackText);
+          const entries = await renderZipEntries(assets, safeFolderName, null, onProgress || progressToast(`${fallbackText}正在渲染 PNG：`), signal);
+          throwIfAborted(signal);
+          showToast('正在生成 ZIP 文件...');
+          const zipBlob = await createZipBlob(entries, signal);
+          throwIfAborted(signal);
+          triggerBlobDownload(zipBlob, `${safeFolderName}.zip`);
+          showToast(`${fallbackText}已打包 ${entries.length} 张 PNG 素材`);
+          return true;
         }
       } catch (error) {
         console.warn('Assets export failed', error);
-        if (error?.name === 'AbortError' && saveZip) {
-          showToast('已取消保存，未下载文件');
-        } else if (error?.name === 'AbortError' && saveToFolder) {
-          try {
-            await downloadAssetsAsZip(assets, safeFolderName, '已取消文件夹选择，已改为 ZIP 下载。');
-          } catch (fallbackError) {
-            console.warn('ZIP fallback export failed', fallbackError);
-            showToast('素材导出失败，请重试');
-          }
-        } else if (error?.name === 'AbortError') {
-          showToast('已取消下载');
+        if (error?.name === 'AbortError') {
+          showToast('已取消下载，未生成新文件');
+          throw error;
         } else if (saveZip) {
           try {
             await downloadAssetsAsZip(assets, safeFolderName, '保存到指定位置失败，已改为浏览器 ZIP 下载。');
+            return true;
           } catch (fallbackError) {
             console.warn('ZIP fallback export failed', fallbackError);
             showToast('素材导出失败，请改用“浏览器下载 ZIP”重试');
+            throw fallbackError;
           }
         } else {
           showToast('素材导出失败，请重试');
+          throw error;
         }
       } finally {
         downloadButton.disabled = !getGenerated();
