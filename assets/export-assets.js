@@ -180,33 +180,61 @@
       return [...assets].sort((a, b) => String(sortKey(a)).localeCompare(String(sortKey(b)), 'en'));
     }
 
-    async function renderZipEntries(assets, safeFolderName, folderHandle = null) {
-      const entries = [];
-      for (const asset of sortedAssetsForExport(assets)) {
-        const rendered = await renderPngAsset(asset);
-        const relativePath = exportAssetRelativePath(asset, rendered.fileName);
-        entries.push({ ...rendered, path: folderHandle ? relativePath : `${safeFolderName}/${relativePath}` });
+    async function renderZipEntries(assets, safeFolderName, folderHandle = null, onProgress = null) {
+      const sortedAssets = sortedAssetsForExport(assets);
+      const entries = new Array(sortedAssets.length);
+      const concurrency = Math.min(4, Math.max(1, Number(navigator.hardwareConcurrency || 4) > 4 ? 3 : 2));
+      let nextIndex = 0;
+      let completed = 0;
+
+      async function renderNext() {
+        while (nextIndex < sortedAssets.length) {
+          const index = nextIndex;
+          nextIndex += 1;
+          const asset = sortedAssets[index];
+          const rendered = await renderPngAsset(asset);
+          const relativePath = exportAssetRelativePath(asset, rendered.fileName);
+          entries[index] = { ...rendered, path: folderHandle ? relativePath : `${safeFolderName}/${relativePath}` };
+          completed += 1;
+          if (typeof onProgress === 'function') onProgress(completed, sortedAssets.length);
+        }
       }
+
+      await Promise.all(Array.from({ length: Math.min(concurrency, sortedAssets.length) }, renderNext));
       return entries;
     }
 
+    function progressToast(prefix) {
+      let lastShown = 0;
+      return (completed, total) => {
+        const now = Date.now();
+        if (completed === total || completed === 1 || now - lastShown > 500) {
+          showToast(`${prefix}${completed} / ${total}`);
+          lastShown = now;
+        }
+      };
+    }
+
     async function downloadAssetsAsZip(assets, safeFolderName, messagePrefix = '') {
-      const entries = await renderZipEntries(assets, safeFolderName);
+      const entries = await renderZipEntries(assets, safeFolderName, null, progressToast(`${messagePrefix}正在渲染 PNG：`));
+      showToast('正在生成 ZIP 文件...');
       const zipBlob = await createZipBlob(entries);
       triggerBlobDownload(zipBlob, `${safeFolderName}.zip`);
       showToast(`${messagePrefix}已打包 ${entries.length} 张 PNG 素材`);
     }
 
     async function saveAssetsAsZip(assets, safeFolderName, fileHandle) {
-      const entries = await renderZipEntries(assets, safeFolderName);
+      const entries = await renderZipEntries(assets, safeFolderName, null, progressToast('正在渲染 PNG：'));
+      showToast('正在写入 ZIP 文件...');
       const zipBlob = await createZipBlob(entries);
       const fileName = `${safeFolderName}.zip`;
       await saveBlobToHandle(zipBlob, fileHandle);
       showToast(`已保存 ZIP 文件：${fileName}（${entries.length} 张 PNG）`);
     }
 
-    async function exportAssetsWithOptions({ folderName, method }) {
-      const assets = getAssets();
+    async function exportAssetsWithOptions(options = {}) {
+      const { folderName, method, assets: providedAssets } = options;
+      const assets = Array.isArray(providedAssets) ? providedAssets : getAssets();
       if (!assets.length) {
         showToast('暂无可下载素材');
         return;
@@ -225,7 +253,7 @@
         }
         const folderHandle = saveToFolder ? await pickDownloadFolderHandle(safeFolderName) : null;
         if (folderHandle) {
-          const entries = await renderZipEntries(assets, safeFolderName, folderHandle);
+          const entries = await renderZipEntries(assets, safeFolderName, folderHandle, progressToast('正在渲染 PNG：'));
           await saveAssetsToFolder(entries, folderHandle);
           showToast(`已保存 ${entries.length} 张 PNG 到 ${safeFolderName}`);
         } else {

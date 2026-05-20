@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const ASSET_VERSION = '20260519-sync-export';
+  const ASSET_VERSION = '20260520-pixel-export';
   const withVersion = path => `${path}?v=${ASSET_VERSION}`;
 
   const coreScripts = [

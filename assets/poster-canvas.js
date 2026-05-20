@@ -73,8 +73,8 @@
         && inner.y + inner.h <= outer.y + outer.h + 1;
     }
 
-    function drawAdjustedProductImage(ctx, image, rect, visualRect, size) {
-      const draw = posterRenderer.productDrawGeometry(image, rect, getProductAdjustment(size), visualRect);
+    function drawAdjustedProductImage(ctx, image, rect, visualRect, size, adjustment = null) {
+      const draw = posterRenderer.productDrawGeometry(image, rect, adjustment || getProductAdjustment(size), visualRect);
 
       ctx.save();
       ctx.beginPath();
@@ -90,8 +90,12 @@
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      const posterAnchors = getPosterAnchors(size, asset);
-      const posterStyles = getPosterStyles(asset);
+      const snapshot = asset?._exportSnapshot || {};
+      const posterAnchors = snapshot.anchors || getPosterAnchors(size, asset);
+      const posterStyles = snapshot.styles || getPosterStyles(asset);
+      const uploadedImageSrc = snapshot.uploadedImageSrc ?? getUploadedImageSrc();
+      const productAdjustment = snapshot.productAdjustment || getProductAdjustment(size);
+      const logoSrc = snapshot.logoSrc || getLogoSrc(getLogoBrand(languageIndex), getLogoVariant(asset, posterStyles));
       let imageRect = posterRenderer.canvasRect(posterAnchors.image, width, height);
       let imageVisualRect = posterRenderer.canvasRect(posterRenderer.imageVisualAnchor(posterAnchors), width, height);
       const titleRect = posterRenderer.canvasRect(posterAnchors.title, width, height);
@@ -163,11 +167,10 @@
         }
       }
 
-      const uploadedImageSrc = getUploadedImageSrc();
       if (!posterAnchors.image.hidden && uploadedImageSrc) {
         try {
           const productImage = await loadCanvasImage(uploadedImageSrc);
-          drawAdjustedProductImage(ctx, productImage, imageRect, imageVisualRect, size);
+          drawAdjustedProductImage(ctx, productImage, imageRect, imageVisualRect, size, productAdjustment);
         } catch (error) {
           console.warn('Uploaded image failed to load for download', error);
         }
@@ -175,7 +178,7 @@
 
       if (!posterAnchors.logo.hidden) {
         try {
-          const logo = await loadCanvasImage(getLogoSrc(getLogoBrand(languageIndex), getLogoVariant(asset, posterStyles)));
+          const logo = await loadCanvasImage(logoSrc);
           const logoW = logoRect.w;
           const logoH = Math.min(logoRect.h, logoW * (logo.naturalHeight / logo.naturalWidth));
           ctx.drawImage(logo, logoRect.x, logoRect.y, logoW, logoH);

@@ -2302,8 +2302,13 @@
         if (Number.isFinite(Number(nextAnchor.lineHeight))) normalized.lineHeight = Math.max(0.5, Number(nextAnchor.lineHeight));
         if (typeof nextAnchor.autoWidth === 'boolean') normalized.autoWidth = nextAnchor.autoWidth;
       }
-      normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
-      normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
+      if (anchorKey === 'title' || anchorKey === 'subtitle') {
+        normalized.x = clamp(normalized.x, minSize - normalized.w, 100 - minSize);
+        normalized.y = clamp(normalized.y, minSize - normalized.h, 100 - minSize);
+      } else {
+        normalized.x = clamp(normalized.x, 0, 100 - normalized.w);
+        normalized.y = clamp(normalized.y, 0, 100 - normalized.h);
+      }
       return anchorKey === 'cta' ? normalizeCtaAnchorRatio(normalized, size) : normalized;
     }
 
@@ -2529,17 +2534,38 @@
       return visibleCopyContentBounds(anchors);
     }
 
+    function visualAlignmentDelta(action, overlay, frame) {
+      if (!overlay || !frame) return { dx: 0, dy: 0 };
+      const overlayCenterX = overlay.x + overlay.w / 2;
+      const overlayCenterY = overlay.y + overlay.h / 2;
+      const frameCenterX = frame.x + frame.w / 2;
+      const frameCenterY = frame.y + frame.h / 2;
+      const delta = { dx: 0, dy: 0 };
+      if (action === 'left') delta.dx = frame.x - overlay.x;
+      if (action === 'hcenter') delta.dx = frameCenterX - overlayCenterX;
+      if (action === 'right') delta.dx = frame.x + frame.w - (overlay.x + overlay.w);
+      if (action === 'top') delta.dy = frame.y - overlay.y;
+      if (action === 'vcenter') delta.dy = frameCenterY - overlayCenterY;
+      if (action === 'bottom') delta.dy = frame.y + frame.h - (overlay.y + overlay.h);
+      return delta;
+    }
+
+    function visualBoundsForAlignment(items) {
+      if (!items.length) return null;
+      const left = Math.min(...items.map(item => item.overlay.x));
+      const top = Math.min(...items.map(item => item.overlay.y));
+      const right = Math.max(...items.map(item => item.overlay.x + item.overlay.w));
+      const bottom = Math.max(...items.map(item => item.overlay.y + item.overlay.h));
+      return normalizedFrame({ x: left, y: top, w: right - left, h: bottom - top });
+    }
+
     function alignSinglePosterCopyAnchor(anchorKey, action, anchors) {
       const anchor = anchors?.[anchorKey];
       const frame = normalizedFrame({ x: 0, y: 0, w: 100, h: 100 });
       if (!anchor || !frame) return false;
-      const next = { ...anchor };
-      if (action === 'left') next.x = frame.x;
-      if (action === 'hcenter') next.x = frame.x + (frame.w - anchor.w) / 2;
-      if (action === 'right') next.x = frame.x + frame.w - anchor.w;
-      if (action === 'top') next.y = frame.y;
-      if (action === 'vcenter') next.y = frame.y + (frame.h - anchor.h) / 2;
-      if (action === 'bottom') next.y = frame.y + frame.h - anchor.h;
+      const overlay = posterOverlayAnchor(anchorKey, anchor);
+      const delta = visualAlignmentDelta(action, overlay, frame);
+      const next = { ...anchor, x: anchor.x + delta.dx, y: anchor.y + delta.dy };
       pushPosterEditHistory();
       setPosterOverride(anchorKey, next);
       showToast('已按当前尺寸画布对齐选中元素');
@@ -2574,23 +2600,21 @@
         showToast(selectedPosterAnchorKeys.has('image') ? '主图仅支持拖动图片，不支持对齐框位置' : '请先多选至少两个元素');
         return;
       }
-      const selectedAnchors = anchorKeys.map(key => anchors[key]);
-      const left = Math.min(...selectedAnchors.map(anchor => anchor.x));
-      const top = Math.min(...selectedAnchors.map(anchor => anchor.y));
-      const right = Math.max(...selectedAnchors.map(anchor => anchor.x + anchor.w));
-      const bottom = Math.max(...selectedAnchors.map(anchor => anchor.y + anchor.h));
-      const centerX = (left + right) / 2;
-      const centerY = (top + bottom) / 2;
+      const selectedItems = anchorKeys
+        .map(key => ({ key, anchor: anchors[key], overlay: posterOverlayAnchor(key, anchors[key]) }))
+        .filter(item => item.anchor && item.overlay);
+      const visualFrame = visualBoundsForAlignment(selectedItems);
+      if (!visualFrame) {
+        showToast('未找到可对齐的可见元素边界');
+        return;
+      }
       pushPosterEditHistory();
       setPosterOverrides(anchorKeys, anchorKey => {
         const anchor = anchors[anchorKey];
-        if (action === 'left') return { ...anchor, x: left };
-        if (action === 'hcenter') return { ...anchor, x: centerX - anchor.w / 2 };
-        if (action === 'right') return { ...anchor, x: right - anchor.w };
-        if (action === 'top') return { ...anchor, y: top };
-        if (action === 'vcenter') return { ...anchor, y: centerY - anchor.h / 2 };
-        if (action === 'bottom') return { ...anchor, y: bottom - anchor.h };
-        return anchor;
+        const item = selectedItems.find(entry => entry.key === anchorKey);
+        if (!anchor || !item) return anchor;
+        const delta = visualAlignmentDelta(action, item.overlay, visualFrame);
+        return { ...anchor, x: anchor.x + delta.dx, y: anchor.y + delta.dy };
       });
       showToast('已对齐当前尺寸选中的元素');
     }
@@ -6150,6 +6174,11 @@
     }
 
     function syncExportStateBeforeDownload() {
+      const activeElement = document.activeElement;
+      if (activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName)) {
+        activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+        activeElement.dispatchEvent(new Event('change', { bubbles: true }));
+      }
       normalizeSizeLanguageState();
       generatedSizeIndices = uniqueValidIndices(generatedSizeIndices, materialSizes);
       generatedLanguageIndices = uniqueValidIndices(generatedLanguageIndices, languages);
@@ -6166,6 +6195,59 @@
       applyLanguagePreview(currentLanguageIndex);
       updateGeneratedMeta();
       updateUploadState();
+    }
+
+    function nextAnimationFrame() {
+      return new Promise(resolve => requestAnimationFrame(() => resolve()));
+    }
+
+    async function waitForExportReadiness() {
+      await Promise.resolve();
+      await nextAnimationFrame();
+      fitMaterialPreview(materialSizes[currentSizeIndex]);
+      await nextAnimationFrame();
+      if (document.fonts?.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (error) {
+          console.warn('Font readiness check failed before export', error);
+        }
+      }
+      if (uploadedImageSrc) {
+        try {
+          await loadCanvasImage(uploadedImageSrc);
+        } catch (error) {
+          console.warn('Uploaded image readiness check failed before export', error);
+        }
+      }
+    }
+
+    function exportSnapshotForAsset(asset) {
+      const size = materialSizes[asset.sizeIndex] || materialSizes[0];
+      const languageIndex = Number.isInteger(asset.languageIndex) ? asset.languageIndex : currentLanguageIndex;
+      const styles = effectivePosterStyles(asset);
+      const logoBrand = logoBrandForLanguage(languageIndex);
+      return {
+        copy: cloneState(copyForAsset(asset)),
+        anchors: cloneState(effectivePosterAnchorsForSize(size, asset)),
+        styles: cloneState(styles),
+        uploadedImageSrc,
+        productAdjustment: cloneState(productImageAdjustments[productAdjustmentKey(size)] || defaultProductAdjustment()),
+        logoSrc: logoSrcFor(logoBrand, asset?.rule?.logoVariant || styles.logoVariant || selectedLogoVariant)
+      };
+    }
+
+    async function prepareExportAssetsWithSnapshots(all = false) {
+      const { assets, error } = prepareExportAssets(all);
+      if (error) return { assets, error };
+      await waitForExportReadiness();
+      return {
+        assets: assets.map(asset => ({
+          ...asset,
+          _exportSnapshot: exportSnapshotForAsset(asset)
+        })),
+        error: ''
+      };
     }
 
     function validateExportState(assets = []) {
@@ -6200,7 +6282,7 @@
     }
 
     async function downloadSingleAsset() {
-      const { assets, error } = prepareExportAssets(false);
+      const { assets, error } = await prepareExportAssetsWithSnapshots(false);
       if (error) {
         showToast(error);
         return;
@@ -6223,7 +6305,7 @@
     async function renderPngAsset(asset) {
       const size = materialSizes[asset.sizeIndex] || materialSizes[0];
       const canvas = document.createElement('canvas');
-      await drawPosterToCanvas(canvas, size, copyForAsset(asset), asset.languageIndex, asset);
+      await drawPosterToCanvas(canvas, size, asset._exportSnapshot?.copy || copyForAsset(asset), asset.languageIndex, asset);
       const blob = await canvasToBlob(canvas, 'image/png');
       if (!blob) throw new Error('export failed');
       return {
@@ -6237,7 +6319,12 @@
     }
 
     async function exportAssetsWithOptions(options) {
-      return assetExporter.exportAssetsWithOptions(options);
+      const all = await prepareExportAssetsWithSnapshots(true);
+      if (all.error) {
+        showToast(all.error);
+        return;
+      }
+      return assetExporter.exportAssetsWithOptions({ ...options, assets: all.assets });
     }
 
     function closeDownloadModal() {
