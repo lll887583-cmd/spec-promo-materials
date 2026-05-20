@@ -1513,7 +1513,10 @@
       generatedLanguageIndices = indicesFromSavedLanguageKeys(draft.generatedLanguageKeys, languages.map((_, index) => index));
       if (!generatedSizeIndices.length) generatedSizeIndices = materialSizes.map((_, index) => index);
       if (!generatedLanguageIndices.length) generatedLanguageIndices = languages.map((_, index) => index);
-      currentSizeIndex = generatedSizeIndices[0] || defaultMaterialPreviewSizeIndex();
+      const savedCurrentSizeIndex = sizeIndexFromId(draft.currentSizeId);
+      currentSizeIndex = generatedSizeIndices.includes(savedCurrentSizeIndex)
+        ? savedCurrentSizeIndex
+        : (generatedSizeIndices[0] || defaultMaterialPreviewSizeIndex());
 
       hasImage = Boolean(draft.hasImage && draft.uploadedImageSrc);
       uploadedImageSrc = hasImage ? String(draft.uploadedImageSrc || '') : '';
@@ -4575,7 +4578,7 @@
       }
       renderPosterEditOverlay();
       generateButton.disabled = !appInitialized || !isGenerationReady();
-      downloadButton.disabled = !generated || !hasImage;
+      downloadButton.disabled = !appInitialized || !generated || !hasImage;
       if (styleSwitchButton) styleSwitchButton.disabled = !generated;
       editPosterButton.disabled = !generated;
       if (regenerateButton) regenerateButton.disabled = !generated;
@@ -4600,7 +4603,7 @@
     function setGeneratingState(next) {
       isGenerating = next;
       generateButton.disabled = next || !appInitialized || !isGenerationReady();
-      downloadButton.disabled = next || !generated || !hasImage;
+      downloadButton.disabled = next || !appInitialized || !generated || !hasImage;
       if (styleSwitchButton) styleSwitchButton.disabled = next || !generated;
       if (next) closeDownloadMenu();
       editPosterButton.disabled = next || !generated;
@@ -6184,9 +6187,10 @@
       initRulesDocumentUpload();
       await restoreRulesDocuments();
       updateGeneratedMeta();
+      const restoredWorkspaceDraft = await restoreWorkspaceDraft();
+      if (!restoredWorkspaceDraft) initializeGeneratedPreview();
       appInitialized = true;
-      initializeGeneratedPreview();
-      await restoreWorkspaceDraft();
+      updateUploadState();
       if (pendingGenerationAfterInit) {
         pendingGenerationAfterInit = false;
         runGeneration();
@@ -6581,6 +6585,7 @@
     }
 
     function validateExportState(assets = []) {
+      if (!appInitialized) return '素材配置加载中，请稍候';
       if (!generated) return '请先生成素材后再下载';
       if (!hasImage || !uploadedImageSrc) return '请先上传主图并生成素材后再下载';
       if (!assets.length) return '暂无可下载素材';
@@ -6597,9 +6602,21 @@
       }
     }
 
+    function syncCurrentExportStateBeforeDownload() {
+      syncActiveFormControlsBeforeDownload();
+      normalizeSizeLanguageState();
+      generatedSizeIndices = uniqueValidIndices(generatedSizeIndices, materialSizes);
+      generatedLanguageIndices = uniqueValidIndices(generatedLanguageIndices, languages);
+      if (!generatedSizeIndices.length && materialSizes[currentSizeIndex]) generatedSizeIndices = [currentSizeIndex];
+      if (!generatedLanguageIndices.length && languages[currentLanguageIndex]) generatedLanguageIndices = [currentLanguageIndex];
+      rebuildGeneratedAssets();
+      updateGeneratedMeta();
+      updateUploadState();
+    }
+
     function prepareExportAssets(all = false) {
       if (all) syncExportStateBeforeDownload();
-      else syncActiveFormControlsBeforeDownload();
+      else syncCurrentExportStateBeforeDownload();
       const assets = all ? downloadAssets() : [currentDownloadAsset()];
       const error = validateExportState(assets);
       return { assets, error };
