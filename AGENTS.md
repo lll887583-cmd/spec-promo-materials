@@ -42,6 +42,32 @@ This repo is a static promo-material template tool. Keep the codebase simple and
 - Prefer changing the real shared component or renderer path over patching only one visible instance.
 - If an asset is referenced through `index.html` with a cache-busting query string, bump the version when you modify that asset.
 - Keep changes scoped to the minimal files required for the fix.
+- Do not change self-test files, smoke tests, or manual self-test documents unless the user explicitly asks for test updates.
+
+## Edit And Export Parity Rules
+
+- The editor preview must be the source of truth for downloads: what the user sees in the current size/language preview should be what single-image and batch downloads render.
+- Single download and batch download must use the same DOM export path. Do not add a separate canvas-only rendering path for CTA/text unless it is proven pixel-matched to the DOM preview.
+- CTA/button wrapping must be scoped to the current size and current language. Changing one size's button width, wrapping, padding, or text override must not make every size for that language wrap.
+- When CTA width is manually resized or a CTA size preset is applied, persist it as fixed-width behavior for that size/language instead of letting `autoWidth` re-expand it during export.
+- Avoid global language-level copy overrides for inline canvas edits. Inline edits on the generated preview should write to a size+language scoped override.
+- If export output differs from the editor preview, stop patching isolated CSS and inspect the full path: preview state -> export snapshot -> export card layout -> html2canvas output.
+
+## Current Official 9-Language Gold Copy
+
+Use this latest copy for formal gold promo exports unless the user provides newer copy:
+
+| Language | Title | Subtitle | CTA |
+| --- | --- | --- | --- |
+| English | Trade Gold with Confidence | Low Spreads, High Liquidity, 24/5 Access | Start Trading |
+| 日本語 | 自信を持って金取引を | 低スプレッド・高流動性・24時間5日取引可能 | 今すぐ取引 |
+| 简体中文 | 稳健交易黄金 | 低点差・高流动性・全天候交易 | 立即交易 |
+| 繁體中文 | 穩健交易黃金 | 低點差・高流動性・全天候交易 | 立即交易 |
+| Tiếng Việt | Tự Tin Giao Dịch Vàng | Spread thấp, thanh khoản cao, giao dịch 24/5 | Giao dịch ngay |
+| ภาษาไทย | เทรดทองคำอย่างมั่นใจ | สเปรดต่ำ สภาพคล่องสูง เข้าถึงได้ 24/5 | เทรดเลย |
+| 한국어 | 자신 있게 골드 트레이딩 | 낮은 스프레드・높은 유동성・24/5 거래 가능 | 거래 시작 |
+| Indonesia | Trading Emas dengan Percaya Diri | Spread Rendah, Likuiditas Tinggi, Akses 24/5 | Mulai Trade |
+| Melayu | Niaga Emas dengan Yakin | Spread Rendah, Kecairan Tinggi, Akses 24/5 | Mula Trade |
 
 ## Before Each Change: Plan And Impact Review
 

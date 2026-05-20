@@ -43,5 +43,9 @@
     return loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
   }
 
-  window.SpecPromoDependencies = { ensureCropper, ensureXlsx };
+  async function ensureHtml2Canvas() {
+    return loadScriptOnce('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js', 'html2canvas');
+  }
+
+  window.SpecPromoDependencies = { ensureCropper, ensureXlsx, ensureHtml2Canvas };
 }());
